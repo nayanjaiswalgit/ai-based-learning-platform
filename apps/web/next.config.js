@@ -1,15 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@ai-learning/shared-types', '@ai-learning/ui-components'],
-  webpack: (config) => {
-    // Monaco editor webpack config
-    config.module.rules.push({
-      test: /\.ttf$/,
-      type: 'asset/resource',
-    });
-    return config;
+  transpilePackages: ['@repo/shared-types'],
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003',
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

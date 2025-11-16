@@ -1,25 +1,4 @@
-'use client';
-
-import { useState } from 'react';
-import MuxPlayer from '@mux/mux-player-react';
-
 export default function DemoPage() {
-  const [playbackId] = useState('YOUR_MUX_PLAYBACK_ID'); // Replace with actual playback ID
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const handleTimeUpdate = (event: any) => {
-    setCurrentTime(event.target.currentTime);
-  };
-
-  const handlePlay = () => {
-    setIsPlaying(true);
-  };
-
-  const handlePause = () => {
-    setIsPlaying(false);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
@@ -33,26 +12,16 @@ export default function DemoPage() {
           Video Player Demo
         </h1>
         <p className="text-gray-600 mb-8">
-          Experience our advanced video player with Mux adaptive streaming
+          Experience our advanced video player with adaptive streaming
         </p>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Video Player */}
+          {/* Video Player Placeholder */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              <MuxPlayer
-                playbackId={playbackId}
-                metadata={{
-                  video_title: 'Introduction to React',
-                  viewer_user_id: 'demo-user',
-                }}
-                streamType="on-demand"
-                autoPlay={false}
-                onPlay={handlePlay}
-                onPause={handlePause}
-                onTimeUpdate={handleTimeUpdate}
-                className="w-full aspect-video"
-              />
+              <div className="w-full aspect-video bg-gray-900 flex items-center justify-center text-white">
+                <p>Video Player Placeholder</p>
+              </div>
             </div>
 
             {/* Course Content */}

@@ -16,4 +16,9 @@ export class LoginDto {
   @IsString()
   @MinLength(6)
   twoFactorCode?: string;
+
+  @ApiProperty({ example: 'captcha-token-here', required: false })
+  @IsString()
+  @IsOptional()
+  captchaToken?: string;
 }

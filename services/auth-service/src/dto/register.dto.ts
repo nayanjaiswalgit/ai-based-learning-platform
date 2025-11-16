@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, Matches, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -29,7 +29,13 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'John Doe', required: false })
   @IsString()
+  @IsOptional()
   @MinLength(2)
   @MaxLength(255)
   fullName?: string;
+
+  @ApiProperty({ example: 'captcha-token-here', required: false })
+  @IsString()
+  @IsOptional()
+  captchaToken?: string;
 }

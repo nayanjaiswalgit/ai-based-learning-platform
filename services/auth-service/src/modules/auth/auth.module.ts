@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../../config/prisma.service';
 import { RedisService } from '../../config/redis.service';
 import { EmailService } from '../../config/email.service';
+import { CaptchaService } from '../../config/captcha.service';
 import { JwtStrategy } from '../../strategies/jwt.strategy';
 import { JwtRefreshStrategy } from '../../strategies/jwt-refresh.strategy';
 import { GoogleStrategy } from '../../strategies/google.strategy';
@@ -41,6 +42,7 @@ import { SamlStrategy } from '../../strategies/saml.strategy';
     PrismaService,
     RedisService,
     EmailService,
+    CaptchaService,
     JwtStrategy,
     JwtRefreshStrategy,
     GoogleStrategy,

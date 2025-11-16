@@ -12,6 +12,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { CaptchaService } from '../../config/captcha.service';
 import { RegisterDto } from '../../dto/register.dto';
 import { LoginDto } from '../../dto/login.dto';
 import { ForgotPasswordDto } from '../../dto/forgot-password.dto';
@@ -26,7 +27,10 @@ import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly captchaService: CaptchaService,
+  ) {}
 
   // ==================== REGISTRATION ====================
 
@@ -37,6 +41,11 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'Email or username already exists' })
   async register(@Body() registerDto: RegisterDto, @Req() req: any) {
+    // Verify CAPTCHA if provided
+    if (registerDto.captchaToken) {
+      await this.captchaService.verifyCaptcha(registerDto.captchaToken, 'register');
+    }
+
     const ipAddress = req.ip;
     const userAgent = req.headers['user-agent'];
     return this.authService.register(registerDto, ipAddress, userAgent);
@@ -62,6 +71,11 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto, @Req() req: any) {
+    // Verify CAPTCHA if provided
+    if (loginDto.captchaToken) {
+      await this.captchaService.verifyCaptcha(loginDto.captchaToken, 'login');
+    }
+
     const ipAddress = req.ip;
     const userAgent = req.headers['user-agent'];
     return this.authService.login(loginDto, ipAddress, userAgent);
@@ -225,5 +239,22 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User info retrieved' })
   async getCurrentUser(@CurrentUser() user: any) {
     return user;
+  }
+
+  // ==================== CSRF TOKEN ====================
+
+  @Public()
+  @Get('csrf-token')
+  @ApiOperation({ summary: 'Get CSRF token for forms' })
+  @ApiResponse({ status: 200, description: 'CSRF token generated' })
+  async getCsrfToken(@Req() req: any) {
+    // Generate CSRF token and store in session
+    const csrfToken = require('crypto').randomBytes(32).toString('hex');
+
+    // Store in Redis with session
+    const sessionId = req.sessionID || req.ip;
+    await this.authService.storeCsrfToken(sessionId, csrfToken);
+
+    return { csrfToken };
   }
 }

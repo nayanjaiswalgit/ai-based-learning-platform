@@ -705,4 +705,21 @@ export class AuthService {
       },
     };
   }
+
+  // ==================== CSRF TOKEN MANAGEMENT ====================
+
+  async storeCsrfToken(sessionId: string, token: string): Promise<void> {
+    // Store CSRF token in Redis with 1 hour expiry
+    await this.redisService.set(`csrf:${sessionId}`, token, 3600);
+  }
+
+  async verifyCsrfToken(sessionId: string, token: string): Promise<boolean> {
+    const storedToken = await this.redisService.get(`csrf:${sessionId}`);
+    if (!storedToken || storedToken !== token) {
+      return false;
+    }
+    // Delete token after verification (one-time use)
+    await this.redisService.del(`csrf:${sessionId}`);
+    return true;
+  }
 }

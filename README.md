@@ -384,25 +384,91 @@ This repository contains comprehensive planning documents for building a world-c
 - Docker
 - PNPM
 
-### Installation (Coming Soon)
+### Option 1: Quick Start with Docker (Recommended)
+
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/ai-learning-platform.git
+cd ai-learning-platform
+
+# Copy environment variables
+cp .env.example .env
+
+# Start everything with Docker (interactive script)
+./scripts/docker-start.sh
+```
+
+**Two modes available:**
+1. **Development Mode**: Infrastructure in Docker + Apps with hot reload
+   - Choose option 1, then run `pnpm dev`
+   - Fast iteration, code changes instantly reflected
+2. **Production Mode**: Everything in Docker
+   - Choose option 2
+   - Full production-like environment
+
+📚 **Full Docker documentation**: See [DOCKER.md](./DOCKER.md)
+
+### Option 2: Local Development (Manual Setup)
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/ai-learning-platform.git
+cd ai-learning-platform
 
 # Install dependencies
 pnpm install
 
 # Set up environment variables
 cp .env.example .env
+# Edit .env with your database credentials
+
+# Start infrastructure (PostgreSQL, Redis, etc.)
+docker-compose -f docker-compose.dev.yml up -d
 
 # Run database migrations
-pnpm db:migrate
+cd services/api
+pnpm prisma:migrate
+cd ../..
 
-# Seed database
+# Seed database (optional)
+cd services/api
 pnpm db:seed
+cd ../..
 
 # Start development server
 pnpm dev
+```
+
+### Available Services
+
+After starting, access:
+- **Web App**: http://localhost:3000
+- **Admin Dashboard**: http://localhost:3001
+- **API Gateway**: http://localhost:4000
+- **API Docs**: http://localhost:4000/api/docs
+- **Mailpit (Email UI)**: http://localhost:8025
+- **pgAdmin**: http://localhost:5050 (dev mode)
+
+### Helpful Commands
+
+```bash
+# Development
+pnpm dev                    # Start all services with hot reload
+pnpm build                  # Build all services
+pnpm lint                   # Lint all code
+pnpm test                   # Run tests
+
+# Docker
+./scripts/docker-start.sh   # Interactive startup
+./scripts/docker-stop.sh    # Stop all containers
+./scripts/docker-logs.sh    # View logs
+./scripts/docker-clean.sh   # Clean up (removes data!)
+
+# Database
+cd services/api
+pnpm prisma:generate        # Generate Prisma client
+pnpm prisma:migrate         # Run migrations
+pnpm prisma:studio          # Open Prisma Studio
 ```
 
 ---

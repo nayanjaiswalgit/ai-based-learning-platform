@@ -1,0 +1,63 @@
+# Multi-stage Dockerfile for NestJS microservices
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/ ./packages/
+COPY services/ ./services/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build the source code
+FROM base AS builder
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/services ./services
+
+# Copy source code
+COPY . .
+
+# Build argument to determine which service to build
+ARG SERVICE_NAME
+
+# Build the service
+RUN pnpm turbo run build --filter=@learning-platform/${SERVICE_NAME} --filter=@ai-learning/${SERVICE_NAME} --filter=@ai-platform/${SERVICE_NAME} --filter=@repo/${SERVICE_NAME} --filter=@services/${SERVICE_NAME}
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+# Build argument to determine which service to run
+ARG SERVICE_NAME
+
+# Copy built service - try all possible package name patterns
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./dist 2>/dev/null || true
+COPY --from=builder /app/services/${SERVICE_NAME}/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+
+# Set correct permissions
+RUN chown -R nestjs:nodejs /app
+
+USER nestjs
+
+EXPOSE 3000
+
+# Start the service
+CMD ["node", "dist/main.js"]

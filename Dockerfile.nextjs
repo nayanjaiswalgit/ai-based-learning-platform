@@ -1,0 +1,69 @@
+# Multi-stage Dockerfile for Next.js applications
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/ ./packages/
+COPY apps/web/package.json ./apps/web/
+COPY apps/admin/package.json ./apps/admin/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+
+# Copy dependencies
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps ./apps
+COPY --from=deps /app/packages ./packages
+
+# Copy source code
+COPY . .
+
+# Build argument to determine which app to build
+ARG APP_NAME
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Build the application
+RUN pnpm turbo run build --filter=${APP_NAME}
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Build argument to determine which app to run
+ARG APP_NAME
+
+# Copy built application
+COPY --from=builder /app/apps/${APP_NAME}/.next ./apps/${APP_NAME}/.next
+COPY --from=builder /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
+COPY --from=builder /app/apps/${APP_NAME}/package.json ./apps/${APP_NAME}/
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+
+# Set correct permissions
+RUN chown -R nextjs:nodejs /app
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+
+# Start the application
+CMD ["node_modules/.bin/next", "start", "-p", "3000"]

@@ -1,10 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@ai-learning/shared-types'],
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  transpilePackages: [],
+  images: {
+    domains: ['localhost', 'your-cdn-domain.com'],
+    formats: ['image/avif', 'image/webp'],
   },
-};
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts'],
+  },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

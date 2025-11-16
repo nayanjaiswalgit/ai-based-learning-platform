@@ -1,0 +1,558 @@
+// This is your Prisma schema file for Payment Service
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// SUBSCRIPTION PLANS
+// =====================================================
+
+model SubscriptionPlan {
+  id                String   @id @default(uuid())
+  name              String   // free, pro, enterprise
+  displayName       String
+  description       String?
+  priceMonthly      Decimal  @db.Decimal(10, 2)
+  priceYearly       Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+  features          Json     // Array of features
+  maxCourses        Int?     // null = unlimited
+  maxProjects       Int?
+  hasAIFeatures     Boolean  @default(false)
+  hasPrioritySupport Boolean @default(false)
+  trialDays         Int      @default(7)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  subscriptions Subscription[]
+  regionalPricing RegionalPricing[]
+
+  @@map("subscription_plans")
+}
+
+// =====================================================
+// USER SUBSCRIPTIONS
+// =====================================================
+
+model Subscription {
+  id                    String   @id @default(uuid())
+  userId                String
+  planId                String
+  plan                  SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  status                String   // active, cancelled, expired, past_due, trialing
+  billingCycle          String   // monthly, yearly
+
+  // Stripe
+  stripeSubscriptionId  String?  @unique
+  stripeCustomerId      String?
+  stripePriceId         String?
+
+  // Razorpay
+  razorpaySubscriptionId String? @unique
+  razorpayCustomerId    String?
+
+  // PayPal
+  paypalSubscriptionId  String?  @unique
+
+  // Paddle
+  paddleSubscriptionId  String?  @unique
+
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean  @default(false)
+  canceledAt            DateTime?
+  trialStart            DateTime?
+  trialEnd              DateTime?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  transactions          PaymentTransaction[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// =====================================================
+// PAYMENT TRANSACTIONS
+// =====================================================
+
+model PaymentTransaction {
+  id                    String   @id @default(uuid())
+  userId                String
+  transactionType       String   // subscription, course, bootcamp, digital_product
+
+  amount                Decimal  @db.Decimal(10, 2)
+  currency              String   @default("USD")
+  originalAmount        Decimal? @db.Decimal(10, 2) // Before PPP discount
+  discount              Decimal? @db.Decimal(10, 2)
+  discountType          String?  // ppp, coupon, affiliate
+
+  status                String   // pending, succeeded, failed, refunded, disputed
+  paymentGateway        String   // stripe, razorpay, paypal, paddle
+
+  // Gateway-specific IDs
+  stripePaymentIntentId String?  @unique
+  razorpayPaymentId     String?  @unique
+  paypalOrderId         String?  @unique
+  paddlePaymentId       String?  @unique
+
+  // Resource references
+  resourceId            String?  // Course, bootcamp, or digital product ID
+  subscriptionId        String?
+  subscription          Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  couponId              String?
+  coupon                Coupon?  @relation(fields: [couponId], references: [id])
+
+  affiliateReferralId   String?
+  affiliateReferral     AffiliateReferral? @relation(fields: [affiliateReferralId], references: [id])
+
+  // Metadata
+  metadata              Json?
+  errorMessage          String?
+  refundedAmount        Decimal? @db.Decimal(10, 2)
+  refundedAt            DateTime?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentGateway])
+  @@index([transactionType])
+  @@map("payment_transactions")
+}
+
+// =====================================================
+// REGIONAL PRICING (PPP)
+// =====================================================
+
+model RegionalPricing {
+  id                String   @id @default(uuid())
+  planId            String
+  plan              SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  countryCode       String   // ISO 3166-1 alpha-2
+  countryName       String
+  currency          String
+
+  priceMonthly      Decimal  @db.Decimal(10, 2)
+  priceYearly       Decimal  @db.Decimal(10, 2)
+
+  discountPercentage Decimal @db.Decimal(5, 2) // 0-100
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([planId, countryCode])
+  @@index([countryCode])
+  @@map("regional_pricing")
+}
+
+// =====================================================
+// COUPONS
+// =====================================================
+
+model Coupon {
+  id                String   @id @default(uuid())
+  code              String   @unique
+  name              String
+  description       String?
+
+  discountType      String   // percentage, fixed
+  discountValue     Decimal  @db.Decimal(10, 2)
+
+  applicableTo      String   // all, subscription, course, bootcamp, digital_product
+  applicableIds     Json?    // Array of specific resource IDs
+
+  currency          String   @default("USD")
+  minPurchaseAmount Decimal? @db.Decimal(10, 2)
+  maxDiscount       Decimal? @db.Decimal(10, 2)
+
+  usageLimit        Int?     // null = unlimited
+  usageCount        Int      @default(0)
+  perUserLimit      Int      @default(1)
+
+  validFrom         DateTime
+  validUntil        DateTime?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  transactions      PaymentTransaction[]
+  userCouponUsage   UserCouponUsage[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("coupons")
+}
+
+model UserCouponUsage {
+  id                String   @id @default(uuid())
+  userId            String
+  couponId          String
+  coupon            Coupon   @relation(fields: [couponId], references: [id])
+  usageCount        Int      @default(1)
+  createdAt         DateTime @default(now())
+
+  @@unique([userId, couponId])
+  @@map("user_coupon_usage")
+}
+
+// =====================================================
+// AFFILIATE PROGRAM
+// =====================================================
+
+model AffiliateProgram {
+  id                String   @id @default(uuid())
+  name              String
+  commissionType    String   // percentage, fixed
+  commissionValue   Decimal  @db.Decimal(10, 2)
+  cookieDuration    Int      @default(30) // days
+  minPayout         Decimal  @db.Decimal(10, 2) @default(50)
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  affiliates        Affiliate[]
+
+  @@map("affiliate_programs")
+}
+
+model Affiliate {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  programId         String
+  program           AffiliateProgram @relation(fields: [programId], references: [id])
+
+  affiliateCode     String   @unique
+
+  totalEarnings     Decimal  @db.Decimal(10, 2) @default(0)
+  pendingEarnings   Decimal  @db.Decimal(10, 2) @default(0)
+  paidEarnings      Decimal  @db.Decimal(10, 2) @default(0)
+
+  clickCount        Int      @default(0)
+  conversionCount   Int      @default(0)
+
+  paymentMethod     String?  // bank_transfer, paypal, stripe
+  paymentDetails    Json?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  referrals         AffiliateReferral[]
+  payouts           AffiliatePayout[]
+
+  @@index([affiliateCode])
+  @@map("affiliates")
+}
+
+model AffiliateReferral {
+  id                String   @id @default(uuid())
+  affiliateId       String
+  affiliate         Affiliate @relation(fields: [affiliateId], references: [id])
+
+  userId            String   // Referred user
+
+  clickedAt         DateTime
+  convertedAt       DateTime?
+
+  commissionAmount  Decimal? @db.Decimal(10, 2)
+  commissionStatus  String   @default("pending") // pending, approved, paid
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  transactions      PaymentTransaction[]
+
+  @@index([affiliateId])
+  @@index([userId])
+  @@map("affiliate_referrals")
+}
+
+model AffiliatePayout {
+  id                String   @id @default(uuid())
+  affiliateId       String
+  affiliate         Affiliate @relation(fields: [affiliateId], references: [id])
+
+  amount            Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+
+  paymentMethod     String
+  paymentDetails    Json
+
+  status            String   // pending, processing, completed, failed
+
+  processedAt       DateTime?
+  completedAt       DateTime?
+  failureReason     String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([affiliateId])
+  @@index([status])
+  @@map("affiliate_payouts")
+}
+
+// =====================================================
+// INSTRUCTOR REVENUE & PAYOUTS
+// =====================================================
+
+model InstructorRevenue {
+  id                String   @id @default(uuid())
+  instructorId      String
+
+  courseId          String?
+  bootcampId        String?
+  digitalProductId  String?
+
+  transactionId     String
+
+  grossAmount       Decimal  @db.Decimal(10, 2)
+  platformFee       Decimal  @db.Decimal(10, 2)
+  instructorEarnings Decimal @db.Decimal(10, 2)
+
+  revenueShare      Decimal  @db.Decimal(5, 2) // percentage
+
+  currency          String   @default("USD")
+
+  payoutStatus      String   @default("pending") // pending, processing, paid, held
+  payoutId          String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([instructorId])
+  @@index([payoutStatus])
+  @@map("instructor_revenue")
+}
+
+model InstructorPayout {
+  id                String   @id @default(uuid())
+  instructorId      String
+
+  amount            Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+
+  paymentMethod     String   // bank_transfer, paypal, stripe_connect
+  paymentDetails    Json
+
+  periodStart       DateTime
+  periodEnd         DateTime
+
+  status            String   // pending, processing, completed, failed
+
+  stripeTransferId  String?  @unique
+  paypalPayoutId    String?  @unique
+
+  processedAt       DateTime?
+  completedAt       DateTime?
+  failureReason     String?
+
+  invoice           Json?    // Invoice details
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([instructorId])
+  @@index([status])
+  @@map("instructor_payouts")
+}
+
+// =====================================================
+// DIGITAL PRODUCTS
+// =====================================================
+
+model DigitalProduct {
+  id                String   @id @default(uuid())
+  creatorId         String   // instructor/seller ID
+
+  title             String
+  slug              String   @unique
+  description       String?
+  longDescription   String?
+
+  productType       String   // ebook, template, resource_pack, tool
+
+  price             Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+
+  fileUrl           String?  // S3 URL
+  fileSize          BigInt?  // bytes
+  fileType          String?
+
+  coverImageUrl     String?
+  previewUrl        String?  // Preview/demo file
+
+  licenseType       String   // single, unlimited, commercial
+  downloadLimit     Int?     // null = unlimited
+
+  salesCount        Int      @default(0)
+  rating            Decimal? @db.Decimal(3, 2)
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  purchases         DigitalProductPurchase[]
+  licenseKeys       LicenseKey[]
+
+  @@index([slug])
+  @@index([creatorId])
+  @@map("digital_products")
+}
+
+model DigitalProductPurchase {
+  id                String   @id @default(uuid())
+  userId            String
+  productId         String
+  product           DigitalProduct @relation(fields: [productId], references: [id])
+
+  amount            Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+
+  transactionId     String
+
+  downloadCount     Int      @default(0)
+  lastDownloadedAt  DateTime?
+
+  licenseKeyId      String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@map("digital_product_purchases")
+}
+
+model LicenseKey {
+  id                String   @id @default(uuid())
+  productId         String
+  product           DigitalProduct @relation(fields: [productId], references: [id])
+
+  key               String   @unique
+  userId            String?  // null if not activated
+
+  activatedAt       DateTime?
+  expiresAt         DateTime?
+
+  maxActivations    Int      @default(1)
+  activationCount   Int      @default(0)
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([key])
+  @@index([productId])
+  @@map("license_keys")
+}
+
+// =====================================================
+// INVOICES
+// =====================================================
+
+model Invoice {
+  id                String   @id @default(uuid())
+  userId            String
+
+  invoiceNumber     String   @unique
+
+  amount            Decimal  @db.Decimal(10, 2)
+  tax               Decimal  @db.Decimal(10, 2) @default(0)
+  total             Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+
+  status            String   // draft, issued, paid, void
+
+  dueDate           DateTime
+  paidAt            DateTime?
+
+  items             Json     // Array of invoice items
+
+  billingAddress    Json?
+  taxInfo           Json?    // VAT, GST details
+
+  pdfUrl            String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([invoiceNumber])
+  @@map("invoices")
+}
+
+// =====================================================
+// REFUNDS
+// =====================================================
+
+model Refund {
+  id                String   @id @default(uuid())
+  transactionId     String
+  userId            String
+
+  amount            Decimal  @db.Decimal(10, 2)
+  currency          String   @default("USD")
+
+  reason            String
+  reasonDetails     String?
+
+  status            String   // pending, approved, rejected, completed
+
+  stripeRefundId    String?  @unique
+  razorpayRefundId  String?  @unique
+  paypalRefundId    String?  @unique
+
+  processedBy       String?  // Admin user ID
+  processedAt       DateTime?
+  completedAt       DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([transactionId])
+  @@index([status])
+  @@map("refunds")
+}
+
+// =====================================================
+// TAX CONFIGURATION
+// =====================================================
+
+model TaxRate {
+  id                String   @id @default(uuid())
+  countryCode       String
+  countryName       String
+  stateCode         String?
+  stateName         String?
+
+  taxType           String   // vat, gst, sales_tax
+  taxRate           Decimal  @db.Decimal(5, 2)
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([countryCode, stateCode])
+  @@index([countryCode])
+  @@map("tax_rates")
+}

@@ -3,346 +3,412 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+// Helper function to hash passwords
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+// Helper to generate random date within range
+function randomDate(start: Date, end: Date): Date {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
+
+// Helper to get random items from array
+function getRandomItems<T>(array: T[], count: number): T[] {
+  const shuffled = [...array].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.min(count, array.length));
+}
+
 async function main() {
-  console.log('🌱 Starting database seed...');
+  console.log('🌱 Starting comprehensive database seeding...\n');
 
-  // Create skills
-  console.log('Creating skills...');
-  const skills = await Promise.all([
-    prisma.skill.upsert({
-      where: { name: 'JavaScript' },
-      update: {},
-      create: {
-        name: 'JavaScript',
-        category: 'programming',
-        description: 'Modern JavaScript and ES6+',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'React' },
-      update: {},
-      create: {
-        name: 'React',
-        category: 'frontend',
-        description: 'React.js library for building user interfaces',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'Node.js' },
-      update: {},
-      create: {
-        name: 'Node.js',
-        category: 'backend',
-        description: 'Server-side JavaScript runtime',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'TypeScript' },
-      update: {},
-      create: {
-        name: 'TypeScript',
-        category: 'programming',
-        description: 'Typed superset of JavaScript',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'Next.js' },
-      update: {},
-      create: {
-        name: 'Next.js',
-        category: 'frontend',
-        description: 'React framework for production',
-      },
-    }),
-  ]);
+  // Clean existing data
+  console.log('🧹 Cleaning existing data...');
+  await prisma.userSubmission.deleteMany();
+  await prisma.userDsaProgress.deleteMany();
+  await prisma.dsaProblem.deleteMany();
+  await prisma.dsaSheet.deleteMany();
+  await prisma.question.deleteMany();
+  await prisma.courseReview.deleteMany();
+  await prisma.courseEnrollment.deleteMany();
+  await prisma.lessonProgress.deleteMany();
+  await prisma.lesson.deleteMany();
+  await prisma.courseModule.deleteMany();
+  await prisma.courseSEO.deleteMany();
+  await prisma.affiliateLink.deleteMany();
+  await prisma.courseBundle.deleteMany();
+  await prisma.coupon.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.cohortEnrollment.deleteMany();
+  await prisma.cohort.deleteMany();
+  await prisma.bootcamp.deleteMany();
+  await prisma.dailyRecommendation.deleteMany();
+  await prisma.roadmap.deleteMany();
+  await prisma.userSkill.deleteMany();
+  await prisma.skill.deleteMany();
+  await prisma.discussionReply.deleteMany();
+  await prisma.discussionThread.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.paymentTransaction.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.learningStreak.deleteMany();
+  await prisma.userAchievement.deleteMany();
+  await prisma.learningAnalytics.deleteMany();
+  await prisma.userProgress.deleteMany();
+  await prisma.passwordResetToken.deleteMany();
+  await prisma.oAuthProvider.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.userProfile.deleteMany();
+  await prisma.user.deleteMany();
 
-  // Create instructor user
-  console.log('Creating users...');
-  const passwordHash = await bcrypt.hash('password123', 10);
+  console.log('✅ Cleaned existing data\n');
 
-  const instructor = await prisma.user.upsert({
-    where: { email: 'instructor@example.com' },
-    update: {},
-    create: {
-      email: 'instructor@example.com',
-      username: 'instructor',
-      passwordHash,
-      role: 'instructor',
-      isEmailVerified: true,
-      profile: {
-        create: {
-          fullName: 'John Instructor',
-          bio: 'Experienced full-stack developer with 10+ years of teaching experience',
-          experienceLevel: 'advanced',
-          preferredLearningStyle: 'hands_on',
-        },
-      },
-    },
-  });
+  // =====================================================
+  // 1. Create Users
+  // =====================================================
+  console.log('👥 Creating users...');
 
-  const student = await prisma.user.upsert({
-    where: { email: 'student@example.com' },
-    update: {},
-    create: {
-      email: 'student@example.com',
-      username: 'student',
-      passwordHash,
-      role: 'student',
-      isEmailVerified: true,
-      profile: {
-        create: {
-          fullName: 'Jane Student',
-          bio: 'Aspiring web developer',
-          experienceLevel: 'beginner',
-          preferredLearningStyle: 'visual',
-        },
-      },
-    },
-  });
+  const adminPassword = await hashPassword('admin123');
+  const userPassword = await hashPassword('user123');
 
-  // Create courses
-  console.log('Creating courses...');
-  const course1 = await prisma.course.create({
+  // Admin user
+  const admin = await prisma.user.create({
     data: {
-      title: 'Complete React & Next.js Course',
-      slug: 'complete-react-nextjs-course',
-      description: 'Learn React and Next.js from scratch to advanced level',
-      longDescription: `Master React and Next.js in this comprehensive course.
+      email: 'admin@platform.com',
+      username: 'admin',
+      passwordHash: adminPassword,
+      role: 'admin',
+      isEmailVerified: true,
+      isActive: true,
+      profile: {
+        create: {
+          fullName: 'Platform Admin',
+          bio: 'System administrator',
+          experienceLevel: 'expert',
+          preferredLearningStyle: 'visual',
+          dailyLearningTimeMinutes: 120,
+        },
+      },
+    },
+  });
 
-You'll learn:
-- React fundamentals and hooks
-- Next.js app router and server components
-- State management with Zustand
-- API routes and server actions
-- Deployment and optimization
+  // Create 10 instructors
+  const instructors = [];
+  for (let i = 1; i <= 10; i++) {
+    const instructor = await prisma.user.create({
+      data: {
+        email: `instructor${i}@platform.com`,
+        username: `instructor${i}`,
+        passwordHash: userPassword,
+        role: 'instructor',
+        isEmailVerified: true,
+        isActive: true,
+        profile: {
+          create: {
+            fullName: `Instructor ${i}`,
+            bio: `Experienced instructor with ${5 + i} years of teaching. Specialized in modern web development and software engineering.`,
+            experienceLevel: 'expert',
+            preferredLearningStyle: i % 2 === 0 ? 'visual' : 'hands_on',
+            dailyLearningTimeMinutes: 60,
+            githubUrl: `https://github.com/instructor${i}`,
+            linkedinUrl: `https://linkedin.com/in/instructor${i}`,
+            websiteUrl: `https://instructor${i}.dev`,
+          },
+        },
+      },
+    });
+    instructors.push(instructor);
+  }
 
-Perfect for beginners and intermediate developers looking to level up their React skills.`,
-      instructorId: instructor.id,
-      difficultyLevel: 'intermediate',
+  // Create 5 mentors
+  const mentors = [];
+  for (let i = 1; i <= 5; i++) {
+    const mentor = await prisma.user.create({
+      data: {
+        email: `mentor${i}@platform.com`,
+        username: `mentor${i}`,
+        passwordHash: userPassword,
+        role: 'mentor',
+        isEmailVerified: true,
+        isActive: true,
+        profile: {
+          create: {
+            fullName: `Mentor ${i}`,
+            bio: `Senior software engineer and mentor. Passionate about helping students succeed.`,
+            experienceLevel: 'advanced',
+            preferredLearningStyle: 'hands_on',
+            dailyLearningTimeMinutes: 90,
+          },
+        },
+      },
+    });
+    mentors.push(mentor);
+  }
+
+  // Create 50 students
+  const students = [];
+  const experienceLevels = ['beginner', 'intermediate', 'advanced'];
+  const learningStyles = ['visual', 'auditory', 'reading_writing', 'hands_on'];
+
+  for (let i = 1; i <= 50; i++) {
+    const student = await prisma.user.create({
+      data: {
+        email: `student${i}@example.com`,
+        username: `student${i}`,
+        passwordHash: userPassword,
+        role: 'student',
+        isEmailVerified: i % 10 !== 0, // 90% verified
+        isActive: true,
+        profile: {
+          create: {
+            fullName: `Student ${i}`,
+            bio: i % 3 === 0 ? `Aspiring ${['Full Stack Developer', 'Data Scientist', 'DevOps Engineer'][i % 3]}` : undefined,
+            currentGoal: ['Get a job as a software developer', 'Learn full-stack development', 'Master DSA for interviews'][i % 3],
+            experienceLevel: experienceLevels[i % 3] as any,
+            preferredLearningStyle: learningStyles[i % 4] as any,
+            dailyLearningTimeMinutes: 30 + (i % 6) * 15,
+          },
+        },
+        subscription: i % 5 === 0 ? {
+          create: {
+            plan: i % 10 === 0 ? 'enterprise' : 'pro',
+            status: 'active',
+            startDate: new Date('2024-01-01'),
+            endDate: new Date('2025-01-01'),
+            autoRenew: true,
+          },
+        } : undefined,
+        learningStreak: {
+          create: {
+            currentStreak: i % 30,
+            longestStreak: i % 30 + 5,
+            lastActiveDate: new Date(),
+          },
+        },
+      },
+    });
+    students.push(student);
+  }
+
+  console.log(`✅ Created ${1 + instructors.length + mentors.length + students.length} users\n`);
+
+  // =====================================================
+  // 2. Create Skills
+  // =====================================================
+  console.log('🎯 Creating skills...');
+
+  const skillsData = [
+    { name: 'JavaScript', category: 'programming', description: 'Modern JavaScript programming language' },
+    { name: 'TypeScript', category: 'programming', description: 'Typed superset of JavaScript' },
+    { name: 'React', category: 'frontend', description: 'Popular UI library for building web applications' },
+    { name: 'Next.js', category: 'frontend', description: 'React framework for production' },
+    { name: 'Node.js', category: 'backend', description: 'JavaScript runtime for server-side development' },
+    { name: 'Python', category: 'programming', description: 'Versatile programming language' },
+    { name: 'PostgreSQL', category: 'database', description: 'Advanced open-source relational database' },
+    { name: 'MongoDB', category: 'database', description: 'Popular NoSQL database' },
+    { name: 'Redis', category: 'database', description: 'In-memory data structure store' },
+    { name: 'Docker', category: 'devops', description: 'Container platform' },
+    { name: 'Kubernetes', category: 'devops', description: 'Container orchestration platform' },
+    { name: 'AWS', category: 'cloud', description: 'Amazon Web Services cloud platform' },
+    { name: 'Git', category: 'tools', description: 'Version control system' },
+    { name: 'Data Structures', category: 'dsa', description: 'Fundamental data structures' },
+    { name: 'Algorithms', category: 'dsa', description: 'Problem-solving algorithms' },
+  ];
+
+  const skills = await Promise.all(
+    skillsData.map(skill => prisma.skill.create({ data: skill }))
+  );
+
+  console.log(`✅ Created ${skills.length} skills\n`);
+
+  // =====================================================
+  // 3. Create Courses
+  // =====================================================
+  console.log('📚 Creating courses...');
+
+  const coursesData = [
+    {
+      title: 'Complete JavaScript Mastery',
+      slug: 'complete-javascript-mastery',
+      description: 'Master JavaScript from basics to advanced concepts',
+      longDescription: 'Comprehensive JavaScript course covering everything from fundamentals to advanced patterns.',
+      difficultyLevel: 'beginner',
       estimatedDurationHours: 40,
-      price: 99.99,
-      isPublished: true,
+      price: 49.99,
       isFree: false,
+      isPublished: true,
+      thumbnailUrl: 'https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a',
+      language: 'en',
+    },
+    {
+      title: 'React & Next.js - Complete Guide',
+      slug: 'react-nextjs-complete-guide',
+      description: 'Build modern web applications with React and Next.js',
+      longDescription: 'Learn to build production-ready applications with React and Next.js.',
+      difficultyLevel: 'intermediate',
+      estimatedDurationHours: 60,
+      price: 79.99,
+      isFree: false,
+      isPublished: true,
       thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee',
       language: 'en',
-      skills: {
-        create: [
-          { skillId: skills.find((s) => s.name === 'React')!.id },
-          { skillId: skills.find((s) => s.name === 'Next.js')!.id },
-          { skillId: skills.find((s) => s.name === 'TypeScript')!.id },
-        ],
-      },
     },
-  });
-
-  const course2 = await prisma.course.create({
-    data: {
-      title: 'Node.js Backend Development Masterclass',
-      slug: 'nodejs-backend-masterclass',
-      description: 'Build scalable backend applications with Node.js and Express',
-      longDescription: `Learn to build production-ready backend applications with Node.js.
-
-This course covers:
-- Express.js and REST APIs
-- Database design with PostgreSQL
-- Authentication and authorization
-- Microservices architecture
-- Testing and deployment
-
-Ideal for developers wanting to specialize in backend development.`,
-      instructorId: instructor.id,
+    {
+      title: 'Full-Stack Development Bootcamp',
+      slug: 'fullstack-bootcamp',
+      description: 'Complete full-stack development from frontend to backend',
+      longDescription: 'Learn full-stack development with React, Node.js, and PostgreSQL.',
       difficultyLevel: 'advanced',
-      estimatedDurationHours: 50,
+      estimatedDurationHours: 100,
       price: 129.99,
-      isPublished: true,
       isFree: false,
-      thumbnailUrl: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479',
+      isPublished: true,
+      thumbnailUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
       language: 'en',
-      skills: {
-        create: [
-          { skillId: skills.find((s) => s.name === 'Node.js')!.id },
-          { skillId: skills.find((s) => s.name === 'JavaScript')!.id },
-        ],
+    },
+  ];
+
+  const courses = [];
+  for (let i = 0; i < coursesData.length; i++) {
+    const courseData = coursesData[i];
+    const instructor = instructors[i % instructors.length];
+
+    const course = await prisma.course.create({
+      data: {
+        ...courseData,
+        instructorId: instructor.id,
+        enrollmentCount: Math.floor(Math.random() * 500) + 50,
+        averageRating: 4.0 + Math.random() * 1.0,
       },
-    },
-  });
+    });
 
-  // Create modules and lessons for course 1
-  console.log('Creating modules and lessons...');
-  const module1 = await prisma.courseModule.create({
-    data: {
-      courseId: course1.id,
-      title: 'Introduction to React',
-      description: 'Get started with React fundamentals',
-      orderIndex: 1,
-    },
-  });
-
-  await prisma.lesson.createMany({
-    data: [
-      {
-        moduleId: module1.id,
-        title: 'What is React?',
-        contentType: 'video',
-        durationMinutes: 15,
-        orderIndex: 1,
-        isFreePreview: true,
-        contentText: '# What is React?\n\nReact is a JavaScript library for building user interfaces...',
-      },
-      {
-        moduleId: module1.id,
-        title: 'Setting Up Your Development Environment',
-        contentType: 'video',
-        durationMinutes: 20,
-        orderIndex: 2,
-        isFreePreview: true,
-      },
-      {
-        moduleId: module1.id,
-        title: 'Your First React Component',
-        contentType: 'video',
-        durationMinutes: 25,
-        orderIndex: 3,
-        isFreePreview: false,
-      },
-    ],
-  });
-
-  const module2 = await prisma.courseModule.create({
-    data: {
-      courseId: course1.id,
-      title: 'React Hooks Deep Dive',
-      description: 'Master useState, useEffect, and custom hooks',
-      orderIndex: 2,
-    },
-  });
-
-  await prisma.lesson.createMany({
-    data: [
-      {
-        moduleId: module2.id,
-        title: 'Understanding useState',
-        contentType: 'video',
-        durationMinutes: 30,
-        orderIndex: 1,
-      },
-      {
-        moduleId: module2.id,
-        title: 'Working with useEffect',
-        contentType: 'video',
-        durationMinutes: 35,
-        orderIndex: 2,
-      },
-    ],
-  });
-
-  // Create a course bundle
-  console.log('Creating course bundle...');
-  const bundle = await prisma.courseBundle.create({
-    data: {
-      title: 'Full Stack Developer Bundle',
-      slug: 'full-stack-developer-bundle',
-      description: 'Complete frontend and backend development',
-      price: 199.99,
-      discount: 15,
-      isActive: true,
-      courses: {
-        create: [
-          { courseId: course1.id },
-          { courseId: course2.id },
-        ],
-      },
-    },
-  });
-
-  // Create coupons
-  console.log('Creating coupons...');
-  await prisma.coupon.create({
-    data: {
-      code: 'WELCOME2024',
-      couponType: 'percentage',
-      discountValue: 20,
-      maxUses: 100,
-      validFrom: new Date(),
-      validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
-      isActive: true,
-    },
-  });
-
-  await prisma.coupon.create({
-    data: {
-      code: 'FIRSTTIME',
-      couponType: 'first_time_user',
-      discountValue: 25,
-      maxUses: 1000,
-      validFrom: new Date(),
-      validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-      isActive: true,
-    },
-  });
-
-  // Create affiliate links
-  console.log('Creating affiliate links...');
-  await prisma.affiliateLink.create({
-    data: {
-      courseId: course1.id,
-      affiliateCode: 'REACT2024',
-      commissionRate: 15,
-    },
-  });
-
-  // Enroll student in course
-  console.log('Creating enrollments...');
-  await prisma.courseEnrollment.create({
-    data: {
-      userId: student.id,
-      courseId: course1.id,
-      progressPercentage: 25,
-    },
-  });
-
-  // Create SEO data
-  console.log('Creating SEO metadata...');
-  await prisma.courseSEO.create({
-    data: {
-      courseId: course1.id,
-      metaTitle: 'Complete React & Next.js Course | Learn Online',
-      metaDescription: 'Master React and Next.js from scratch. Build modern web applications with hands-on projects. Enroll now!',
-      keywords: ['react', 'nextjs', 'javascript', 'web development'],
-      ogTitle: 'Complete React & Next.js Course',
-      ogDescription: 'Learn React and Next.js from scratch to advanced level',
-      ogImage: course1.thumbnailUrl,
-      twitterCard: 'summary_large_image',
-      canonicalUrl: `https://yourplatform.com/courses/${course1.slug}`,
-      structuredData: {
-        '@context': 'https://schema.org',
-        '@type': 'Course',
-        name: course1.title,
-        description: course1.description,
-        provider: {
-          '@type': 'Organization',
-          name: 'Your Learning Platform',
+    // Create modules
+    for (let m = 1; m <= 3; m++) {
+      const module = await prisma.courseModule.create({
+        data: {
+          courseId: course.id,
+          title: `Module ${m}: ${['Introduction', 'Core Concepts', 'Advanced Topics'][m - 1]}`,
+          description: `Learn about ${['basics', 'core concepts', 'advanced topics'][m - 1]}`,
+          orderIndex: m,
         },
-      },
+      });
+
+      // Create lessons
+      for (let l = 1; l <= 3; l++) {
+        await prisma.lesson.create({
+          data: {
+            moduleId: module.id,
+            title: `Lesson ${l}: ${['Getting Started', 'Hands-on Practice', 'Project'][l - 1]}`,
+            contentType: ['video', 'article', 'exercise'][l - 1] as any,
+            durationMinutes: 15 + l * 5,
+            orderIndex: l,
+            isFreePreview: m === 1 && l === 1,
+            contentText: l === 2 ? '# Article Content\n\nThis is the lesson content.' : undefined,
+            videoUrl: l === 1 ? 'https://example.com/video.mp4' : undefined,
+          },
+        });
+      }
+    }
+
+    courses.push(course);
+  }
+
+  console.log(`✅ Created ${courses.length} courses with modules and lessons\n`);
+
+  // =====================================================
+  // 4. Create Enrollments
+  // =====================================================
+  console.log('📝 Creating enrollments and reviews...');
+
+  let enrollmentCount = 0;
+  for (const student of students.slice(0, 30)) {
+    const enrolledCourses = getRandomItems(courses, 1 + Math.floor(Math.random() * 2));
+
+    for (const course of enrolledCourses) {
+      await prisma.courseEnrollment.create({
+        data: {
+          userId: student.id,
+          courseId: course.id,
+          enrolledAt: randomDate(new Date('2024-01-01'), new Date()),
+          progressPercentage: Math.floor(Math.random() * 100),
+        },
+      });
+      enrollmentCount++;
+    }
+  }
+
+  console.log(`✅ Created ${enrollmentCount} enrollments\n`);
+
+  // =====================================================
+  // 5. Create DSA Sheet
+  // =====================================================
+  console.log('🧮 Creating DSA sheet and problems...');
+
+  const dsaSheet = await prisma.dsaSheet.create({
+    data: {
+      name: 'Top Interview 150',
+      description: 'Curated list of 150 DSA problems for coding interviews',
+      difficultyLevel: 'intermediate',
+      estimatedHours: 80,
+      authorId: instructors[0].id,
+      isPublic: true,
     },
   });
 
-  console.log('✅ Database seed completed successfully!');
-  console.log('\n📊 Created:');
-  console.log(`- ${skills.length} skills`);
-  console.log('- 2 users (instructor, student)');
-  console.log('- 2 courses');
-  console.log('- 2 modules with lessons');
-  console.log('- 1 course bundle');
-  console.log('- 2 coupons');
-  console.log('- 1 affiliate link');
-  console.log('- 1 enrollment');
-  console.log('- SEO metadata');
+  const problemsData = [
+    { title: 'Two Sum', difficulty: 'easy', topic: 'ARRAYS', company: 'GOOGLE' },
+    { title: 'Reverse Linked List', difficulty: 'easy', topic: 'LINKED_LISTS', company: 'AMAZON' },
+    { title: 'Valid Palindrome', difficulty: 'easy', topic: 'STRINGS', company: 'MICROSOFT' },
+    { title: 'Merge Intervals', difficulty: 'medium', topic: 'ARRAYS', company: 'META' },
+    { title: 'Binary Tree Level Order', difficulty: 'medium', topic: 'TREES', company: 'GOOGLE' },
+    { title: 'Coin Change', difficulty: 'medium', topic: 'DYNAMIC_PROGRAMMING', company: 'AMAZON' },
+    { title: 'Word Ladder', difficulty: 'hard', topic: 'GRAPHS', company: 'GOOGLE' },
+  ];
+
+  for (let i = 0; i < problemsData.length; i++) {
+    await prisma.dsaProblem.create({
+      data: {
+        ...problemsData[i],
+        sheetId: dsaSheet.id,
+        orderIndex: i + 1,
+        description: `${problemsData[i].title} problem description`,
+        examples: 'Example 1: ...\nExample 2: ...',
+        constraints: 'Time: O(n), Space: O(1)',
+        hints: 'Try using a hash map',
+        solution: '// Solution code here',
+      },
+    });
+  }
+
+  console.log(`✅ Created DSA sheet with ${problemsData.length} problems\n`);
+
+  // =====================================================
+  // Summary
+  // =====================================================
+  console.log('\n' + '='.repeat(60));
+  console.log('✅ Database seeding completed successfully!\n');
+  console.log('📊 Summary:');
+  console.log(`   • Users: ${1 + instructors.length + mentors.length + students.length}`);
+  console.log(`     - Admin: 1`);
+  console.log(`     - Instructors: ${instructors.length}`);
+  console.log(`     - Mentors: ${mentors.length}`);
+  console.log(`     - Students: ${students.length}`);
+  console.log(`   • Skills: ${skills.length}`);
+  console.log(`   • Courses: ${courses.length}`);
+  console.log(`   • Enrollments: ${enrollmentCount}`);
+  console.log(`   • DSA Problems: ${problemsData.length}`);
+  console.log('='.repeat(60));
+
+  console.log('\n🔑 Test Credentials:');
+  console.log('   Admin:      admin@platform.com / admin123');
+  console.log('   Instructor: instructor1@platform.com / user123');
+  console.log('   Student:    student1@example.com / user123');
+  console.log('='.repeat(60) + '\n');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e);
+    console.error('❌ Error seeding database:', e);
     process.exit(1);
   })
   .finally(async () => {

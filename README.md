@@ -27,12 +27,50 @@ This repository contains comprehensive planning documents for building a world-c
    - Deployment strategies
    - Monitoring & observability
 
-3. **[DATABASE_SCHEMA.sql](./DATABASE_SCHEMA.sql)** - Database design
+3. **[SERVER_DRIVEN_UI.md](./SERVER_DRIVEN_UI.md)** - Server-driven UI architecture ⭐ NEW
+   - Hybrid UI configuration system
+   - Component registry pattern
+   - Dynamic rendering with React 19.2
+   - Real-time UI updates
+   - Feature flags & A/B testing
+   - Best libraries for each feature
+
+4. **[SCALABILITY.md](./SCALABILITY.md)** - Scalability & performance ⭐ NEW
+   - Scale to 10M+ users
+   - Kubernetes auto-scaling
+   - Database sharding & read replicas
+   - Redis cluster setup
+   - CDN & caching strategies
+   - Performance targets
+   - Cost optimization
+
+5. **[TECH_STACK.md](./TECH_STACK.md)** - Complete technology stack ⭐ NEW
+   - React 19.2 + Next.js 15
+   - Latest versions of all libraries
+   - Complete package.json files
+   - Installation commands
+   - Version compatibility matrix
+
+6. **[BEST_PRACTICES.md](./BEST_PRACTICES.md)** - Development best practices ⭐ NEW
+   - TypeScript strict mode
+   - React & NestJS patterns
+   - Security best practices
+   - Performance optimization
+   - Testing strategies
+   - Code review checklist
+
+7. **[DATABASE_SCHEMA.sql](./DATABASE_SCHEMA.sql)** - Database design
    - Complete PostgreSQL schema
    - All tables with relationships
    - Indexes for performance
    - Triggers and functions
    - Sample data
+
+8. **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Implementation guide
+   - Week-by-week breakdown
+   - Decision points
+   - Required services
+   - Development workflow
 
 ---
 
@@ -105,35 +143,42 @@ This repository contains comprehensive planning documents for building a world-c
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Technology Stack (Latest Versions)
 
 ### Frontend
 ```
-- Framework: Next.js 14 (App Router)
-- Language: TypeScript
-- UI Library: Tailwind CSS + shadcn/ui
-- Code Editor: Monaco Editor
-- Terminal: Xterm.js
-- State: Zustand / Redux Toolkit
-- Charts: Recharts
+- Framework: Next.js 15.0.3 with Turbopack
+- Runtime: React 19.2 (latest stable)
+- Language: TypeScript 5.6.3
+- UI Library: Tailwind CSS 3.4.15 + shadcn/ui (Radix UI)
+- Code Editor: Monaco Editor 0.52.2
+- Terminal: Xterm.js 5.5.0
+- State: Zustand 5.0.2 + TanStack Query 5.62.3
+- Forms: React Hook Form 7.53.2 + Zod 3.23.8
+- Charts: Recharts 2.14.1
+- Animation: Framer Motion 11.13.1
+- Icons: Lucide React 0.462.0
 ```
 
 ### Backend
 ```
-- Framework: NestJS (Node.js)
-- Language: TypeScript
+- Framework: NestJS 10.4.11 (Node.js 22+)
+- Language: TypeScript 5.6.3
 - API: RESTful + GraphQL (optional)
-- Real-time: Socket.io
-- Monorepo: Turborepo + PNPM
+- Real-time: Socket.io 4.8.1
+- Validation: class-validator + Zod
+- Auth: Passport JWT + OAuth2
+- Monorepo: Turborepo 2.3.1 + PNPM 9.14.4
 ```
 
 ### Database & Storage
 ```
-- Primary DB: PostgreSQL 15+
-- Caching: Redis 7+
-- Search: Elasticsearch
+- Primary DB: PostgreSQL 16.4 with Prisma 6.0.1
+- Caching: Redis 7.4 (cluster mode)
+- Search: Elasticsearch 8.15 or Meilisearch 1.10
 - File Storage: AWS S3 / Cloudflare R2
-- Vector DB: Pinecone (for AI)
+- Vector DB: Pinecone (latest) or Qdrant 1.12
+- ORM: Prisma with strict type safety
 ```
 
 ### DevOps & Infrastructure

@@ -14,6 +14,8 @@ import { PayoutModule } from './modules/payout/payout.module';
 import { DigitalProductModule } from './modules/digital-product/digital-product.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { RefundModule } from './modules/refund/refund.module';
+import { CoursePurchaseModule } from './modules/course-purchase/course-purchase.module';
+import { TaxModule } from './modules/tax/tax.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { RefundModule } from './modules/refund/refund.module';
     DigitalProductModule,
     InvoiceModule,
     RefundModule,
+    CoursePurchaseModule,
+    TaxModule,
   ],
 })
 export class AppModule {}

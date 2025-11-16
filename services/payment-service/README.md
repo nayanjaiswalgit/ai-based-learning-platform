@@ -44,6 +44,9 @@ Complete payment and subscription management service for the AI-based Learning P
 - Affiliate program with commission tracking
 - Referral tracking
 - Automated payouts
+- **Gift subscriptions** - Send subscriptions as gifts with custom messages
+- Course purchases with coupon support
+- Bundle purchases
 
 ### Phase 6: Revenue Management ✅
 - Instructor revenue sharing (70/30 split)
@@ -57,6 +60,14 @@ Complete payment and subscription management service for the AI-based Learning P
 - License key generation and activation
 - Download tracking
 - Purchase history
+
+### Additional Features ✅
+- **Tax Management** - VAT, GST, Sales Tax support for 50+ countries
+- **Course Purchases** - One-time and bundle purchases with full payment flow
+- **Gift Subscriptions** - Send gift codes with personalized messages
+- **Notification Integration** - Email notifications for all payment events
+- **Database Seeding** - Production-ready seed data for plans, coupons, tax rates
+- **Docker Support** - Multi-stage production Dockerfile + docker-compose
 
 ## API Endpoints
 
@@ -115,6 +126,19 @@ Complete payment and subscription management service for the AI-based Learning P
 - `POST /digital-products/license/activate` - Activate license key
 - `GET /digital-products/purchases/:userId` - Get user purchases
 
+### Course Purchases
+- `POST /course-purchases/purchase` - Purchase a course
+- `POST /course-purchases/bundle` - Purchase course bundle
+- `POST /course-purchases/:transactionId/complete` - Complete purchase
+- `GET /course-purchases/user/:userId` - Get user purchases
+
+### Tax
+- `POST /tax/rates` - Create tax rate
+- `GET /tax/rates` - Get all tax rates
+- `GET /tax/calculate` - Calculate tax for amount
+- `GET /tax/rate/:countryCode` - Get tax rate for country
+- `POST /tax/seed` - Seed common tax rates
+
 ### Invoices
 - `POST /invoices` - Create invoice
 - `PUT /invoices/:id/paid` - Mark invoice as paid
@@ -143,6 +167,7 @@ cp .env.example .env
 ```bash
 pnpm db:migrate
 pnpm db:generate
+pnpm db:seed
 ```
 
 4. Start the service:
@@ -199,6 +224,28 @@ pnpm test:e2e
 # Test coverage
 pnpm test:cov
 ```
+
+## Docker Deployment
+
+### Using Docker Compose (Recommended for Development)
+```bash
+docker-compose up -d
+```
+
+### Production Build
+```bash
+# Build image
+docker build -t payment-service:latest .
+
+# Run container
+docker run -p 3003:3003 \
+  -e DATABASE_URL=postgresql://... \
+  -e STRIPE_SECRET_KEY=... \
+  payment-service:latest
+```
+
+### Kubernetes Deployment
+See `infrastructure/kubernetes/payment-service/` for K8s manifests.
 
 ## Architecture
 

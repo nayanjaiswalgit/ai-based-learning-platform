@@ -1,0 +1,814 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// USERS & AUTHENTICATION
+// =====================================================
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  username          String    @unique
+  passwordHash      String    @map("password_hash")
+  role              UserRole  @default(STUDENT)
+  profilePictureUrl String?   @map("profile_picture_url")
+  isEmailVerified   Boolean   @default(false) @map("is_email_verified")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  profile              UserProfile?
+  refreshTokens        RefreshToken[]
+  oauthProviders       OAuthProvider[]
+  passwordResetTokens  PasswordResetToken[]
+  skills               UserSkill[]
+  courseEnrollments    CourseEnrollment[]
+  courseReviews        CourseReview[]
+  cohortEnrollments    CohortEnrollment[]
+  submissions          UserSubmission[]
+  dsaProgress          UserDsaProgress[]
+  roadmap              Roadmap?
+  progress             UserProgress[]
+  learningStreak       LearningStreak?
+  achievements         UserAchievement[]
+  analytics            LearningAnalytics[]
+  discussionThreads    DiscussionThread[]
+  discussionReplies    DiscussionReply[]
+  notifications        Notification[]
+  subscriptions        Subscription[]
+  paymentTransactions  PaymentTransaction[]
+  dailyRecommendations DailyRecommendation[]
+  createdCourses       Course[]              @relation("InstructorCourses")
+  createdBootcamps     Bootcamp[]            @relation("InstructorBootcamps")
+  createdQuestions     Question[]            @relation("QuestionCreator")
+  mentorCohorts        CohortMentor[]
+  sessionAttendances   SessionAttendance[]
+
+  @@index([email])
+  @@index([username])
+  @@index([role])
+  @@map("users")
+}
+
+model UserProfile {
+  id                       String   @id @default(uuid())
+  userId                   String   @unique @map("user_id")
+  fullName                 String?  @map("full_name")
+  bio                      String?
+  currentGoal              String?  @map("current_goal")
+  experienceLevel          String?  @map("experience_level")
+  preferredLearningStyle   String?  @map("preferred_learning_style")
+  dailyLearningTimeMinutes Int      @default(30) @map("daily_learning_time_minutes")
+  timezone                 String   @default("UTC")
+  dateOfBirth              DateTime? @map("date_of_birth")
+  location                 String?
+  githubUrl                String?  @map("github_url")
+  linkedinUrl              String?  @map("linkedin_url")
+  websiteUrl               String?  @map("website_url")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+  ipAddress String?   @map("ip_address")
+  userAgent String?   @map("user_agent")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model OAuthProvider {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  provider       String
+  providerUserId String   @map("provider_user_id")
+  accessToken    String?  @map("access_token")
+  refreshToken   String?  @map("refresh_token")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@map("oauth_providers")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+// =====================================================
+// SKILLS
+// =====================================================
+
+model Skill {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  category    String?
+  description String?
+  iconUrl     String?  @map("icon_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userSkills   UserSkill[]
+  courseSkills CourseSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  skillId          String    @map("skill_id")
+  proficiencyLevel Int       @map("proficiency_level")
+  lastAssessedAt   DateTime? @map("last_assessed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@map("user_skills")
+}
+
+// =====================================================
+// COURSES
+// =====================================================
+
+model Course {
+  id                    String    @id @default(uuid())
+  title                 String
+  slug                  String    @unique
+  description           String?
+  longDescription       String?   @map("long_description")
+  instructorId          String    @map("instructor_id")
+  difficultyLevel       String?   @map("difficulty_level")
+  estimatedDurationHours Decimal? @map("estimated_duration_hours") @db.Decimal(5, 2)
+  price                 Decimal   @default(0) @db.Decimal(10, 2)
+  isPublished           Boolean   @default(false) @map("is_published")
+  isFree                Boolean   @default(false) @map("is_free")
+  thumbnailUrl          String?   @map("thumbnail_url")
+  previewVideoUrl       String?   @map("preview_video_url")
+  language              String    @default("en")
+  ratingAverage         Decimal   @default(0) @db.Decimal(3, 2) @map("rating_average")
+  ratingCount           Int       @default(0) @map("rating_count")
+  enrollmentCount       Int       @default(0) @map("enrollment_count")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  instructor   User               @relation("InstructorCourses", fields: [instructorId], references: [id])
+  modules      CourseModule[]
+  skills       CourseSkill[]
+  enrollments  CourseEnrollment[]
+  reviews      CourseReview[]
+
+  @@index([slug])
+  @@index([instructorId])
+  @@index([isPublished])
+  @@map("courses")
+}
+
+model CourseSkill {
+  id        String @id @default(uuid())
+  courseId  String @map("course_id")
+  skillId   String @map("skill_id")
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  skill  Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, skillId])
+  @@map("course_skills")
+}
+
+model CourseModule {
+  id          String   @id @default(uuid())
+  courseId    String   @map("course_id")
+  title       String
+  description String?
+  orderIndex  Int      @map("order_index")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@unique([courseId, orderIndex])
+  @@map("course_modules")
+}
+
+model Lesson {
+  id              String   @id @default(uuid())
+  moduleId        String   @map("module_id")
+  title           String
+  contentType     String   @map("content_type")
+  contentUrl      String?  @map("content_url")
+  contentText     String?  @map("content_text")
+  durationMinutes Int?     @map("duration_minutes")
+  orderIndex      Int      @map("order_index")
+  isFreePreview   Boolean  @default(false) @map("is_free_preview")
+  videoTranscript String?  @map("video_transcript")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  module    CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resources LessonResource[]
+
+  @@map("lessons")
+}
+
+model LessonResource {
+  id            String   @id @default(uuid())
+  lessonId      String   @map("lesson_id")
+  resourceType  String   @map("resource_type")
+  resourceUrl   String   @map("resource_url")
+  title         String
+  fileSizeBytes BigInt?  @map("file_size_bytes")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_resources")
+}
+
+model CourseEnrollment {
+  id                 String    @id @default(uuid())
+  userId             String    @map("user_id")
+  courseId           String    @map("course_id")
+  enrolledAt         DateTime  @default(now()) @map("enrolled_at")
+  completedAt        DateTime? @map("completed_at")
+  progressPercentage Decimal   @default(0) @db.Decimal(5, 2) @map("progress_percentage")
+  lastAccessedAt     DateTime? @map("last_accessed_at")
+  certificateUrl     String?   @map("certificate_url")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("course_enrollments")
+}
+
+model CourseReview {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  courseId   String   @map("course_id")
+  rating     Int
+  reviewText String?  @map("review_text")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("course_reviews")
+}
+
+// =====================================================
+// BOOTCAMPS & COHORTS
+// =====================================================
+
+model Bootcamp {
+  id                    String   @id @default(uuid())
+  title                 String
+  slug                  String   @unique
+  description           String?
+  durationWeeks         Int      @map("duration_weeks")
+  syllabus              Json?
+  instructorId          String   @map("instructor_id")
+  price                 Decimal  @db.Decimal(10, 2)
+  maxStudentsPerCohort  Int      @default(30) @map("max_students_per_cohort")
+  difficultyLevel       String?  @map("difficulty_level")
+  thumbnailUrl          String?  @map("thumbnail_url")
+  isPublished           Boolean  @default(false) @map("is_published")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  instructor User     @relation("InstructorBootcamps", fields: [instructorId], references: [id])
+  cohorts    Cohort[]
+
+  @@map("bootcamps")
+}
+
+model Cohort {
+  id                String   @id @default(uuid())
+  bootcampId        String   @map("bootcamp_id")
+  name              String
+  startDate         DateTime @map("start_date")
+  endDate           DateTime @map("end_date")
+  status            String   @default("upcoming")
+  currentEnrollment Int      @default(0) @map("current_enrollment")
+  maxEnrollment     Int      @default(30) @map("max_enrollment")
+  scheduleDetails   Json?    @map("schedule_details")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  bootcamp     Bootcamp           @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  enrollments  CohortEnrollment[]
+  mentors      CohortMentor[]
+  sessions     CohortSession[]
+
+  @@map("cohorts")
+}
+
+model CohortEnrollment {
+  id               String    @id @default(uuid())
+  cohortId         String    @map("cohort_id")
+  userId           String    @map("user_id")
+  enrollmentStatus String    @default("pending") @map("enrollment_status")
+  enrolledAt       DateTime  @default(now()) @map("enrolled_at")
+  completedAt      DateTime? @map("completed_at")
+  certificateUrl   String?   @map("certificate_url")
+  finalGrade       Decimal?  @db.Decimal(5, 2) @map("final_grade")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, userId])
+  @@map("cohort_enrollments")
+}
+
+model CohortMentor {
+  id         String   @id @default(uuid())
+  cohortId   String   @map("cohort_id")
+  mentorId   String   @map("mentor_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  mentor User   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, mentorId])
+  @@map("cohort_mentors")
+}
+
+model CohortSession {
+  id                 String   @id @default(uuid())
+  cohortId           String   @map("cohort_id")
+  title              String
+  sessionDate        DateTime @map("session_date")
+  durationMinutes    Int      @default(90) @map("duration_minutes")
+  meetingLink        String?  @map("meeting_link")
+  recordingUrl       String?  @map("recording_url")
+  attendanceRecorded Boolean  @default(false) @map("attendance_recorded")
+  notes              String?
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  cohort      Cohort              @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  attendances SessionAttendance[]
+
+  @@map("cohort_sessions")
+}
+
+model SessionAttendance {
+  id        String    @id @default(uuid())
+  sessionId String    @map("session_id")
+  userId    String    @map("user_id")
+  attended  Boolean   @default(false)
+  joinTime  DateTime? @map("join_time")
+  leaveTime DateTime? @map("leave_time")
+
+  session CohortSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@map("session_attendance")
+}
+
+// =====================================================
+// QUESTIONS & ASSESSMENTS
+// =====================================================
+
+model Question {
+  id             String   @id @default(uuid())
+  questionType   String   @map("question_type")
+  title          String
+  description    String?
+  difficulty     String?
+  topics         Json?
+  companyTags    Json?    @map("company_tags")
+  createdBy      String?  @map("created_by")
+  isPublic       Boolean  @default(true) @map("is_public")
+  likesCount     Int      @default(0) @map("likes_count")
+  dislikesCount  Int      @default(0) @map("dislikes_count")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  creator            User?                @relation("QuestionCreator", fields: [createdBy], references: [id])
+  mcqOptions         McqOption[]
+  codingQuestion     CodingQuestion?
+  terminalChallenge  TerminalChallenge?
+  submissions        UserSubmission[]
+  dsaSheetProblems   DsaSheetProblem[]
+
+  @@index([questionType])
+  @@index([difficulty])
+  @@map("questions")
+}
+
+model McqOption {
+  id          String  @id @default(uuid())
+  questionId  String  @map("question_id")
+  optionText  String  @map("option_text")
+  isCorrect   Boolean @default(false) @map("is_correct")
+  explanation String?
+  orderIndex  Int?    @map("order_index")
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("mcq_options")
+}
+
+model CodingQuestion {
+  id               String  @id @default(uuid())
+  questionId       String  @unique @map("question_id")
+  starterCode      Json?   @map("starter_code")
+  testCases        Json    @map("test_cases")
+  constraints      String?
+  hints            Json?
+  editorialSolution String? @map("editorial_solution")
+  timeLimitSeconds Int     @default(10) @map("time_limit_seconds")
+  memoryLimitMb    Int     @default(256) @map("memory_limit_mb")
+  allowedLanguages Json    @default("[\"python\", \"javascript\", \"java\", \"cpp\"]") @map("allowed_languages")
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("coding_questions")
+}
+
+model TerminalChallenge {
+  id                 String  @id @default(uuid())
+  questionId         String  @unique @map("question_id")
+  scenarioDescription String  @map("scenario_description")
+  dockerImage        String  @default("ubuntu:22.04") @map("docker_image")
+  setupScript        String? @map("setup_script")
+  validationScript   String  @map("validation_script")
+  expectedCommands   Json?   @map("expected_commands")
+  timeLimitMinutes   Int     @default(30) @map("time_limit_minutes")
+  hints              Json?
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("terminal_challenges")
+}
+
+model UserSubmission {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  questionId       String    @map("question_id")
+  submissionType   String    @map("submission_type")
+  submissionData   Json      @map("submission_data")
+  language         String?
+  status           String?
+  executionTimeMs  Int?      @map("execution_time_ms")
+  memoryUsedMb     Decimal?  @db.Decimal(10, 2) @map("memory_used_mb")
+  testCasesPassed  Int?      @map("test_cases_passed")
+  totalTestCases   Int?      @map("total_test_cases")
+  errorMessage     String?   @map("error_message")
+  submittedAt      DateTime  @default(now()) @map("submitted_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, questionId])
+  @@index([userId])
+  @@index([questionId])
+  @@index([status])
+  @@map("user_submissions")
+}
+
+// =====================================================
+// DSA SHEETS
+// =====================================================
+
+model DsaSheet {
+  id            String   @id @default(uuid())
+  title         String
+  slug          String   @unique
+  description   String?
+  createdBy     String?  @map("created_by")
+  isPublic      Boolean  @default(true) @map("is_public")
+  isOfficial    Boolean  @default(false) @map("is_official")
+  totalProblems Int      @default(0) @map("total_problems")
+  thumbnailUrl  String?  @map("thumbnail_url")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  problems      DsaSheetProblem[]
+  userProgress  UserDsaProgress[]
+
+  @@map("dsa_sheets")
+}
+
+model DsaSheetProblem {
+  id              String  @id @default(uuid())
+  sheetId         String  @map("sheet_id")
+  questionId      String  @map("question_id")
+  category        String?
+  subcategory     String?
+  orderIndex      Int     @map("order_index")
+  importanceLevel String? @map("importance_level")
+  notes           String?
+
+  sheet        DsaSheet          @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  question     Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userProgress UserDsaProgress[]
+
+  @@unique([sheetId, questionId])
+  @@map("dsa_sheet_problems")
+}
+
+model UserDsaProgress {
+  id                   String    @id @default(uuid())
+  userId               String    @map("user_id")
+  sheetId              String    @map("sheet_id")
+  problemId            String    @map("problem_id")
+  status               String    @default("todo")
+  attemptsCount        Int       @default(0) @map("attempts_count")
+  firstSolvedAt        DateTime? @map("first_solved_at")
+  lastAttemptedAt      DateTime? @map("last_attempted_at")
+  timeTakenMinutes     Int?      @map("time_taken_minutes")
+  notes                String?
+  revisionScheduledAt  DateTime? @map("revision_scheduled_at")
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sheet   DsaSheet        @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  problem DsaSheetProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sheetId, problemId])
+  @@index([userId, sheetId])
+  @@map("user_dsa_progress")
+}
+
+// =====================================================
+// ROADMAPS
+// =====================================================
+
+model Roadmap {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  goalTitle       String    @map("goal_title")
+  goalDescription String?   @map("goal_description")
+  targetDate      DateTime? @map("target_date")
+  currentPhase    String?   @map("current_phase")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones RoadmapMilestone[]
+
+  @@map("roadmaps")
+}
+
+model RoadmapMilestone {
+  id                   String    @id @default(uuid())
+  roadmapId            String    @map("roadmap_id")
+  title                String
+  description          String?
+  orderIndex           Int       @map("order_index")
+  estimatedDurationDays Int?     @map("estimated_duration_days")
+  status               String    @default("upcoming")
+  startedAt            DateTime? @map("started_at")
+  completedAt          DateTime? @map("completed_at")
+
+  roadmap Roadmap         @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  tasks   MilestoneTask[]
+
+  @@unique([roadmapId, orderIndex])
+  @@map("roadmap_milestones")
+}
+
+model MilestoneTask {
+  id           String    @id @default(uuid())
+  milestoneId  String    @map("milestone_id")
+  taskType     String?   @map("task_type")
+  resourceId   String?   @map("resource_id")
+  resourceType String?   @map("resource_type")
+  title        String
+  description  String?
+  orderIndex   Int?      @map("order_index")
+  isCompleted  Boolean   @default(false) @map("is_completed")
+  completedAt  DateTime? @map("completed_at")
+
+  milestone RoadmapMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@map("milestone_tasks")
+}
+
+model DailyRecommendation {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  recommendationDate  DateTime @map("recommendation_date") @db.Date
+  recommendedContent  Json     @map("recommended_content")
+  engagementScore     Decimal? @db.Decimal(3, 2) @map("engagement_score")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recommendationDate])
+  @@map("daily_recommendations")
+}
+
+// =====================================================
+// PROGRESS & ANALYTICS
+// =====================================================
+
+model UserProgress {
+  id                 String    @id @default(uuid())
+  userId             String    @map("user_id")
+  resourceType       String    @map("resource_type")
+  resourceId         String    @map("resource_id")
+  progressPercentage Decimal   @default(0) @db.Decimal(5, 2) @map("progress_percentage")
+  timeSpentMinutes   Int       @default(0) @map("time_spent_minutes")
+  lastAccessedAt     DateTime? @map("last_accessed_at")
+  completedAt        DateTime? @map("completed_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, resourceType, resourceId])
+  @@index([userId, resourceType, resourceId])
+  @@map("user_progress")
+}
+
+model LearningStreak {
+  id                String   @id @default(uuid())
+  userId            String   @unique @map("user_id")
+  currentStreakDays Int      @default(0) @map("current_streak_days")
+  longestStreakDays Int      @default(0) @map("longest_streak_days")
+  lastActivityDate  DateTime? @map("last_activity_date") @db.Date
+  totalActiveDays   Int      @default(0) @map("total_active_days")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_streaks")
+}
+
+model UserAchievement {
+  id                     String   @id @default(uuid())
+  userId                 String   @map("user_id")
+  achievementType        String   @map("achievement_type")
+  achievementTitle       String   @map("achievement_title")
+  achievementDescription String?  @map("achievement_description")
+  badgeIconUrl           String?  @map("badge_icon_url")
+  earnedAt               DateTime @default(now()) @map("earned_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_achievements")
+}
+
+model LearningAnalytics {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  analyticsDate     DateTime @map("analytics_date") @db.Date
+  timeSpentMinutes  Int      @default(0) @map("time_spent_minutes")
+  lessonsCompleted  Int      @default(0) @map("lessons_completed")
+  problemsSolved    Int      @default(0) @map("problems_solved")
+  coursesStarted    Int      @default(0) @map("courses_started")
+  coursesCompleted  Int      @default(0) @map("courses_completed")
+  skillImprovements Json?    @map("skill_improvements")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, analyticsDate])
+  @@map("learning_analytics")
+}
+
+// =====================================================
+// DISCUSSIONS
+// =====================================================
+
+model DiscussionThread {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  title        String
+  content      String
+  isPinned     Boolean  @default(false) @map("is_pinned")
+  isLocked     Boolean  @default(false) @map("is_locked")
+  viewsCount   Int      @default(0) @map("views_count")
+  repliesCount Int      @default(0) @map("replies_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replies DiscussionReply[]
+
+  @@map("discussion_threads")
+}
+
+model DiscussionReply {
+  id            String   @id @default(uuid())
+  threadId      String   @map("thread_id")
+  userId        String   @map("user_id")
+  parentReplyId String?  @map("parent_reply_id")
+  content       String
+  isSolution    Boolean  @default(false) @map("is_solution")
+  likesCount    Int      @default(0) @map("likes_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  thread      DiscussionThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentReply DiscussionReply?  @relation("ReplyToReply", fields: [parentReplyId], references: [id])
+  replies     DiscussionReply[] @relation("ReplyToReply")
+
+  @@map("discussion_replies")
+}
+
+// =====================================================
+// NOTIFICATIONS
+// =====================================================
+
+model Notification {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  notificationType String   @map("notification_type")
+  title            String
+  message          String?
+  actionUrl        String?  @map("action_url")
+  isRead           Boolean  @default(false) @map("is_read")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+// =====================================================
+// PAYMENTS
+// =====================================================
+
+model Subscription {
+  id                   String    @id @default(uuid())
+  userId               String    @map("user_id")
+  planType             String    @map("plan_type")
+  status               String
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  currentPeriodStart   DateTime? @map("current_period_start") @db.Date
+  currentPeriodEnd     DateTime? @map("current_period_end") @db.Date
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model PaymentTransaction {
+  id                    String   @id @default(uuid())
+  userId                String   @map("user_id")
+  transactionType       String   @map("transaction_type")
+  amount                Decimal  @db.Decimal(10, 2)
+  currency              String   @default("USD")
+  status                String
+  stripePaymentIntentId String?  @map("stripe_payment_intent_id")
+  resourceId            String?  @map("resource_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_transactions")
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+  MENTOR
+}

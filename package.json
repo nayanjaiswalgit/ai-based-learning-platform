@@ -17,7 +17,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "node -e \"console.log('\\\\n✅ Installation complete! Run: pnpm dev\\\\n')\""
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.10",

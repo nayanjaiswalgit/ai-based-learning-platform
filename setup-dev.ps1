@@ -1,7 +1,7 @@
 # Development Environment Setup Script (PowerShell)
 # This script sets up the development environment for the AI Learning Platform
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "AI Learning Platform - Development Setup" -ForegroundColor Cyan
@@ -15,10 +15,10 @@ if (-not (Test-Path .env)) {
 
     if (Test-Path .env.example) {
         Copy-Item .env.example .env
-        Write-Host "✓ Created .env file" -ForegroundColor Green
-        Write-Host "⚠ Please update .env with your actual values" -ForegroundColor Yellow
+        Write-Host "[OK] Created .env file" -ForegroundColor Green
+        Write-Host "[!] Please update .env with your actual values" -ForegroundColor Yellow
     } else {
-        Write-Host "✗ .env.example not found" -ForegroundColor Red
+        Write-Host "[X] .env.example not found" -ForegroundColor Red
         Write-Host "Please create a .env file manually"
     }
     Write-Host ""
@@ -34,14 +34,14 @@ if (Test-Path "packages\database") {
     if (Test-Path "prisma\schema.prisma") {
         Write-Host "Generating Prisma client..."
         pnpm prisma generate
-        Write-Host "✓ Prisma client generated" -ForegroundColor Green
+        Write-Host "[OK] Prisma client generated" -ForegroundColor Green
     } else {
-        Write-Host "✗ prisma\schema.prisma not found" -ForegroundColor Red
+        Write-Host "[X] prisma\schema.prisma not found" -ForegroundColor Red
     }
 
     Pop-Location
 } else {
-    Write-Host "⚠ packages\database directory not found" -ForegroundColor Yellow
+    Write-Host "[!] packages\database directory not found" -ForegroundColor Yellow
 }
 Write-Host ""
 
@@ -49,10 +49,11 @@ Write-Host ""
 Write-Host "Step 2: Checking PostgreSQL..." -ForegroundColor Cyan
 Write-Host "-------------------------------"
 
-if (Get-Command psql -ErrorAction SilentlyContinue) {
-    Write-Host "✓ PostgreSQL CLI found" -ForegroundColor Green
+$psqlCmd = Get-Command psql -ErrorAction SilentlyContinue
+if ($psqlCmd) {
+    Write-Host "[OK] PostgreSQL CLI found" -ForegroundColor Green
 } else {
-    Write-Host "⚠ PostgreSQL CLI not found" -ForegroundColor Yellow
+    Write-Host "[!] PostgreSQL CLI not found" -ForegroundColor Yellow
     Write-Host "Make sure PostgreSQL is installed and running"
 }
 Write-Host ""
@@ -61,18 +62,21 @@ Write-Host ""
 Write-Host "Step 3: Checking Redis..." -ForegroundColor Cyan
 Write-Host "-------------------------"
 
-if (Get-Command redis-cli -ErrorAction SilentlyContinue) {
+$redisCmd = Get-Command redis-cli -ErrorAction SilentlyContinue
+if ($redisCmd) {
     try {
-        $redisResponse = redis-cli ping
+        $redisResponse = redis-cli ping 2>$null
         if ($redisResponse -eq "PONG") {
-            Write-Host "✓ Redis is running" -ForegroundColor Green
+            Write-Host "[OK] Redis is running" -ForegroundColor Green
+        } else {
+            Write-Host "[!] Redis is not responding" -ForegroundColor Yellow
         }
     } catch {
-        Write-Host "⚠ Redis is not responding" -ForegroundColor Yellow
+        Write-Host "[!] Redis is not responding" -ForegroundColor Yellow
         Write-Host "Make sure Redis (or Memurai) is installed and running"
     }
 } else {
-    Write-Host "⚠ Redis CLI not found" -ForegroundColor Yellow
+    Write-Host "[!] Redis CLI not found" -ForegroundColor Yellow
     Write-Host "Install Redis or Memurai for Windows"
 }
 Write-Host ""
@@ -81,16 +85,22 @@ Write-Host ""
 Write-Host "Step 4: Checking Docker..." -ForegroundColor Cyan
 Write-Host "--------------------------"
 
-if (Get-Command docker -ErrorAction SilentlyContinue) {
+$dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
+if ($dockerCmd) {
     try {
-        docker info | Out-Null
-        Write-Host "✓ Docker is running" -ForegroundColor Green
+        docker info 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "[OK] Docker is running" -ForegroundColor Green
+        } else {
+            Write-Host "[!] Docker daemon is not running" -ForegroundColor Yellow
+            Write-Host "Start Docker Desktop to enable terminal and code execution services"
+        }
     } catch {
-        Write-Host "⚠ Docker daemon is not running" -ForegroundColor Yellow
+        Write-Host "[!] Docker daemon is not running" -ForegroundColor Yellow
         Write-Host "Start Docker Desktop to enable terminal and code execution services"
     }
 } else {
-    Write-Host "⚠ Docker not found" -ForegroundColor Yellow
+    Write-Host "[!] Docker not found" -ForegroundColor Yellow
     Write-Host "Install Docker Desktop for full functionality"
 }
 Write-Host ""

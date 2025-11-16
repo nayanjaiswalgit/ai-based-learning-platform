@@ -102,10 +102,41 @@ services:
     networks:
       - monitoring
 
+  # Loki (Log aggregation)
+  loki:
+    image: grafana/loki:2.9.3
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki.yaml
+    networks:
+      - monitoring
+
+  # Promtail (Log collector)
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail.yaml
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/promtail.yaml
+    depends_on:
+      - loki
+    networks:
+      - monitoring
+      - learning-platform-network
+
 volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
+  loki_data:
 
 networks:
   monitoring:

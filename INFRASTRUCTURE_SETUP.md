@@ -217,6 +217,46 @@ This document summarizes all infrastructure and DevOps work completed by Agent 1
 - Postgres Exporter
 - Redis Exporter
 
+### ✅ Log Aggregation (Grafana Loki)
+- **Loki** (`monitoring/loki/`):
+  - Lightweight log aggregation
+  - 30-day retention
+  - Kubernetes-native log collection
+  - Integration with Grafana
+
+- **Promtail** (`monitoring/promtail/`):
+  - DaemonSet for log collection
+  - Auto-discovery of pods
+  - Service-specific log parsing
+  - Real-time log streaming
+
+- **Log Dashboards**:
+  - Log volume tracking
+  - Service-specific log views
+  - Error log filtering
+  - Log level distribution
+
+---
+
+## ⚙️ Optional: Istio Service Mesh (Week 13-16)
+
+### ✅ Service Mesh Configuration
+- **Gateway**: External traffic management
+- **VirtualService**: Advanced routing rules
+- **DestinationRule**: Traffic policies (circuit breaking, retries)
+- **PeerAuthentication**: Mutual TLS between services
+- **AuthorizationPolicy**: Service-to-service authorization
+
+**Features:**
+- Canary deployments support
+- A/B testing capability
+- Circuit breaking
+- Automatic retries
+- Distributed tracing (Jaeger)
+- Service mesh observability (Kiali)
+
+**Note**: Istio is optional and can be added later when advanced traffic management is needed.
+
 ---
 
 ## 📁 Complete File Structure
@@ -277,7 +317,16 @@ ai-based-learning-platform/
 │   │   ├── hpa.yaml
 │   │   ├── ingress.yaml
 │   │   ├── cert-manager.yaml
-│   │   └── secrets-template.yaml
+│   │   ├── secrets-template.yaml
+│   │   ├── loki-deployment.yaml
+│   │   └── promtail-daemonset.yaml
+│   ├── istio/ (optional)
+│   │   ├── README.md
+│   │   ├── gateway.yaml
+│   │   ├── virtual-service.yaml
+│   │   ├── destination-rules.yaml
+│   │   ├── peer-authentication.yaml
+│   │   └── authorization-policy.yaml
 │   ├── production/
 │   ├── staging/
 │   └── README.md
@@ -286,11 +335,19 @@ ai-based-learning-platform/
 │   │   ├── prometheus.yml
 │   │   └── alerts.yml
 │   ├── grafana/
-│   │   └── dashboards/
-│   │       └── overview.json
+│   │   ├── dashboards/
+│   │   │   ├── overview.json
+│   │   │   └── logs.json
+│   │   └── datasources/
+│   │       └── loki.yaml
+│   ├── loki/
+│   │   └── loki-config.yaml
+│   ├── promtail/
+│   │   └── promtail-config.yaml
 │   ├── alertmanager/
 │   │   └── config.yml
-│   └── docker-compose.monitoring.yml
+│   ├── docker-compose.monitoring.yml
+│   └── README.md
 ├── docker-compose.yml
 ├── .dockerignore
 ├── .gitignore
@@ -332,11 +389,13 @@ ai-based-learning-platform/
 - ✅ No secrets in Git
 
 ### Observability
-- ✅ Centralized logging (Prometheus)
-- ✅ Real-time metrics (Grafana)
+- ✅ Centralized logging (Grafana Loki + Promtail)
+- ✅ Real-time metrics (Prometheus + Grafana)
 - ✅ Error tracking (Sentry)
-- ✅ Performance monitoring
+- ✅ Performance monitoring (APM)
 - ✅ Alert notifications (Slack + Email)
+- ✅ Log aggregation with 30-day retention
+- ✅ Distributed tracing ready (Istio + Jaeger)
 
 ### Developer Experience
 - ✅ Hot reload in development
@@ -372,12 +431,14 @@ pnpm build
 ### Monitoring Stack
 
 ```bash
-# Start Prometheus + Grafana
+# Start Prometheus + Grafana + Loki
 docker-compose -f monitoring/docker-compose.monitoring.yml up -d
 
 # Access dashboards
 open http://localhost:9090  # Prometheus
 open http://localhost:3001  # Grafana (admin/admin)
+open http://localhost:3100  # Loki
+open http://localhost:9093  # AlertManager
 ```
 
 ### Kubernetes Deployment
@@ -431,9 +492,17 @@ kubectl get hpa -n learning-platform
 - [x] Integrate Sentry for error tracking
 - [x] Set up Datadog/Prometheus for APM
 - [x] Configure Prometheus + Grafana dashboards
+- [x] Set up log aggregation (Grafana Loki + Promtail)
 - [x] Set up AlertManager with Slack/Email
 - [x] Create alerts for critical metrics
 - [x] Performance monitoring dashboards
+- [x] Create logging dashboards in Grafana
+
+### Phase 5 (Week 13-16): ✅ COMPLETE (Optional)
+- [x] Configure Istio service mesh (optional)
+- [x] Set up advanced traffic management
+- [x] Configure mutual TLS between services
+- [x] Add circuit breaking and retry policies
 
 ---
 

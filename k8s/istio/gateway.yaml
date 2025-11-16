@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: learning-platform-gateway
+  namespace: learning-platform
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    # HTTP
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "api.yourdomain.com"
+        - "ws.yourdomain.com"
+      tls:
+        httpsRedirect: true
+
+    # HTTPS
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "api.yourdomain.com"
+        - "ws.yourdomain.com"
+      tls:
+        mode: SIMPLE
+        credentialName: learning-platform-tls

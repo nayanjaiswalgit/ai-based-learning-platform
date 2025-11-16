@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-runner
+  namespace: learning-platform
+  labels:
+    app: code-runner
+    component: backend
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: code-runner
+  template:
+    metadata:
+      labels:
+        app: code-runner
+        component: backend
+    spec:
+      containers:
+        - name: code-runner
+          image: learning-platform-code-runner:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4001
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "4001"
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: url
+          volumeMounts:
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: code-runner
+  namespace: learning-platform
+  labels:
+    app: code-runner
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 4001
+      protocol: TCP
+      name: http
+  selector:
+    app: code-runner

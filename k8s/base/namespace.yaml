@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: learning-platform
+  labels:
+    name: learning-platform
+    environment: production

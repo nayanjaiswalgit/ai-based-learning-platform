@@ -1,118 +1,85 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16.4-alpine
-    container_name: ai-learning-postgres
-    environment:
-      POSTGRES_USER: ailearning
-      POSTGRES_PASSWORD: ailearning123
-      POSTGRES_DB: ai_learning
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ailearning"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Redis for caching and queues
+  # Redis for session management
   redis:
     image: redis:7.4-alpine
     container_name: ai-learning-redis
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
+      - redis-data:/data
+    networks:
+      - ai-learning-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
-      retries: 5
+      retries: 3
 
-  # Assessment Service
-  assessment-service:
+  # Terminal Service
+  terminal-service:
     build:
-      context: .
-      dockerfile: ./services/assessment-service/Dockerfile
-    container_name: ai-learning-assessment
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://ailearning:ailearning123@postgres:5432/ai_learning
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      FRONTEND_URL: http://localhost:3000
-      JWT_SECRET: dev-secret-key-change-in-production
+      context: ./services/terminal-service
+      dockerfile: Dockerfile
+    container_name: ai-learning-terminal-service
     ports:
-      - "3001:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - "3007:3007"
+    environment:
+      - NODE_ENV=development
+      - PORT=3007
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DOCKER_SOCKET_PATH=/var/run/docker.sock
+      - SESSION_TTL=1800
+      - CORS_ORIGIN=http://localhost:3000
+      - RECORDINGS_DIR=/app/recordings
     volumes:
-      - ./services/assessment-service:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./services/terminal-service:/app
+      - terminal-recordings:/app/recordings
       - /app/node_modules
-    command: npm run dev
-
-  # Code Execution Service
-  code-execution-service:
-    build:
-      context: .
-      dockerfile: ./services/code-execution-service/Dockerfile
-    container_name: ai-learning-code-execution
-    privileged: true  # Required for Docker-in-Docker
-    environment:
-      NODE_ENV: development
-      PORT: 3002
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      DOCKER_HOST: unix:///var/run/docker.sock
-      FRONTEND_URL: http://localhost:3000
-      JWT_SECRET: dev-secret-key-change-in-production
-      MAX_EXECUTION_TIME: 10000
-      MAX_MEMORY_MB: 256
-    ports:
-      - "3002:3002"
+    networks:
+      - ai-learning-network
     depends_on:
       redis:
         condition: service_healthy
-    volumes:
-      - ./services/code-execution-service:/app
-      - /app/node_modules
-      - /var/run/docker.sock:/var/run/docker.sock  # Docker socket for code execution
-    command: npm run dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3007/terminal/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # Frontend (Next.js)
-  web:
-    build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
-    container_name: ai-learning-web
-    environment:
-      NODE_ENV: development
-      NEXT_PUBLIC_ASSESSMENT_API: http://localhost:3001
-      NEXT_PUBLIC_CODE_EXECUTION_API: http://localhost:3002
+  # PostgreSQL Database (for future services)
+  postgres:
+    image: postgres:16.4-alpine
+    container_name: ai-learning-postgres
     ports:
-      - "3000:3000"
-    depends_on:
-      - assessment-service
-      - code-execution-service
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=ai_learning
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     volumes:
-      - ./apps/web:/app
-      - /app/node_modules
-      - /app/.next
-    command: npm run dev
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - ai-learning-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
 volumes:
-  postgres_data:
-  redis_data:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  terminal-recordings:
+    driver: local
 
 networks:
-  default:
-    name: ai-learning-network
+  ai-learning-network:
+    driver: bridge

@@ -1,0 +1,30 @@
+# Image with Nginx
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Nginx and tools
+RUN apt-get update && apt-get install -y \
+    nginx \
+    curl \
+    wget \
+    vim \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create workspace
+RUN mkdir -p /workspace && chmod 777 /workspace
+RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+
+# Create user
+RUN useradd -m -s /bin/bash learner && \
+    echo "learner:password" | chpasswd && \
+    usermod -aG sudo learner
+
+# Give learner permissions to edit nginx configs
+RUN chown -R learner:learner /etc/nginx /var/log/nginx /var/lib/nginx
+
+WORKDIR /workspace
+USER learner
+
+CMD ["/bin/bash"]

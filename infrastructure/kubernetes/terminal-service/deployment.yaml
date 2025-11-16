@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terminal-service
+  namespace: ai-learning
+  labels:
+    app: terminal-service
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: terminal-service
+  template:
+    metadata:
+      labels:
+        app: terminal-service
+        version: v1
+    spec:
+      serviceAccountName: terminal-service
+      containers:
+        - name: terminal-service
+          image: ai-learning/terminal-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3007
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3007"
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: DOCKER_SOCKET_PATH
+              value: "/var/run/docker.sock"
+            - name: SESSION_TTL
+              value: "1800"
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: terminal-service-config
+                  key: cors-origin
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
+            - name: recordings
+              mountPath: /app/recordings
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /terminal/stats
+              port: 3007
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /terminal/stats
+              port: 3007
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        - name: recordings
+          persistentVolumeClaim:
+            claimName: terminal-recordings-pvc
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - terminal-service
+                topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: terminal-service
+  namespace: ai-learning
+  labels:
+    app: terminal-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3007
+      targetPort: 3007
+      protocol: TCP
+      name: http
+  selector:
+    app: terminal-service
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: terminal-service
+  namespace: ai-learning
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terminal-service-config
+  namespace: ai-learning
+data:
+  cors-origin: "https://your-domain.com"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terminal-recordings-pvc
+  namespace: ai-learning
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: terminal-service-hpa
+  namespace: ai-learning
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: terminal-service
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 4
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 120
+      selectPolicy: Min

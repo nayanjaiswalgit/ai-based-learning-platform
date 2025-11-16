@@ -1,0 +1,30 @@
+# Ubuntu image with Git for Git scenarios
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install Git and essential tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    vim \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure Git
+RUN git config --global user.name "Learner" && \
+    git config --global user.email "learner@example.com" && \
+    git config --global init.defaultBranch main
+
+# Create workspace
+RUN mkdir -p /workspace && chmod 777 /workspace
+
+# Create user
+RUN useradd -m -s /bin/bash learner && \
+    echo "learner:password" | chpasswd
+
+WORKDIR /workspace
+USER learner
+
+CMD ["/bin/bash"]

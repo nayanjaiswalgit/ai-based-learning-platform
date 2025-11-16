@@ -66,11 +66,30 @@ This repository contains comprehensive planning documents for building a world-c
    - Triggers and functions
    - Sample data
 
-8. **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Implementation guide
-   - Week-by-week breakdown
-   - Decision points
-   - Required services
-   - Development workflow
+8. **[PRODUCTION_FEATURES.md](./PRODUCTION_FEATURES.md)** - Production-ready features ⭐ NEW
+   - Stripe subscription system
+   - Feature flags with PostHog
+   - Error boundaries & handling
+   - Sentry error tracking
+   - Real-time notifications
+   - Email templates
+   - Rate limiting
+   - Logging with Winston
+
+9. **[AI_AGENT_TASKS.md](./AI_AGENT_TASKS.md)** - Task breakdown for parallel development ⭐ NEW
+   - 13 specialized AI agent roles
+   - Week-by-week deliverables
+   - Dependencies and critical path
+   - Features from Teachyst.com
+   - White-label, DRM, PPP pricing
+   - SAML/SSO, 1:1 meetings
+   - Multi-payment gateways
+
+10. **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Implementation guide
+    - Week-by-week breakdown
+    - Decision points
+    - Required services
+    - Development workflow
 
 ---
 

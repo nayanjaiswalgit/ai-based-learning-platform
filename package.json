@@ -8,7 +8,9 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean",
-    "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:seed": "cd packages/database && pnpm db:seed",
+    "db:studio": "cd packages/database && pnpm db:studio"
   },
   "devDependencies": {
     "turbo": "^2.3.1",

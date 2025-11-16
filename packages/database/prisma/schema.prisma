@@ -1,0 +1,183 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// USERS & AUTHENTICATION
+// =====================================================
+
+model User {
+  id                 String              @id @default(uuid())
+  email              String              @unique
+  username           String              @unique
+  passwordHash       String              @map("password_hash")
+  role               UserRole            @default(STUDENT)
+  profilePictureUrl  String?             @map("profile_picture_url")
+  isEmailVerified    Boolean             @default(false) @map("is_email_verified")
+  isActive           Boolean             @default(true) @map("is_active")
+  twoFactorSecret    String?             @map("two_factor_secret")
+  twoFactorEnabled   Boolean             @default(false) @map("two_factor_enabled")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  profile            UserProfile?
+  refreshTokens      RefreshToken[]
+  oauthProviders     OAuthProvider[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                      String    @id @default(uuid())
+  userId                  String    @unique @map("user_id")
+  fullName                String?   @map("full_name")
+  bio                     String?
+  currentGoal             String?   @map("current_goal")
+  experienceLevel         ExperienceLevel? @map("experience_level")
+  preferredLearningStyle  LearningStyle? @map("preferred_learning_style")
+  dailyLearningTimeMinutes Int      @default(30) @map("daily_learning_time_minutes")
+  timezone                String    @default("UTC")
+  dateOfBirth             DateTime? @map("date_of_birth")
+  location                String?
+  githubUrl               String?   @map("github_url")
+  linkedinUrl             String?   @map("linkedin_url")
+  websiteUrl              String?   @map("website_url")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+  ipAddress String?   @map("ip_address")
+  userAgent String?   @map("user_agent")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model OAuthProvider {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  provider       OAuthProviderType
+  providerUserId String   @map("provider_user_id")
+  accessToken    String?  @map("access_token")
+  refreshToken   String?  @map("refresh_token")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@map("oauth_providers")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
+}
+
+// =====================================================
+// ORGANIZATIONS & MULTI-TENANCY
+// =====================================================
+
+model Organization {
+  id            String   @id @default(uuid())
+  name          String
+  slug          String   @unique
+  domain        String?  @unique
+  plan          String   @default("free")
+  samlEnabled   Boolean  @default(false) @map("saml_enabled")
+  samlConfig    Json?    @map("saml_config")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  members       OrganizationMember[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           String   @default("member")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+  MENTOR
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum LearningStyle {
+  VISUAL
+  READING
+  HANDS_ON
+  MIXED
+}
+
+enum OAuthProviderType {
+  GOOGLE
+  GITHUB
+  LINKEDIN
+}

@@ -1,0 +1,459 @@
+// Notification Service Database Schema
+// This service handles: Notifications, Messaging, Forums, Email Preferences
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      NotificationType
+  title     String
+  message   String   @db.Text
+  data      Json?    // Additional data specific to notification type
+  read      Boolean  @default(false)
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  COURSE_ENROLLMENT
+  NEW_LESSON
+  CODE_EXECUTION_COMPLETE
+  DAILY_CHALLENGE
+  BOOTCAMP_SESSION_REMINDER
+  ASSIGNMENT_DUE
+  MENTOR_REPLY
+  ACHIEVEMENT_UNLOCKED
+  NEW_MESSAGE
+  FORUM_REPLY
+  UPVOTE_RECEIVED
+  BEST_ANSWER_MARKED
+  PAYMENT_CONFIRMED
+  COURSE_COMPLETED
+  BADGE_EARNED
+  STREAK_MILESTONE
+}
+
+// ============================================
+// EMAIL SYSTEM
+// ============================================
+
+model EmailTemplate {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  type        EmailTemplateType
+  subject     String
+  htmlContent String   @map("html_content") @db.Text
+  textContent String?  @map("text_content") @db.Text
+  variables   Json?    // List of variables used in template
+  createdBy   String?  @map("created_by") // Instructor ID for custom templates
+  isCustom    Boolean  @default(false) @map("is_custom")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  sentEmails  SentEmail[]
+
+  @@index([type])
+  @@index([createdBy])
+  @@map("email_templates")
+}
+
+enum EmailTemplateType {
+  WELCOME
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  PAYMENT_CONFIRMATION
+  COURSE_ENROLLMENT
+  WEEKLY_PROGRESS
+  NEW_COURSE_RECOMMENDATION
+  BOOTCAMP_ANNOUNCEMENT
+  INSTRUCTOR_BROADCAST
+  ASSIGNMENT_REMINDER
+  SESSION_REMINDER
+  ACHIEVEMENT_NOTIFICATION
+}
+
+model SentEmail {
+  id           String   @id @default(uuid())
+  templateId   String?  @map("template_id")
+  template     EmailTemplate? @relation(fields: [templateId], references: [id])
+  recipientId  String   @map("recipient_id")
+  email        String
+  subject      String
+  status       EmailStatus @default(PENDING)
+  sentAt       DateTime? @map("sent_at")
+  openedAt     DateTime? @map("opened_at")
+  clickedAt    DateTime? @map("clicked_at")
+  bouncedAt    DateTime? @map("bounced_at")
+  errorMessage String?  @map("error_message") @db.Text
+  metadata     Json?    // Additional tracking data
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([recipientId])
+  @@index([email])
+  @@index([status])
+  @@index([sentAt])
+  @@map("sent_emails")
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+model EmailPreference {
+  id                    String   @id @default(uuid())
+  userId                String   @unique @map("user_id")
+  marketingEmails       Boolean  @default(true) @map("marketing_emails")
+  courseUpdates         Boolean  @default(true) @map("course_updates")
+  bootcampNotifications Boolean  @default(true) @map("bootcamp_notifications")
+  achievementEmails     Boolean  @default(true) @map("achievement_emails")
+  weeklyDigest          Boolean  @default(true) @map("weekly_digest")
+  assignmentReminders   Boolean  @default(true) @map("assignment_reminders")
+  mentorMessages        Boolean  @default(true) @map("mentor_messages")
+  forumReplies          Boolean  @default(true) @map("forum_replies")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("email_preferences")
+}
+
+// ============================================
+// PUSH NOTIFICATIONS
+// ============================================
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  auth      String
+  p256dh    String
+  userAgent String?  @map("user_agent")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model NotificationPreference {
+  id               String   @id @default(uuid())
+  userId           String   @unique @map("user_id")
+  pushEnabled      Boolean  @default(true) @map("push_enabled")
+  emailEnabled     Boolean  @default(true) @map("email_enabled")
+  inAppEnabled     Boolean  @default(true) @map("in_app_enabled")
+  quietHoursStart  Int?     @map("quiet_hours_start") // Hour 0-23
+  quietHoursEnd    Int?     @map("quiet_hours_end")   // Hour 0-23
+  timezone         String   @default("UTC")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("notification_preferences")
+}
+
+// ============================================
+// IN-APP MESSAGING
+// ============================================
+
+model Conversation {
+  id           String   @id @default(uuid())
+  type         ConversationType @default(DIRECT)
+  name         String?  // For group chats
+  cohortId     String?  @map("cohort_id") // For cohort group chats
+  createdBy    String   @map("created_by")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  lastMessageAt DateTime? @map("last_message_at")
+
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([cohortId])
+  @@index([type])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  COHORT
+  INSTRUCTOR_STUDENT
+}
+
+model ConversationParticipant {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String   @map("user_id")
+  role           ParticipantRole @default(MEMBER)
+  lastReadAt     DateTime? @map("last_read_at")
+  mutedUntil     DateTime? @map("muted_until")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+  leftAt         DateTime? @map("left_at")
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+enum ParticipantRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String   @map("sender_id")
+  content        String   @db.Text
+  type           MessageType @default(TEXT)
+  attachments    MessageAttachment[]
+  replyToId      String?  @map("reply_to_id")
+  replyTo        Message? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies        Message[] @relation("MessageReplies")
+  isEdited       Boolean  @default(false) @map("is_edited")
+  editedAt       DateTime? @map("edited_at")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  readReceipts   MessageReadReceipt[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([replyToId])
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  IMAGE
+  CODE
+  SYSTEM
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  fileName  String   @map("file_name")
+  fileUrl   String   @map("file_url")
+  fileType  String   @map("file_type")
+  fileSize  Int      @map("file_size") // in bytes
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+model MessageReadReceipt {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  readAt    DateTime @default(now()) @map("read_at")
+
+  @@unique([messageId, userId])
+  @@index([userId])
+  @@map("message_read_receipts")
+}
+
+// ============================================
+// DISCUSSION FORUMS
+// ============================================
+
+model ForumCategory {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  icon        String?
+  color       String?
+  position    Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  courseId    String?  @map("course_id") // Optional: category for specific course
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  threads     ForumThread[]
+
+  @@index([courseId])
+  @@index([position])
+  @@map("forum_categories")
+}
+
+model ForumThread {
+  id           String   @id @default(uuid())
+  categoryId   String   @map("category_id")
+  category     ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  authorId     String   @map("author_id")
+  title        String
+  slug         String   @unique
+  content      String   @db.Text
+  isPinned     Boolean  @default(false) @map("is_pinned")
+  isLocked     Boolean  @default(false) @map("is_locked")
+  isSolved     Boolean  @default(false) @map("is_solved")
+  views        Int      @default(0)
+  tags         String[] // Array of tags
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  lastReplyAt  DateTime? @map("last_reply_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  replies      ForumReply[]
+  votes        ForumVote[]
+  subscriptions ForumSubscription[]
+
+  @@index([categoryId, createdAt])
+  @@index([authorId])
+  @@index([isPinned, createdAt])
+  @@index([tags])
+  @@map("forum_threads")
+}
+
+model ForumReply {
+  id           String   @id @default(uuid())
+  threadId     String   @map("thread_id")
+  thread       ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId     String   @map("author_id")
+  content      String   @db.Text
+  isBestAnswer Boolean  @default(false) @map("is_best_answer")
+  replyToId    String?  @map("reply_to_id")
+  replyTo      ForumReply? @relation("ReplyReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies      ForumReply[] @relation("ReplyReplies")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  votes        ForumVote[]
+
+  @@index([threadId, createdAt])
+  @@index([authorId])
+  @@index([replyToId])
+  @@index([isBestAnswer])
+  @@map("forum_replies")
+}
+
+model ForumVote {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  threadId  String?  @map("thread_id")
+  thread    ForumThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  replyId   String?  @map("reply_id")
+  reply     ForumReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  voteType  VoteType @map("vote_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, threadId])
+  @@unique([userId, replyId])
+  @@index([threadId])
+  @@index([replyId])
+  @@map("forum_votes")
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
+model ForumSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  threadId  String   @map("thread_id")
+  thread    ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, threadId])
+  @@index([threadId])
+  @@map("forum_subscriptions")
+}
+
+model ForumModeration {
+  id           String   @id @default(uuid())
+  moderatorId  String   @map("moderator_id")
+  targetType   ModerationTargetType @map("target_type")
+  targetId     String   @map("target_id")
+  action       ModerationAction
+  reason       String?  @db.Text
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([targetType, targetId])
+  @@index([moderatorId])
+  @@map("forum_moderations")
+}
+
+enum ModerationTargetType {
+  THREAD
+  REPLY
+  USER
+}
+
+enum ModerationAction {
+  DELETE
+  LOCK
+  PIN
+  UNPIN
+  MARK_SOLVED
+  WARN_USER
+  BAN_USER
+  RESTORE
+}
+
+// ============================================
+// SCHEDULED NOTIFICATIONS
+// ============================================
+
+model ScheduledNotification {
+  id              String   @id @default(uuid())
+  type            NotificationType
+  recipientId     String?  @map("recipient_id") // Null for broadcast
+  recipientFilter Json?    @map("recipient_filter") // Filter criteria for recipients
+  title           String
+  message         String   @db.Text
+  data            Json?
+  scheduledFor    DateTime @map("scheduled_for")
+  sentAt          DateTime? @map("sent_at")
+  status          ScheduledStatus @default(PENDING)
+  errorMessage    String?  @map("error_message") @db.Text
+  createdBy       String   @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([scheduledFor, status])
+  @@index([recipientId])
+  @@map("scheduled_notifications")
+}
+
+enum ScheduledStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}

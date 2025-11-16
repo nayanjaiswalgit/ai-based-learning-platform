@@ -3,18 +3,16 @@ version: '3.8'
 services:
   # PostgreSQL Database
   postgres:
-    image: postgres:16.4-alpine
+    image: postgres:16.4
     container_name: learning-platform-db
     environment:
-      POSTGRES_DB: learning_platform
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: learning_platform
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./DATABASE_SCHEMA.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./DATABASE_SCHEMA_AGENT9_ADDITIONS.sql:/docker-entrypoint-initdb.d/02-agent9-additions.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -32,47 +30,32 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 5s
+      timeout: 3s
       retries: 5
 
-  # Bootcamp Service (Agent 9)
-  bootcamp-service:
+  # Notification Service
+  notification-service:
     build:
-      context: ./services/bootcamp-service
+      context: ./services/notification-service
       dockerfile: Dockerfile
-    container_name: bootcamp-service
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/learning_platform
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: your-super-secret-jwt-key
-      FRONTEND_URL: http://localhost:3000
-      API_URL: http://localhost:3001
+    container_name: notification-service
     ports:
-      - "3001:3001"
+      - "3005:3005"
+    environment:
+      PORT: 3005
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/learning_platform?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      CORS_ORIGINS: "http://localhost:3000"
+      FRONTEND_URL: "http://localhost:3000"
+      NODE_ENV: production
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
     volumes:
-      - ./services/bootcamp-service/uploads:/app/uploads
-    restart: unless-stopped
-
-  # Frontend (Next.js)
-  web:
-    build:
-      context: ./apps/web
-      dockerfile: Dockerfile
-    container_name: learning-platform-web
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-    ports:
-      - "3000:3000"
-    depends_on:
-      - bootcamp-service
-    restart: unless-stopped
+      - ./services/notification-service/.env:/app/.env
 
 volumes:
   postgres_data:

@@ -1,0 +1,23 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: learning-platform
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: notification-service-mtls
+  namespace: learning-platform
+spec:
+  selector:
+    matchLabels:
+      app: notification-service
+  mtls:
+    mode: PERMISSIVE
+  portLevelMtls:
+    4003:
+      mode: DISABLE

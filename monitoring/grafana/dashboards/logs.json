@@ -1,0 +1,104 @@
+{
+  "dashboard": {
+    "title": "Learning Platform - Logs",
+    "tags": ["learning-platform", "logs", "loki"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Log Volume",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(rate({namespace=\"learning-platform\"} [1m])) by (app)",
+            "legendFormat": "{{app}}",
+            "datasource": "Loki"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "API Service Logs",
+        "type": "logs",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 10 },
+        "targets": [
+          {
+            "expr": "{namespace=\"learning-platform\", app=\"api\"}",
+            "datasource": "Loki"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "wrapLogMessage": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "Code Runner Logs",
+        "type": "logs",
+        "gridPos": { "x": 12, "y": 8, "w": 12, "h": 10 },
+        "targets": [
+          {
+            "expr": "{namespace=\"learning-platform\", app=\"code-runner\"}",
+            "datasource": "Loki"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "wrapLogMessage": true
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Logs (All Services)",
+        "type": "logs",
+        "gridPos": { "x": 0, "y": 18, "w": 24, "h": 10 },
+        "targets": [
+          {
+            "expr": "{namespace=\"learning-platform\"} |~ \"(?i)error|exception|fatal\"",
+            "datasource": "Loki"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": true,
+          "wrapLogMessage": true
+        }
+      },
+      {
+        "id": 5,
+        "title": "Log Level Distribution",
+        "type": "piechart",
+        "gridPos": { "x": 0, "y": 28, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(count_over_time({namespace=\"learning-platform\"} |= \"level\" [5m])) by (level)",
+            "legendFormat": "{{level}}",
+            "datasource": "Loki"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Top 10 Log Sources",
+        "type": "table",
+        "gridPos": { "x": 12, "y": 28, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "topk(10, sum(count_over_time({namespace=\"learning-platform\"} [5m])) by (pod))",
+            "datasource": "Loki",
+            "format": "table"
+          }
+        ]
+      }
+    ],
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}

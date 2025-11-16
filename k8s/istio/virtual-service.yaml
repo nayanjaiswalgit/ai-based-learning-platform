@@ -1,0 +1,47 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-virtual-service
+  namespace: learning-platform
+spec:
+  hosts:
+    - "api.yourdomain.com"
+  gateways:
+    - learning-platform-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api/v1
+      route:
+        - destination:
+            host: api
+            port:
+              number: 80
+          weight: 100
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: gateway-error,connect-failure,refused-stream
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: websocket-virtual-service
+  namespace: learning-platform
+spec:
+  hosts:
+    - "ws.yourdomain.com"
+  gateways:
+    - learning-platform-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: notification-service
+            port:
+              number: 80
+      timeout: 3600s
+      websocketUpgrade: true

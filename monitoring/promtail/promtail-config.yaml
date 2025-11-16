@@ -1,0 +1,117 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Scrape logs from all pods in the learning-platform namespace
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+    pipeline_stages:
+      - docker: {}
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      - labels:
+          stream:
+    relabel_configs:
+      # Only scrape pods from learning-platform namespace
+      - source_labels: [__meta_kubernetes_namespace]
+        action: keep
+        regex: learning-platform
+
+      # Add pod name label
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+
+      # Add container name label
+      - source_labels: [__meta_kubernetes_pod_container_name]
+        target_label: container
+
+      # Add namespace label
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+
+      # Add app label
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app
+
+      # Add node name
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+
+  # Scrape system logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*log
+
+  # API Service specific logs
+  - job_name: api-service
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - learning-platform
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+      - labels:
+          level:
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: api
+
+  # Code Runner logs
+  - job_name: code-runner
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - learning-platform
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: code-runner
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+
+  # AI Service logs
+  - job_name: ai-service
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - learning-platform
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: ai-service
+
+  # Notification Service logs
+  - job_name: notification-service
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - learning-platform
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: notification-service

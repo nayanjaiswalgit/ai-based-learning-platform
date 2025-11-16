@@ -1,48 +1,42 @@
-FROM node:20-alpine AS builder
-
+# Base stage
+FROM node:20.18.0-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.14.2 --activate
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Install pnpm
-RUN npm install -g pnpm
-
-# Install dependencies
+# Dependencies stage
+FROM base AS dependencies
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY services/notification-service/package.json ./services/notification-service/
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Development stage
+FROM base AS development
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/services/notification-service/node_modules ./services/notification-service/node_modules
+COPY --from=dependencies /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=dependencies /app/packages/utils/node_modules ./packages/utils/node_modules
 COPY . .
+EXPOSE 4003
+CMD ["pnpm", "--filter", "@learning-platform/notification-service", "dev"]
 
-# Generate Prisma client
-RUN pnpm prisma generate
-
-# Build application
-RUN pnpm build
+# Builder stage
+FROM base AS builder
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/services/notification-service/node_modules ./services/notification-service/node_modules
+COPY --from=dependencies /app/packages/types/node_modules ./packages/types/node_modules
+COPY --from=dependencies /app/packages/utils/node_modules ./packages/utils/node_modules
+COPY . .
+RUN pnpm --filter @learning-platform/notification-service build
 
 # Production stage
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Install pnpm
-RUN npm install -g pnpm
-
-# Copy package files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy built application from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-# Expose port
-EXPOSE 3005
-
-# Start application
-CMD ["node", "dist/main.js"]
+FROM base AS production
+ENV NODE_ENV=production
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/services/notification-service/node_modules ./services/notification-service/node_modules
+COPY --from=builder /app/services/notification-service/dist ./services/notification-service/dist
+COPY services/notification-service/package.json ./services/notification-service/
+EXPOSE 4003
+USER node
+CMD ["node", "services/notification-service/dist/main.js"]

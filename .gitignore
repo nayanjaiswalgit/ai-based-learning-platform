@@ -5,44 +5,62 @@ node_modules
 
 # Testing
 coverage
+*.lcov
+.nyc_output
 
 # Next.js
-.next/
-out/
+.next
+out
 build
-dist/
+dist
+
+# Turbo
+.turbo
 
 # Production
 *.log
+logs
+*.pid
+*.seed
+*.pid.lock
+
+# Environment Files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Local env files
-.env*.local
-.env
-
-# Vercel
-.vercel
-
-# Typescript
+# Misc
+.cache
 *.tsbuildinfo
-
-# OS
-.DS_Store
-*.pem
-
-# Debug
-.vscode/
-.idea/
-
-# Turbo
-.turbo
-
-# Prisma
-prisma/migrations/
+.eslintcache
 
 # Docker
 docker-compose.override.yml
+
+# Prisma
+prisma/migrations/*_init/
+
+# Secrets
+*.pem
+*.key
+*.crt
+secrets/

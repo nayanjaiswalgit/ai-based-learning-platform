@@ -1,0 +1,63 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: api-authz
+  namespace: learning-platform
+spec:
+  selector:
+    matchLabels:
+      app: api
+  action: ALLOW
+  rules:
+    # Allow requests from frontend
+    - from:
+        - source:
+            principals: ["cluster.local/ns/learning-platform/sa/web"]
+      to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            paths: ["/api/*"]
+
+    # Allow requests from ingress gateway
+    - from:
+        - source:
+            namespaces: ["istio-system"]
+      to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: code-runner-authz
+  namespace: learning-platform
+spec:
+  selector:
+    matchLabels:
+      app: code-runner
+  action: ALLOW
+  rules:
+    # Only allow requests from API service
+    - from:
+        - source:
+            principals: ["cluster.local/ns/learning-platform/sa/api"]
+      to:
+        - operation:
+            methods: ["POST"]
+            paths: ["/execute"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ai-service-authz
+  namespace: learning-platform
+spec:
+  selector:
+    matchLabels:
+      app: ai-service
+  action: ALLOW
+  rules:
+    # Only allow requests from API service
+    - from:
+        - source:
+            principals: ["cluster.local/ns/learning-platform/sa/api"]

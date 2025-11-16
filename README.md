@@ -378,11 +378,11 @@ This repository contains comprehensive planning documents for building a world-c
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL 15+
+- Node.js 20.18.0+
+- PostgreSQL 16+
 - Redis 7+
 - Docker
-- PNPM
+- pnpm 9.15.1+
 
 ### Option 1: Quick Start with Docker (Recommended)
 
@@ -413,7 +413,7 @@ cp .env.example .env
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/ai-learning-platform.git
-cd ai-learning-platform
+cd ai-based-learning-platform
 
 # Install dependencies
 pnpm install
@@ -426,14 +426,10 @@ cp .env.example .env
 docker-compose -f docker-compose.dev.yml up -d
 
 # Run database migrations
-cd services/api
-pnpm prisma:migrate
-cd ../..
+pnpm --filter @ai-learning/database prisma migrate dev
 
-# Seed database (optional)
-cd services/api
-pnpm db:seed
-cd ../..
+# Seed database
+pnpm --filter @ai-learning/database prisma db seed
 
 # Start development server
 pnpm dev
@@ -448,6 +444,11 @@ After starting, access:
 - **API Docs**: http://localhost:4000/api/docs
 - **Mailpit (Email UI)**: http://localhost:8025
 - **pgAdmin**: http://localhost:5050 (dev mode)
+
+### Platform-Specific Setup
+
+- **Windows Users**: See [WINDOWS_SETUP.md](./WINDOWS_SETUP.md) and [QUICKSTART.md](./QUICKSTART.md) for detailed Windows setup instructions
+- **macOS/Linux**: The above quick start should work without issues
 
 ### Helpful Commands
 
@@ -470,6 +471,7 @@ pnpm prisma:generate        # Generate Prisma client
 pnpm prisma:migrate         # Run migrations
 pnpm prisma:studio          # Open Prisma Studio
 ```
+
 
 ---
 

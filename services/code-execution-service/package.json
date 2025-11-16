@@ -27,7 +27,7 @@
     "similarity": "1.2.1"
   },
   "devDependencies": {
-    "@nestjs/cli": "10.4.15",
+    "@nestjs/cli": "11.0.10",
     "@nestjs/testing": "10.4.15",
     "@types/bull": "4.10.0",
     "@types/dockerode": "3.3.31",

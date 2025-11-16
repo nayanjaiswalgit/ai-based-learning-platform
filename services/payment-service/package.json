@@ -36,7 +36,7 @@
     "stripe": "^17.3.1",
     "razorpay": "^2.9.4",
     "@paypal/checkout-server-sdk": "^1.0.3",
-    "paddle-sdk": "^1.4.3",
+    "paddle-sdk": "^4.7.0",
     "bull": "^4.16.3",
     "class-validator": "^0.14.1",
     "class-transformer": "^0.5.1",
@@ -53,7 +53,7 @@
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.4.7",
+    "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^10.2.3",
     "@nestjs/testing": "^10.4.7",
     "@types/express": "^5.0.0",

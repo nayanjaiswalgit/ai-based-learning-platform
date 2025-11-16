@@ -1,0 +1,32 @@
+{
+  "name": "@platform/database",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Database package with Prisma ORM",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.0.1",
+    "ioredis": "^5.4.1",
+    "meilisearch": "^0.42.0",
+    "@pinecone-database/pinecone": "^3.0.3"
+  },
+  "devDependencies": {
+    "prisma": "^6.0.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.7.7"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

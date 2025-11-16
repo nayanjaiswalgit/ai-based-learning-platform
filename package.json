@@ -1,0 +1,28 @@
+{
+  "name": "ai-learning-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Based Personalized Learning Platform",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:generate": "pnpm --filter @platform/database prisma generate",
+    "db:push": "pnpm --filter @platform/database prisma db push",
+    "db:migrate": "pnpm --filter @platform/database prisma migrate dev",
+    "db:seed": "pnpm --filter @platform/database prisma db seed",
+    "db:studio": "pnpm --filter @platform/database prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.3"
+}

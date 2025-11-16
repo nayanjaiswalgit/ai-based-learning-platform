@@ -1,18 +1,67 @@
+# Dependencies - Exclude at all levels
 node_modules
-.next
-.turbo
+**/node_modules
+**/.pnpm-store
+.pnpm-store
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build outputs
 dist
+**/dist
 build
+**/build
+.next
+**/.next
+.turbo
+**/.turbo
+out
+**/out
 coverage
-.env*.local
-.git
-.gitignore
-*.md
-!README.md
-Dockerfile
-docker-compose.yml
+**/coverage
+
+# Environment files
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
 .vscode
 .idea
-*.log
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Testing
+coverage
+.nyc_output
+test-results
+
+# Documentation (except README)
+*.md
+!README.md
+
+# Docker files (no need to copy into image)
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+
+# Misc
+*.log
 .cache
+tmp
+temp
+.husky

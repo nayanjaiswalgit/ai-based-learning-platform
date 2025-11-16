@@ -1,8 +1,9 @@
 version: '3.8'
 
-# AI-Based Learning Platform - Development Environment
-# This docker-compose file sets up the infrastructure services only
-# Run application services with: pnpm dev
+# AI-Based Learning Platform - Complete Docker Environment
+# This docker-compose file sets up ALL services (infrastructure + applications)
+# Use: docker-compose up -d
+# Use with tools: docker-compose --profile tools up -d
 
 services:
   # PostgreSQL Database
@@ -77,6 +78,357 @@ services:
       - '8025:8025' # Web UI
     networks:
       - learning-platform-network
+
+  # ==================== APPLICATION SERVICES ====================
+
+  # Web Application (Next.js)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.nextjs
+      args:
+        APP_NAME: web
+    container_name: learning-platform-web
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://api-gateway:4000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+      - api-gateway
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Admin Dashboard (Next.js)
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.nextjs
+      args:
+        APP_NAME: admin
+    container_name: learning-platform-admin
+    restart: unless-stopped
+    ports:
+      - '3001:3000'
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://api-gateway:4000
+    networks:
+      - learning-platform-network
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: api
+    container_name: learning-platform-api-gateway
+    restart: unless-stopped
+    ports:
+      - '4000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_key_32_chars_min}
+      - FRONTEND_URL=http://web:3000
+      - ADMIN_URL=http://admin:3000
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/v1/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: auth-service
+    container_name: learning-platform-auth
+    restart: unless-stopped
+    ports:
+      - '3002:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_key_32_chars_min}
+      - JWT_EXPIRATION=7d
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Course Service
+  course-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: course-service
+    container_name: learning-platform-course
+    restart: unless-stopped
+    ports:
+      - '3003:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # AI Service
+  ai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: ai-service
+    container_name: learning-platform-ai
+    restart: unless-stopped
+    ports:
+      - '3004:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Code Runner Service
+  code-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: code-runner
+    container_name: learning-platform-code-runner
+    restart: unless-stopped
+    ports:
+      - '3005:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - redis
+    # Mount Docker socket for code execution in containers
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # Assessment Service
+  assessment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: assessment-service
+    container_name: learning-platform-assessment
+    restart: unless-stopped
+    ports:
+      - '3006:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: payment-service
+    container_name: learning-platform-payment
+    restart: unless-stopped
+    ports:
+      - '3007:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+
+  # Notification Service
+  notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: notification-service
+    container_name: learning-platform-notification
+    restart: unless-stopped
+    ports:
+      - '3008:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+      - mailpit
+
+  # Analytics Service
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: analytics-service
+    container_name: learning-platform-analytics
+    restart: unless-stopped
+    ports:
+      - '3009:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Recommendation Service
+  recommendation-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: recommendation-service
+    container_name: learning-platform-recommendation
+    restart: unless-stopped
+    ports:
+      - '3010:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Bootcamp Service
+  bootcamp-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: bootcamp-service
+    container_name: learning-platform-bootcamp
+    restart: unless-stopped
+    ports:
+      - '3011:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-learning_platform}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Terminal Service
+  terminal-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: terminal-service
+    container_name: learning-platform-terminal
+    restart: unless-stopped
+    ports:
+      - '3012:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - learning-platform-network
+
+  # Code Execution Service
+  code-execution-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nestjs
+      args:
+        SERVICE_NAME: code-execution-service
+    container_name: learning-platform-code-execution
+    restart: unless-stopped
+    ports:
+      - '3013:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379
+    networks:
+      - learning-platform-network
+    depends_on:
+      - redis
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # ==================== OPTIONAL ADMIN TOOLS ====================
 
   # Optional: PostgreSQL Admin (pgAdmin)
   pgadmin:

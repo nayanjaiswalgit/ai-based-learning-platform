@@ -1,0 +1,72 @@
+# Multi-stage Dockerfile for NestJS microservices
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+# Copy package files only
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY turbo.json ./
+
+# Copy package.json files from all workspaces
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/config/package.json ./packages/config/
+COPY packages/database/package.json ./packages/database/
+
+# Copy service package.json
+ARG SERVICE_NAME
+COPY services/${SERVICE_NAME}/package.json ./services/${SERVICE_NAME}/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build the source code
+FROM base AS builder
+WORKDIR /app
+ARG SERVICE_NAME
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/turbo.json ./turbo.json
+
+# Copy source files (not node_modules, thanks to .dockerignore)
+COPY packages/ ./packages/
+COPY services/${SERVICE_NAME}/ ./services/${SERVICE_NAME}/
+
+# Build the service
+RUN cd services/${SERVICE_NAME} && pnpm run build
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+ARG SERVICE_NAME
+
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nestjs
+
+# Copy built service
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./dist
+COPY --from=builder /app/services/${SERVICE_NAME}/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+
+# Set correct permissions
+RUN chown -R nestjs:nodejs /app
+
+USER nestjs
+
+EXPOSE 3000
+
+# Start the service
+CMD ["node", "dist/main.js"]

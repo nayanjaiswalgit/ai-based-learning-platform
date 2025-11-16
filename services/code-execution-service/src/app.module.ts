@@ -5,6 +5,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-redis-store';
 import { ExecutionModule } from './modules/execution/execution.module';
 import { TestCaseModule } from './modules/test-case/test-case.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -31,5 +32,6 @@ import { TestCaseModule } from './modules/test-case/test-case.module';
     ExecutionModule,
     TestCaseModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

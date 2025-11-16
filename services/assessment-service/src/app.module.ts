@@ -5,6 +5,7 @@ import { QuizModule } from './modules/quiz/quiz.module';
 import { DsaSheetModule } from './modules/dsa-sheet/dsa-sheet.module';
 import { AdvancedAssessmentModule } from './modules/advanced-assessment/advanced-assessment.module';
 import { DatabaseModule } from './database/database.module';
+import { HealthController } from './health/health.controller';
 
 @Module({
   imports: [
@@ -17,5 +18,6 @@ import { DatabaseModule } from './database/database.module';
     DsaSheetModule,
     AdvancedAssessmentModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

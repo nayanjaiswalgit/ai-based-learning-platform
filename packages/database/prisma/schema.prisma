@@ -1,0 +1,355 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+  MENTOR
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  password      String?
+  firstName     String?
+  lastName      String?
+  role          UserRole  @default(STUDENT)
+  emailVerified Boolean   @default(false)
+  avatar        String?
+  bio           String?
+
+  // OAuth fields
+  googleId      String?   @unique
+  githubId      String?   @unique
+  linkedinId    String?   @unique
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  questions         Question[]
+  quizzes           Quiz[]
+  quizAttempts      QuizAttempt[]
+  dsaProgress       DSAProblemProgress[]
+  codeSubmissions   CodeSubmission[]
+  enrollments       Enrollment[]
+
+  @@index([email])
+  @@index([username])
+}
+
+// ============================================
+// ASSESSMENT & TESTING
+// ============================================
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  MULTIPLE_SELECT
+  TRUE_FALSE
+  FILL_IN_BLANK
+  CODE_OUTPUT
+}
+
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Question {
+  id              String          @id @default(cuid())
+  questionText    String
+  type            QuestionType
+  difficulty      DifficultyLevel
+  options         Json            // Array of {text, isCorrect, explanation}
+  explanation     String?
+  tags            String[]
+  courseId        String?
+  timeLimit       Int             @default(60) // seconds
+  points          Int             @default(5)
+
+  createdBy       String
+  creator         User            @relation(fields: [createdBy], references: [id])
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  quizQuestions   QuizQuestion[]
+
+  @@index([courseId])
+  @@index([difficulty])
+  @@index([type])
+}
+
+model Quiz {
+  id                    String    @id @default(cuid())
+  title                 String
+  description           String?
+  timeLimit             Int       // seconds
+  passingPercentage     Int       @default(70)
+  randomizeQuestions    Boolean   @default(true)
+  shuffleAnswers        Boolean   @default(true)
+  showResultsImmediately Boolean  @default(true)
+  maxAttempts           Int       @default(3)
+  courseId              String?
+  availableFrom         DateTime?
+  availableUntil        DateTime?
+
+  createdBy             String
+  creator               User      @relation(fields: [createdBy], references: [id])
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  questions             QuizQuestion[]
+  attempts              QuizAttempt[]
+
+  @@index([courseId])
+}
+
+model QuizQuestion {
+  id         String   @id @default(cuid())
+  quizId     String
+  questionId String
+  order      Int
+
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@unique([quizId, questionId])
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id              String    @id @default(cuid())
+  quizId          String
+  userId          String
+  startedAt       DateTime  @default(now())
+  submittedAt     DateTime?
+  answers         Json      // Array of {questionId, selectedAnswers, timeSpent}
+  score           Int?
+  percentage      Float?
+  passed          Boolean?
+  timeSpent       Int?      // seconds
+
+  quiz            Quiz      @relation(fields: [quizId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+
+  @@index([quizId])
+  @@index([userId])
+}
+
+// ============================================
+// DSA SHEET SYSTEM
+// ============================================
+
+enum ProblemCategory {
+  ARRAY
+  STRING
+  LINKED_LIST
+  STACK
+  QUEUE
+  TREE
+  GRAPH
+  DYNAMIC_PROGRAMMING
+  GREEDY
+  BACKTRACKING
+  SORTING
+  SEARCHING
+  MATH
+  BIT_MANIPULATION
+  HEAP
+  TRIE
+}
+
+enum ProblemStatus {
+  TODO
+  ATTEMPTED
+  SOLVED
+  MASTERED
+}
+
+model DSAProblem {
+  id            String            @id @default(cuid())
+  title         String
+  description   String
+  difficulty    DifficultyLevel
+  categories    ProblemCategory[]
+  companyTags   String[]
+  externalLink  String?
+  timeLimit     Int               @default(45) // seconds
+  memoryLimit   Int               @default(256) // MB
+  hints         String?
+  solution      String?
+  testCases     Json?             // Array of test cases
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Relations
+  userProgress  DSAProblemProgress[]
+
+  @@index([difficulty])
+}
+
+model DSAProblemProgress {
+  id              String         @id @default(cuid())
+  userId          String
+  problemId       String
+  status          ProblemStatus  @default(TODO)
+  personalNotes   String?
+  attempts        Int            @default(0)
+  confidenceLevel Int?           // 0-100
+  timeTaken       Int?           // seconds
+  lastAttempted   DateTime?
+  nextReviewDate  DateTime?      // For spaced repetition
+
+  user            User           @relation(fields: [userId], references: [id])
+  problem         DSAProblem     @relation(fields: [problemId], references: [id])
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+}
+
+// ============================================
+// CODE EXECUTION
+// ============================================
+
+enum ProgrammingLanguage {
+  PYTHON
+  JAVASCRIPT
+  TYPESCRIPT
+  JAVA
+  CPP
+  C
+  GO
+  RUST
+}
+
+enum ExecutionStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  ERROR
+  TIMEOUT
+  MEMORY_LIMIT_EXCEEDED
+}
+
+model CodeSubmission {
+  id              String              @id @default(cuid())
+  userId          String
+  problemId       String?
+  code            String
+  language        ProgrammingLanguage
+  stdin           String?
+  status          ExecutionStatus     @default(QUEUED)
+  output          String?
+  error           String?
+  executionTime   Int?                // milliseconds
+  memoryUsed      Int?                // MB
+  testResults     Json?               // Array of test results
+  similarityScore Float?              // For anti-cheat
+
+  user            User                @relation(fields: [userId], references: [id])
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model TestCase {
+  id              String   @id @default(cuid())
+  problemId       String
+  input           String
+  expectedOutput  String
+  isHidden        Boolean  @default(false)
+  points          Int      @default(10)
+  description     String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([problemId])
+}
+
+// ============================================
+// ADVANCED ASSESSMENTS
+// ============================================
+
+enum AdvancedAssessmentType {
+  FILL_IN_BLANK
+  DRAG_DROP_CODE
+  CODE_DEBUGGING
+  CODE_REVIEW
+  SYSTEM_DESIGN
+}
+
+model AdvancedAssessment {
+  id          String                  @id @default(cuid())
+  title       String
+  type        AdvancedAssessmentType
+  content     Json                    // Different structure based on type
+  tags        String[]
+
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@index([type])
+}
+
+// ============================================
+// COURSES (minimal schema for Agent 6 needs)
+// ============================================
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+
+  user        User     @relation(fields: [userId], references: [id])
+  course      Course   @relation(fields: [courseId], references: [id])
+
+  enrolledAt  DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+}

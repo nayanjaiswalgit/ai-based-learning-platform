@@ -1,17 +1,26 @@
-# Dependencies
+# Dependencies - Exclude at all levels
 node_modules
+**/node_modules
+**/.pnpm-store
+.pnpm-store
 npm-debug.log
 yarn-error.log
 pnpm-debug.log
-.pnpm-store
+pnpm-lock.yaml
 
 # Build outputs
 dist
+**/dist
 build
+**/build
 .next
+**/.next
 .turbo
+**/.turbo
 out
+**/out
 coverage
+**/coverage
 
 # Environment files
 .env.local

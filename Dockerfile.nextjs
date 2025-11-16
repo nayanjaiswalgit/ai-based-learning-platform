@@ -8,9 +8,17 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files
+# Copy package files only
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/ ./packages/
+COPY turbo.json ./
+
+# Copy package.json files from all workspaces
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/config/package.json ./packages/config/
+COPY packages/database/package.json ./packages/database/
 COPY apps/web/package.json ./apps/web/
 COPY apps/admin/package.json ./apps/admin/
 
@@ -20,17 +28,18 @@ RUN pnpm install --frozen-lockfile
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-
-# Copy dependencies
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps ./apps
-COPY --from=deps /app/packages ./packages
-
-# Copy source code
-COPY . .
-
-# Build argument to determine which app to build
 ARG APP_NAME
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/turbo.json ./turbo.json
+
+# Copy source files (not node_modules, thanks to .dockerignore)
+COPY packages/ ./packages/
+COPY apps/${APP_NAME}/ ./apps/${APP_NAME}/
+
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Build the application
@@ -39,15 +48,13 @@ RUN pnpm turbo run build --filter=${APP_NAME}
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
+ARG APP_NAME
 
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-
-# Build argument to determine which app to run
-ARG APP_NAME
 
 # Copy built application
 COPY --from=builder /app/apps/${APP_NAME}/.next ./apps/${APP_NAME}/.next
@@ -66,4 +73,5 @@ EXPOSE 3000
 ENV PORT 3000
 
 # Start the application
-CMD ["node_modules/.bin/next", "start", "-p", "3000"]
+WORKDIR /app/apps/${APP_NAME}
+CMD ["../../node_modules/.bin/next", "start", "-p", "3000"]

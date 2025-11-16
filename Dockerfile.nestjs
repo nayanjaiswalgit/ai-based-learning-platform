@@ -8,10 +8,21 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files
+# Copy package files only
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/ ./packages/
-COPY services/ ./services/
+COPY turbo.json ./
+
+# Copy package.json files from all workspaces
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/config/package.json ./packages/config/
+COPY packages/database/package.json ./packages/database/
+
+# Copy service package.json
+ARG SERVICE_NAME
+COPY services/${SERVICE_NAME}/package.json ./services/${SERVICE_NAME}/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
@@ -19,35 +30,33 @@ RUN pnpm install --frozen-lockfile
 # Build the source code
 FROM base AS builder
 WORKDIR /app
-
-# Copy dependencies
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
-COPY --from=deps /app/services ./services
-
-# Copy source code
-COPY . .
-
-# Build argument to determine which service to build
 ARG SERVICE_NAME
 
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/turbo.json ./turbo.json
+
+# Copy source files (not node_modules, thanks to .dockerignore)
+COPY packages/ ./packages/
+COPY services/${SERVICE_NAME}/ ./services/${SERVICE_NAME}/
+
 # Build the service
-RUN pnpm turbo run build --filter=@learning-platform/${SERVICE_NAME} --filter=@ai-learning/${SERVICE_NAME} --filter=@ai-platform/${SERVICE_NAME} --filter=@repo/${SERVICE_NAME} --filter=@services/${SERVICE_NAME}
+RUN cd services/${SERVICE_NAME} && pnpm run build
 
 # Production image
 FROM base AS runner
 WORKDIR /app
+ARG SERVICE_NAME
 
 ENV NODE_ENV production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# Build argument to determine which service to run
-ARG SERVICE_NAME
-
-# Copy built service - try all possible package name patterns
-COPY --from=builder /app/services/${SERVICE_NAME}/dist ./dist 2>/dev/null || true
+# Copy built service
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./dist
 COPY --from=builder /app/services/${SERVICE_NAME}/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages

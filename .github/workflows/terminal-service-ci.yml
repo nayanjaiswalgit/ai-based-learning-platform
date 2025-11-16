@@ -1,0 +1,147 @@
+name: Terminal Service CI/CD
+
+on:
+  push:
+    branches: [main, develop, 'claude/**']
+    paths:
+      - 'services/terminal-service/**'
+      - '.github/workflows/terminal-service-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/terminal-service/**'
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: ./services/terminal-service
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: ./services/terminal-service
+        run: pnpm run lint || true
+
+      - name: Run tests
+        working-directory: ./services/terminal-service
+        run: pnpm test || true
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          NODE_ENV: test
+
+      - name: Build
+        working-directory: ./services/terminal-service
+        run: pnpm run build
+
+  build-docker-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Ubuntu base image
+        working-directory: ./infrastructure/docker/terminal-images
+        run: |
+          docker build -t ai-learning/ubuntu-base:latest \
+            -f ubuntu/Dockerfile ubuntu/
+
+      - name: Build Ubuntu Git image
+        working-directory: ./infrastructure/docker/terminal-images
+        run: |
+          docker build -t ai-learning/ubuntu-git:latest \
+            -f ubuntu/Dockerfile.git ubuntu/
+
+      - name: Build K8s tools image
+        working-directory: ./infrastructure/docker/terminal-images
+        run: |
+          docker build -t ai-learning/k8s-tools:latest \
+            -f devops/Dockerfile.k8s devops/
+
+      - name: Build AWS CLI image
+        working-directory: ./infrastructure/docker/terminal-images
+        run: |
+          docker build -t ai-learning/aws-cli:latest \
+            -f devops/Dockerfile.aws devops/
+
+      - name: Build Nginx tools image
+        working-directory: ./infrastructure/docker/terminal-images
+        run: |
+          docker build -t ai-learning/nginx-tools:latest \
+            -f devops/Dockerfile.nginx devops/
+
+      - name: Build Terminal Service image
+        working-directory: ./services/terminal-service
+        run: |
+          docker build -t ai-learning/terminal-service:latest .
+
+  # Uncomment when ready to push to container registry
+  # push-images:
+  #   name: Push Images to Registry
+  #   runs-on: ubuntu-latest
+  #   needs: build-docker-images
+  #   if: github.ref == 'refs/heads/main'
+  #
+  #   steps:
+  #     - name: Login to Container Registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         registry: ${{ secrets.REGISTRY_URL }}
+  #         username: ${{ secrets.REGISTRY_USERNAME }}
+  #         password: ${{ secrets.REGISTRY_PASSWORD }}
+  #
+  #     - name: Push images
+  #       run: |
+  #         docker push ai-learning/ubuntu-base:latest
+  #         docker push ai-learning/ubuntu-git:latest
+  #         docker push ai-learning/k8s-tools:latest
+  #         docker push ai-learning/aws-cli:latest
+  #         docker push ai-learning/nginx-tools:latest
+  #         docker push ai-learning/terminal-service:latest

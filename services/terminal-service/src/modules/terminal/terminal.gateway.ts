@@ -12,6 +12,8 @@ import { Server, Socket } from 'socket.io';
 import { DockerService } from '../docker/docker.service';
 import { SessionService } from '../session/session.service';
 import { ScenarioService } from '../scenario/scenario.service';
+import { RecordingService } from './recording.service';
+import { CollaborationService } from './collaboration.service';
 
 interface TerminalInput {
   sessionId: string;
@@ -44,6 +46,8 @@ export class TerminalGateway
     private readonly dockerService: DockerService,
     private readonly sessionService: SessionService,
     private readonly scenarioService: ScenarioService,
+    private readonly recordingService: RecordingService,
+    private readonly collaborationService: CollaborationService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -56,6 +60,9 @@ export class TerminalGateway
     const sessionId = this.socketToSession.get(client.id);
 
     if (sessionId) {
+      // Remove from collaboration if in shared session
+      this.collaborationService.removeParticipant(sessionId, client.id);
+
       // Clean up container
       await this.stopSession(sessionId);
       this.socketToSession.delete(client.id);
@@ -67,7 +74,7 @@ export class TerminalGateway
    */
   @SubscribeMessage('start-session')
   async handleStartSession(
-    @MessageBody() data: { userId: string; scenarioId: string },
+    @MessageBody() data: { userId: string; scenarioId: string; enableRecording?: boolean },
     @ConnectedSocket() client: Socket,
   ) {
     try {
@@ -89,10 +96,21 @@ export class TerminalGateway
         data.scenarioId,
         {
           scenarioTitle: scenario.title,
+          recordingEnabled: data.enableRecording || false,
         },
       );
 
       this.socketToSession.set(client.id, session.sessionId);
+
+      // Start recording if enabled
+      if (data.enableRecording) {
+        await this.recordingService.startRecording(
+          session.sessionId,
+          data.userId,
+          data.scenarioId,
+          { scenarioTitle: scenario.title },
+        );
+      }
 
       // Create Docker container
       const container = await this.dockerService.createTerminalContainer(
@@ -134,10 +152,29 @@ export class TerminalGateway
 
       // Stream container output to client
       container.stream.on('data', (chunk: Buffer) => {
+        const output = chunk.toString('utf-8');
+
+        // Record output if recording enabled
+        if (data.enableRecording) {
+          this.recordingService.recordFrame(session.sessionId, 'output', output);
+        }
+
+        // Emit to primary client
         client.emit('terminal-output', {
           sessionId: session.sessionId,
-          data: chunk.toString('utf-8'),
+          data: output,
         });
+
+        // Broadcast to shared session participants
+        this.collaborationService.broadcastToSession(
+          session.sessionId,
+          'terminal-output',
+          {
+            sessionId: session.sessionId,
+            data: output,
+          },
+          client.id,
+        );
       });
 
       container.stream.on('end', () => {
@@ -162,12 +199,27 @@ export class TerminalGateway
     try {
       const { sessionId, data: input } = data;
 
+      // Check if user can write (for collaborative sessions)
+      if (!this.collaborationService.canWrite(sessionId, client.id)) {
+        const sharedSession = this.collaborationService.getSharedSession(sessionId);
+        if (sharedSession && this.socketToSession.get(client.id) !== sessionId) {
+          client.emit('error', { message: 'You do not have write permission' });
+          return;
+        }
+      }
+
       // Get container
       const container = this.dockerService.getContainer(sessionId);
 
       if (!container) {
         client.emit('error', { message: 'Session not found' });
         return;
+      }
+
+      // Record input
+      const session = await this.sessionService.getSession(sessionId);
+      if (session?.metadata?.recordingEnabled) {
+        this.recordingService.recordFrame(sessionId, 'input', input);
       }
 
       // Write to container stdin
@@ -180,6 +232,14 @@ export class TerminalGateway
 
       // Extend session expiration on activity
       await this.sessionService.extendSession(sessionId);
+
+      // Broadcast input to collaborators (echo for visibility)
+      this.collaborationService.broadcastToSession(
+        sessionId,
+        'terminal-input-echo',
+        { sessionId, data: input },
+        client.id,
+      );
     } catch (error) {
       this.logger.error('Failed to handle terminal input', error);
       client.emit('error', { message: 'Failed to send input' });
@@ -361,10 +421,144 @@ export class TerminalGateway
   }
 
   /**
+   * Share session for collaboration
+   */
+  @SubscribeMessage('share-session')
+  async handleShareSession(
+    @MessageBody() data: { sessionId: string; userId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const { sessionId, userId } = data;
+
+      // Create shared session
+      this.collaborationService.createSharedSession(sessionId, userId);
+
+      client.emit('session-shared', {
+        sessionId,
+        message: 'Session is now shared',
+      });
+
+      this.logger.log(`Session ${sessionId} shared by user ${userId}`);
+    } catch (error) {
+      this.logger.error('Failed to share session', error);
+      client.emit('error', { message: 'Failed to share session' });
+    }
+  }
+
+  /**
+   * Join shared session
+   */
+  @SubscribeMessage('join-shared-session')
+  async handleJoinSharedSession(
+    @MessageBody() data: { sessionId: string; userId: string; role?: 'viewer' | 'collaborator' },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const { sessionId, userId, role } = data;
+
+      // Add participant to shared session
+      const success = this.collaborationService.addParticipant(
+        sessionId,
+        userId,
+        client,
+        role || 'viewer',
+      );
+
+      if (!success) {
+        client.emit('error', { message: 'Shared session not found' });
+        return;
+      }
+
+      // Get participants list
+      const participants = this.collaborationService.getParticipants(sessionId);
+
+      client.emit('joined-shared-session', {
+        sessionId,
+        role: role || 'viewer',
+        participants,
+      });
+
+      this.logger.log(`User ${userId} joined shared session ${sessionId} as ${role || 'viewer'}`);
+    } catch (error) {
+      this.logger.error('Failed to join shared session', error);
+      client.emit('error', { message: 'Failed to join shared session' });
+    }
+  }
+
+  /**
+   * Change participant role
+   */
+  @SubscribeMessage('change-participant-role')
+  async handleChangeParticipantRole(
+    @MessageBody() data: { sessionId: string; userId: string; newRole: 'viewer' | 'collaborator' },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const { sessionId, userId, newRole } = data;
+
+      const success = this.collaborationService.changeParticipantRole(
+        sessionId,
+        userId,
+        newRole,
+      );
+
+      if (success) {
+        client.emit('role-changed-success', {
+          sessionId,
+          userId,
+          newRole,
+        });
+      } else {
+        client.emit('error', { message: 'Failed to change role' });
+      }
+    } catch (error) {
+      this.logger.error('Failed to change participant role', error);
+      client.emit('error', { message: 'Failed to change role' });
+    }
+  }
+
+  /**
+   * Get session recording
+   */
+  @SubscribeMessage('get-recording')
+  async handleGetRecording(
+    @MessageBody() data: { sessionId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const { sessionId } = data;
+
+      // In a real implementation, you'd load the recording from storage
+      client.emit('recording-info', {
+        sessionId,
+        message: 'Recording available',
+      });
+    } catch (error) {
+      this.logger.error('Failed to get recording', error);
+      client.emit('error', { message: 'Failed to get recording' });
+    }
+  }
+
+  /**
    * Helper method to stop a session
    */
   private async stopSession(sessionId: string): Promise<void> {
     try {
+      // Stop recording if enabled
+      const session = await this.sessionService.getSession(sessionId);
+      if (session?.metadata?.recordingEnabled) {
+        try {
+          const filename = await this.recordingService.stopRecording(sessionId);
+          this.logger.log(`Recording saved: ${filename}`);
+        } catch (error) {
+          this.logger.error('Failed to stop recording', error);
+        }
+      }
+
+      // End shared session if exists
+      this.collaborationService.endSharedSession(sessionId);
+
       // Stop Docker container
       await this.dockerService.stopContainer(sessionId);
 

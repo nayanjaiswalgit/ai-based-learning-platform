@@ -1,14 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  transpilePackages: [],
   images: {
-    domains: ['localhost', 'your-cdn-domain.com'],
-    formats: ['image/avif', 'image/webp'],
+    domains: ['images.unsplash.com', 'image.mux.com'],
   },
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts'],
-  },
-}
+  transpilePackages: ['@mux/mux-player-react'],
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

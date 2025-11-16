@@ -1,25 +1,27 @@
 {
-  "name": "ai-learning-platform",
+  "name": "ai-based-learning-platform",
   "version": "1.0.0",
   "private": true,
-  "description": "AI-Based Personalized Learning Platform",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:seed": "cd packages/database && pnpm db:seed",
+    "db:studio": "cd packages/database && pnpm db:studio"
   },
   "devDependencies": {
     "turbo": "^2.3.1",
     "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.9",
+    "typescript": "^5.6.3",
     "@types/node": "^22.9.1",
-    "typescript": "^5.6.3"
+    "eslint": "^9.15.0"
   },
+  "packageManager": "pnpm@9.14.4",
   "engines": {
-    "node": ">=18.17.0",
+    "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
-  },
-  "packageManager": "pnpm@9.14.4"
+  }
 }

@@ -4,10 +4,10 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
+  console.log('🌱 Starting database seed...');
 
   // Create skills
-  console.log('📚 Seeding skills...');
+  console.log('Creating skills...');
   const skills = await Promise.all([
     prisma.skill.upsert({
       where: { name: 'JavaScript' },
@@ -15,18 +15,7 @@ async function main() {
       create: {
         name: 'JavaScript',
         category: 'programming',
-        description: 'Modern JavaScript programming language',
-        iconUrl: '/icons/javascript.svg',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'Python' },
-      update: {},
-      create: {
-        name: 'Python',
-        category: 'programming',
-        description: 'Python programming language',
-        iconUrl: '/icons/python.svg',
+        description: 'Modern JavaScript and ES6+',
       },
     }),
     prisma.skill.upsert({
@@ -36,7 +25,6 @@ async function main() {
         name: 'React',
         category: 'frontend',
         description: 'React.js library for building user interfaces',
-        iconUrl: '/icons/react.svg',
       },
     }),
     prisma.skill.upsert({
@@ -45,308 +33,316 @@ async function main() {
       create: {
         name: 'Node.js',
         category: 'backend',
-        description: 'Node.js JavaScript runtime',
-        iconUrl: '/icons/nodejs.svg',
+        description: 'Server-side JavaScript runtime',
       },
     }),
     prisma.skill.upsert({
-      where: { name: 'PostgreSQL' },
+      where: { name: 'TypeScript' },
       update: {},
       create: {
-        name: 'PostgreSQL',
-        category: 'database',
-        description: 'PostgreSQL relational database',
-        iconUrl: '/icons/postgresql.svg',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'Docker' },
-      update: {},
-      create: {
-        name: 'Docker',
-        category: 'devops',
-        description: 'Container platform',
-        iconUrl: '/icons/docker.svg',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'AWS' },
-      update: {},
-      create: {
-        name: 'AWS',
-        category: 'devops',
-        description: 'Amazon Web Services cloud platform',
-        iconUrl: '/icons/aws.svg',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'Data Structures' },
-      update: {},
-      create: {
-        name: 'Data Structures',
+        name: 'TypeScript',
         category: 'programming',
-        description: 'Fundamental data structures',
-        iconUrl: '/icons/datastructures.svg',
+        description: 'Typed superset of JavaScript',
       },
     }),
     prisma.skill.upsert({
-      where: { name: 'Algorithms' },
+      where: { name: 'Next.js' },
       update: {},
       create: {
-        name: 'Algorithms',
-        category: 'programming',
-        description: 'Algorithm design and analysis',
-        iconUrl: '/icons/algorithms.svg',
-      },
-    }),
-    prisma.skill.upsert({
-      where: { name: 'System Design' },
-      update: {},
-      create: {
-        name: 'System Design',
-        category: 'programming',
-        description: 'System architecture and design',
-        iconUrl: '/icons/systemdesign.svg',
+        name: 'Next.js',
+        category: 'frontend',
+        description: 'React framework for production',
       },
     }),
   ]);
 
-  console.log(`✅ Created ${skills.length} skills`);
-
-  // Create admin user
-  console.log('👤 Seeding admin user...');
-  const passwordHash = await bcrypt.hash('admin123', 10);
-
-  const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@learning-platform.com' },
-    update: {},
-    create: {
-      email: 'admin@learning-platform.com',
-      username: 'admin',
-      passwordHash,
-      role: 'ADMIN',
-      isEmailVerified: true,
-      isActive: true,
-      profile: {
-        create: {
-          fullName: 'Platform Admin',
-          bio: 'System Administrator',
-          experienceLevel: 'ADVANCED',
-          preferredLearningStyle: 'MIXED',
-        },
-      },
-    },
-  });
-
-  console.log(`✅ Created admin user: ${adminUser.email}`);
-
   // Create instructor user
-  console.log('👨‍🏫 Seeding instructor user...');
-  const instructorPasswordHash = await bcrypt.hash('instructor123', 10);
+  console.log('Creating users...');
+  const passwordHash = await bcrypt.hash('password123', 10);
 
-  const instructorUser = await prisma.user.upsert({
-    where: { email: 'instructor@learning-platform.com' },
+  const instructor = await prisma.user.upsert({
+    where: { email: 'instructor@example.com' },
     update: {},
     create: {
-      email: 'instructor@learning-platform.com',
+      email: 'instructor@example.com',
       username: 'instructor',
-      passwordHash: instructorPasswordHash,
-      role: 'INSTRUCTOR',
+      passwordHash,
+      role: 'instructor',
       isEmailVerified: true,
-      isActive: true,
       profile: {
         create: {
           fullName: 'John Instructor',
-          bio: 'Experienced software engineer and educator',
-          experienceLevel: 'ADVANCED',
-          preferredLearningStyle: 'HANDS_ON',
-          githubUrl: 'https://github.com/johninstructor',
-          linkedinUrl: 'https://linkedin.com/in/johninstructor',
+          bio: 'Experienced full-stack developer with 10+ years of teaching experience',
+          experienceLevel: 'advanced',
+          preferredLearningStyle: 'hands_on',
         },
       },
     },
   });
 
-  console.log(`✅ Created instructor user: ${instructorUser.email}`);
-
-  // Create student user
-  console.log('🎓 Seeding student user...');
-  const studentPasswordHash = await bcrypt.hash('student123', 10);
-
-  const studentUser = await prisma.user.upsert({
-    where: { email: 'student@learning-platform.com' },
+  const student = await prisma.user.upsert({
+    where: { email: 'student@example.com' },
     update: {},
     create: {
-      email: 'student@learning-platform.com',
+      email: 'student@example.com',
       username: 'student',
-      passwordHash: studentPasswordHash,
-      role: 'STUDENT',
+      passwordHash,
+      role: 'student',
       isEmailVerified: true,
-      isActive: true,
       profile: {
         create: {
           fullName: 'Jane Student',
-          bio: 'Aspiring full-stack developer',
-          experienceLevel: 'BEGINNER',
-          preferredLearningStyle: 'VISUAL',
-          currentGoal: 'Become a full-stack developer',
-          dailyLearningTimeMinutes: 120,
-        },
-      },
-      learningStreak: {
-        create: {
-          currentStreakDays: 5,
-          longestStreakDays: 10,
-          lastActivityDate: new Date(),
-          totalActiveDays: 25,
+          bio: 'Aspiring web developer',
+          experienceLevel: 'beginner',
+          preferredLearningStyle: 'visual',
         },
       },
     },
   });
 
-  console.log(`✅ Created student user: ${studentUser.email}`);
-
-  // Create a sample course
-  console.log('📖 Seeding sample course...');
-  const sampleCourse = await prisma.course.create({
+  // Create courses
+  console.log('Creating courses...');
+  const course1 = await prisma.course.create({
     data: {
-      title: 'Complete Web Development Bootcamp',
-      slug: 'complete-web-development-bootcamp',
-      description: 'Learn web development from scratch with HTML, CSS, JavaScript, React, Node.js, and more.',
-      longDescription: 'A comprehensive course covering everything you need to know to become a professional web developer. From the basics of HTML and CSS to advanced topics like React, Node.js, databases, and deployment.',
-      instructorId: instructorUser.id,
-      difficultyLevel: 'BEGINNER',
+      title: 'Complete React & Next.js Course',
+      slug: 'complete-react-nextjs-course',
+      description: 'Learn React and Next.js from scratch to advanced level',
+      longDescription: `Master React and Next.js in this comprehensive course.
+
+You'll learn:
+- React fundamentals and hooks
+- Next.js app router and server components
+- State management with Zustand
+- API routes and server actions
+- Deployment and optimization
+
+Perfect for beginners and intermediate developers looking to level up their React skills.`,
+      instructorId: instructor.id,
+      difficultyLevel: 'intermediate',
       estimatedDurationHours: 40,
       price: 99.99,
       isPublished: true,
       isFree: false,
-      thumbnailUrl: '/courses/web-dev-bootcamp.jpg',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee',
       language: 'en',
-      courseSkills: {
+      skills: {
         create: [
-          { skillId: skills[0].id }, // JavaScript
-          { skillId: skills[2].id }, // React
-          { skillId: skills[3].id }, // Node.js
-        ],
-      },
-      modules: {
-        create: [
-          {
-            title: 'Introduction to Web Development',
-            description: 'Learn the basics of web development',
-            orderIndex: 1,
-            lessons: {
-              create: [
-                {
-                  title: 'What is Web Development?',
-                  contentType: 'VIDEO',
-                  contentUrl: '/videos/intro-to-web-dev.mp4',
-                  durationMinutes: 15,
-                  orderIndex: 1,
-                  isFreePreview: true,
-                },
-                {
-                  title: 'Setting Up Your Development Environment',
-                  contentType: 'VIDEO',
-                  contentUrl: '/videos/setup-dev-env.mp4',
-                  durationMinutes: 20,
-                  orderIndex: 2,
-                  isFreePreview: true,
-                },
-              ],
-            },
-          },
-          {
-            title: 'HTML Fundamentals',
-            description: 'Master HTML from the ground up',
-            orderIndex: 2,
-            lessons: {
-              create: [
-                {
-                  title: 'HTML Basics',
-                  contentType: 'VIDEO',
-                  contentUrl: '/videos/html-basics.mp4',
-                  durationMinutes: 30,
-                  orderIndex: 1,
-                },
-                {
-                  title: 'HTML Forms and Input',
-                  contentType: 'VIDEO',
-                  contentUrl: '/videos/html-forms.mp4',
-                  durationMinutes: 25,
-                  orderIndex: 2,
-                },
-              ],
-            },
-          },
+          { skillId: skills.find((s) => s.name === 'React')!.id },
+          { skillId: skills.find((s) => s.name === 'Next.js')!.id },
+          { skillId: skills.find((s) => s.name === 'TypeScript')!.id },
         ],
       },
     },
   });
 
-  console.log(`✅ Created sample course: ${sampleCourse.title}`);
-
-  // Create sample DSA sheet
-  console.log('📝 Seeding DSA sheet...');
-  const dsaSheet = await prisma.dsaSheet.create({
+  const course2 = await prisma.course.create({
     data: {
-      title: 'Top 100 Coding Interview Questions',
-      slug: 'top-100-coding-interview-questions',
-      description: 'Curated list of the most important coding interview questions',
-      createdBy: instructorUser.id,
-      isPublic: true,
-      isOfficial: true,
-      totalProblems: 0,
-      thumbnailUrl: '/dsa-sheets/top-100.jpg',
+      title: 'Node.js Backend Development Masterclass',
+      slug: 'nodejs-backend-masterclass',
+      description: 'Build scalable backend applications with Node.js and Express',
+      longDescription: `Learn to build production-ready backend applications with Node.js.
+
+This course covers:
+- Express.js and REST APIs
+- Database design with PostgreSQL
+- Authentication and authorization
+- Microservices architecture
+- Testing and deployment
+
+Ideal for developers wanting to specialize in backend development.`,
+      instructorId: instructor.id,
+      difficultyLevel: 'advanced',
+      estimatedDurationHours: 50,
+      price: 129.99,
+      isPublished: true,
+      isFree: false,
+      thumbnailUrl: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479',
+      language: 'en',
+      skills: {
+        create: [
+          { skillId: skills.find((s) => s.name === 'Node.js')!.id },
+          { skillId: skills.find((s) => s.name === 'JavaScript')!.id },
+        ],
+      },
     },
   });
 
-  console.log(`✅ Created DSA sheet: ${dsaSheet.title}`);
-
-  // Create sample questions
-  console.log('❓ Seeding sample questions...');
-  const question1 = await prisma.question.create({
+  // Create modules and lessons for course 1
+  console.log('Creating modules and lessons...');
+  const module1 = await prisma.courseModule.create({
     data: {
-      questionType: 'CODING',
-      title: 'Two Sum',
-      description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
-      difficulty: 'EASY',
-      topics: ['arrays', 'hash-table'],
-      companyTags: ['Google', 'Amazon', 'Facebook'],
-      createdBy: instructorUser.id,
-      isPublic: true,
-      codingQuestion: {
-        create: {
-          starterCode: {
-            python: 'def two_sum(nums, target):\n    # Your code here\n    pass',
-            javascript: 'function twoSum(nums, target) {\n    // Your code here\n}',
-          },
-          testCases: [
-            { input: '([2,7,11,15], 9)', expectedOutput: '[0,1]', isHidden: false },
-            { input: '([3,2,4], 6)', expectedOutput: '[1,2]', isHidden: false },
-            { input: '([3,3], 6)', expectedOutput: '[0,1]', isHidden: true },
-          ],
-          constraints: '2 <= nums.length <= 10^4',
-          hints: ['Use a hash map to store seen numbers', 'For each number, check if target - num exists in the map'],
-          timeLimitSeconds: 5,
-          memoryLimitMb: 256,
+      courseId: course1.id,
+      title: 'Introduction to React',
+      description: 'Get started with React fundamentals',
+      orderIndex: 1,
+    },
+  });
+
+  await prisma.lesson.createMany({
+    data: [
+      {
+        moduleId: module1.id,
+        title: 'What is React?',
+        contentType: 'video',
+        durationMinutes: 15,
+        orderIndex: 1,
+        isFreePreview: true,
+        contentText: '# What is React?\n\nReact is a JavaScript library for building user interfaces...',
+      },
+      {
+        moduleId: module1.id,
+        title: 'Setting Up Your Development Environment',
+        contentType: 'video',
+        durationMinutes: 20,
+        orderIndex: 2,
+        isFreePreview: true,
+      },
+      {
+        moduleId: module1.id,
+        title: 'Your First React Component',
+        contentType: 'video',
+        durationMinutes: 25,
+        orderIndex: 3,
+        isFreePreview: false,
+      },
+    ],
+  });
+
+  const module2 = await prisma.courseModule.create({
+    data: {
+      courseId: course1.id,
+      title: 'React Hooks Deep Dive',
+      description: 'Master useState, useEffect, and custom hooks',
+      orderIndex: 2,
+    },
+  });
+
+  await prisma.lesson.createMany({
+    data: [
+      {
+        moduleId: module2.id,
+        title: 'Understanding useState',
+        contentType: 'video',
+        durationMinutes: 30,
+        orderIndex: 1,
+      },
+      {
+        moduleId: module2.id,
+        title: 'Working with useEffect',
+        contentType: 'video',
+        durationMinutes: 35,
+        orderIndex: 2,
+      },
+    ],
+  });
+
+  // Create a course bundle
+  console.log('Creating course bundle...');
+  const bundle = await prisma.courseBundle.create({
+    data: {
+      title: 'Full Stack Developer Bundle',
+      slug: 'full-stack-developer-bundle',
+      description: 'Complete frontend and backend development',
+      price: 199.99,
+      discount: 15,
+      isActive: true,
+      courses: {
+        create: [
+          { courseId: course1.id },
+          { courseId: course2.id },
+        ],
+      },
+    },
+  });
+
+  // Create coupons
+  console.log('Creating coupons...');
+  await prisma.coupon.create({
+    data: {
+      code: 'WELCOME2024',
+      couponType: 'percentage',
+      discountValue: 20,
+      maxUses: 100,
+      validFrom: new Date(),
+      validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+      isActive: true,
+    },
+  });
+
+  await prisma.coupon.create({
+    data: {
+      code: 'FIRSTTIME',
+      couponType: 'first_time_user',
+      discountValue: 25,
+      maxUses: 1000,
+      validFrom: new Date(),
+      validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+      isActive: true,
+    },
+  });
+
+  // Create affiliate links
+  console.log('Creating affiliate links...');
+  await prisma.affiliateLink.create({
+    data: {
+      courseId: course1.id,
+      affiliateCode: 'REACT2024',
+      commissionRate: 15,
+    },
+  });
+
+  // Enroll student in course
+  console.log('Creating enrollments...');
+  await prisma.courseEnrollment.create({
+    data: {
+      userId: student.id,
+      courseId: course1.id,
+      progressPercentage: 25,
+    },
+  });
+
+  // Create SEO data
+  console.log('Creating SEO metadata...');
+  await prisma.courseSEO.create({
+    data: {
+      courseId: course1.id,
+      metaTitle: 'Complete React & Next.js Course | Learn Online',
+      metaDescription: 'Master React and Next.js from scratch. Build modern web applications with hands-on projects. Enroll now!',
+      keywords: ['react', 'nextjs', 'javascript', 'web development'],
+      ogTitle: 'Complete React & Next.js Course',
+      ogDescription: 'Learn React and Next.js from scratch to advanced level',
+      ogImage: course1.thumbnailUrl,
+      twitterCard: 'summary_large_image',
+      canonicalUrl: `https://yourplatform.com/courses/${course1.slug}`,
+      structuredData: {
+        '@context': 'https://schema.org',
+        '@type': 'Course',
+        name: course1.title,
+        description: course1.description,
+        provider: {
+          '@type': 'Organization',
+          name: 'Your Learning Platform',
         },
       },
     },
   });
 
-  console.log(`✅ Created question: ${question1.title}`);
-
-  console.log('\n🎉 Database seeding completed successfully!');
-  console.log('\n📋 Test Credentials:');
-  console.log('Admin: admin@learning-platform.com / admin123');
-  console.log('Instructor: instructor@learning-platform.com / instructor123');
-  console.log('Student: student@learning-platform.com / student123');
+  console.log('✅ Database seed completed successfully!');
+  console.log('\n📊 Created:');
+  console.log(`- ${skills.length} skills`);
+  console.log('- 2 users (instructor, student)');
+  console.log('- 2 courses');
+  console.log('- 2 modules with lessons');
+  console.log('- 1 course bundle');
+  console.log('- 2 coupons');
+  console.log('- 1 affiliate link');
+  console.log('- 1 enrollment');
+  console.log('- SEO metadata');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seeding:', e);
+    console.error('❌ Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {

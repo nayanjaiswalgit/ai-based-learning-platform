@@ -1,9 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    domains: ['images.unsplash.com', 'image.mux.com'],
+  reactStrictMode: true,
+  transpilePackages: ['@ai-learning/shared-types', '@ai-learning/ui-components'],
+  webpack: (config) => {
+    // Monaco editor webpack config
+    config.module.rules.push({
+      test: /\.ttf$/,
+      type: 'asset/resource',
+    });
+    return config;
   },
-  transpilePackages: ['@mux/mux-player-react'],
 };
 
 module.exports = nextConfig;

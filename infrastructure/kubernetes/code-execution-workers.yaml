@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: code-execution-workers
+  namespace: ai-learning
+  labels:
+    app: code-execution-workers
+    tier: worker
+spec:
+  replicas: 5  # Initial worker count
+  selector:
+    matchLabels:
+      app: code-execution-workers
+  template:
+    metadata:
+      labels:
+        app: code-execution-workers
+    spec:
+      serviceAccountName: code-execution-sa
+      containers:
+      - name: worker
+        image: ai-learning/code-execution-service:latest
+        imagePullPolicy: Always
+        command: ["node", "dist/worker.js"]
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: WORKER_MODE
+          value: "true"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: DOCKER_HOST
+          value: "unix:///var/run/docker.sock"
+        - name: MAX_CONCURRENT_JOBS
+          value: "5"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "3000m"
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: tmp-storage
+          mountPath: /tmp
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+      - name: tmp-storage
+        emptyDir:
+          sizeLimit: 2Gi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: code-execution-workers-hpa
+  namespace: ai-learning
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: code-execution-workers
+  minReplicas: 5
+  maxReplicas: 50
+  metrics:
+  - type: External
+    external:
+      metric:
+        name: bull_queue_waiting_jobs
+        selector:
+          matchLabels:
+            queue_name: "code-execution"
+      target:
+        type: AverageValue
+        averageValue: "3"  # Scale up when avg waiting jobs per pod > 3
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Scale up immediately
+      policies:
+      - type: Percent
+        value: 200  # Can double pods
+        periodSeconds: 30
+      - type: Pods
+        value: 10  # Can add up to 10 pods at once
+        periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 600  # Wait 10 min before scaling down
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 120
+      selectPolicy: Min
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: code-execution-workers-pdb
+  namespace: ai-learning
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: code-execution-workers

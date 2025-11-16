@@ -1,23 +1,10 @@
-'use client'
-
-import { useState } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { BookOpen, ArrowLeft } from 'lucide-react'
+import Link from 'next/link';
+import { FormRenderer } from '@/components/forms/FormRenderer';
+import { forgotPasswordFormConfig } from '@/lib/forms/configs/forgot-password';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BookOpen, ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle forgot password logic here
-    setSubmitted(true)
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
@@ -30,39 +17,11 @@ export default function ForgotPasswordPage() {
           </div>
           <CardTitle className="text-2xl">Reset password</CardTitle>
           <CardDescription>
-            {submitted
-              ? 'Check your email for reset instructions'
-              : 'Enter your email to receive reset instructions'}
+            Enter your email to receive reset instructions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {!submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Send Reset Link
-              </Button>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-primary/10 p-4 text-sm">
-                We&apos;ve sent a password reset link to <strong>{email}</strong>. Please check your inbox and follow the instructions.
-              </div>
-              <Button variant="outline" className="w-full" onClick={() => setSubmitted(false)}>
-                Resend Email
-              </Button>
-            </div>
-          )}
+          <FormRenderer config={forgotPasswordFormConfig} />
 
           <div className="mt-6 text-center">
             <Link href="/login" className="inline-flex items-center text-sm text-primary hover:underline">
@@ -73,5 +32,5 @@ export default function ForgotPasswordPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

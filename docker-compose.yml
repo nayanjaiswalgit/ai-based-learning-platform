@@ -1,85 +1,83 @@
 version: '3.8'
 
 services:
-  # Redis for session management
-  redis:
-    image: redis:7.4-alpine
-    container_name: ai-learning-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - ai-learning-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
-  # Terminal Service
-  terminal-service:
-    build:
-      context: ./services/terminal-service
-      dockerfile: Dockerfile
-    container_name: ai-learning-terminal-service
-    ports:
-      - "3007:3007"
-    environment:
-      - NODE_ENV=development
-      - PORT=3007
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DOCKER_SOCKET_PATH=/var/run/docker.sock
-      - SESSION_TTL=1800
-      - CORS_ORIGIN=http://localhost:3000
-      - RECORDINGS_DIR=/app/recordings
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./services/terminal-service:/app
-      - terminal-recordings:/app/recordings
-      - /app/node_modules
-    networks:
-      - ai-learning-network
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3007/terminal/stats"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # PostgreSQL Database (for future services)
+  # PostgreSQL Database
   postgres:
     image: postgres:16.4-alpine
-    container_name: ai-learning-postgres
+    container_name: learning-platform-db
+    environment:
+      POSTGRES_DB: learning_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_DB=ai_learning
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - ai-learning-network
+      - postgres_data:/var/lib/postgresql/data
+      - ./DATABASE_SCHEMA.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./DATABASE_SCHEMA_AGENT9_ADDITIONS.sql:/docker-entrypoint-initdb.d/02-agent9-additions.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
-      timeout: 3s
-      retries: 3
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7.4-alpine
+    container_name: learning-platform-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Bootcamp Service (Agent 9)
+  bootcamp-service:
+    build:
+      context: ./services/bootcamp-service
+      dockerfile: Dockerfile
+    container_name: bootcamp-service
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/learning_platform
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key
+      FRONTEND_URL: http://localhost:3000
+      API_URL: http://localhost:3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/bootcamp-service/uploads:/app/uploads
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: learning-platform-web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - bootcamp-service
+    restart: unless-stopped
 
 volumes:
-  redis-data:
-    driver: local
-  postgres-data:
-    driver: local
-  terminal-recordings:
-    driver: local
+  postgres_data:
+  redis_data:
 
 networks:
-  ai-learning-network:
-    driver: bridge
+  default:
+    name: learning-platform-network

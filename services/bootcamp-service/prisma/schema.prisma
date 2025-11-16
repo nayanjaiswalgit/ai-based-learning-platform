@@ -1,0 +1,530 @@
+// Prisma Schema for Bootcamp & Cohort Service
+// Agent 9 - Database Models
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// USERS (Reference from Auth Service)
+// =====================================================
+
+model User {
+  id                 String   @id @default(uuid())
+  email              String   @unique
+  username           String   @unique
+  passwordHash       String   @map("password_hash")
+  role               String   @default("student")
+  profilePictureUrl  String?  @map("profile_picture_url")
+  isEmailVerified    Boolean  @default(false) @map("is_email_verified")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  profile                  UserProfile?
+  bootcampsCreated         Bootcamp[]               @relation("InstructorBootcamps")
+  applications             BootcampApplication[]
+  cohortEnrollments        CohortEnrollment[]
+  cohortMentorAssignments  CohortMentor[]
+  sessionAttendance        SessionAttendance[]
+  assignmentSubmissions    AssignmentSubmission[]
+  peerReviewsGiven         PeerReview[]
+  projectShowcases         ProjectShowcase[]
+  mentorAvailability       MentorAvailability[]
+  meetingsAsMentor         OneOnOneMeeting[]        @relation("MentorMeetings")
+  meetingsAsStudent        OneOnOneMeeting[]        @relation("StudentMeetings")
+  certificates             Certificate[]
+  templatesCreated         CertificateTemplate[]
+  cohortMessagesCreated    CohortMessage[]
+  announcementsCreated     CohortAnnouncement[]
+  assignmentsCreated       CohortAssignment[]
+  submissionsGraded        AssignmentSubmission[]   @relation("GradedSubmissions")
+  applicationReviews       BootcampApplication[]    @relation("ReviewedApplications")
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                      String    @id @default(uuid())
+  userId                  String    @unique @map("user_id")
+  fullName                String?   @map("full_name")
+  bio                     String?
+  currentGoal             String?   @map("current_goal")
+  experienceLevel         String?   @map("experience_level")
+  preferredLearningStyle  String?   @map("preferred_learning_style")
+  dailyLearningTimeMinutes Int?     @default(30) @map("daily_learning_time_minutes")
+  timezone                String?   @default("UTC")
+  dateOfBirth             DateTime? @map("date_of_birth")
+  location                String?
+  githubUrl               String?   @map("github_url")
+  linkedinUrl             String?   @map("linkedin_url")
+  websiteUrl              String?   @map("website_url")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// =====================================================
+// BOOTCAMPS
+// =====================================================
+
+model Bootcamp {
+  id                    String   @id @default(uuid())
+  title                 String
+  slug                  String   @unique
+  description           String?
+  durationWeeks         Int      @map("duration_weeks")
+  syllabus              Json?
+  instructorId          String   @map("instructor_id")
+  price                 Decimal  @db.Decimal(10, 2)
+  maxStudentsPerCohort  Int      @default(30) @map("max_students_per_cohort")
+  difficultyLevel       String?  @map("difficulty_level")
+  thumbnailUrl          String?  @map("thumbnail_url")
+  isPublished           Boolean  @default(false) @map("is_published")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  instructor         User                        @relation("InstructorBootcamps", fields: [instructorId], references: [id])
+  cohorts            Cohort[]
+  applications       BootcampApplication[]
+  screeningQuestions BootcampScreeningQuestion[]
+  certificateTemplates CertificateTemplate[]
+
+  @@map("bootcamps")
+}
+
+model BootcampApplication {
+  id                 String    @id @default(uuid())
+  bootcampId         String    @map("bootcamp_id")
+  userId             String    @map("user_id")
+  applicationStatus  String    @default("pending") @map("application_status")
+  motivationLetter   String?   @map("motivation_letter")
+  resumeUrl          String?   @map("resume_url")
+  linkedinUrl        String?   @map("linkedin_url")
+  githubUrl          String?   @map("github_url")
+  portfolioUrl       String?   @map("portfolio_url")
+  screeningScore     Decimal?  @db.Decimal(5, 2) @map("screening_score")
+  interviewNotes     String?   @map("interview_notes")
+  appliedAt          DateTime  @default(now()) @map("applied_at")
+  reviewedAt         DateTime? @map("reviewed_at")
+  reviewedBy         String?   @map("reviewed_by")
+  rejectionReason    String?   @map("rejection_reason")
+
+  bootcamp Bootcamp            @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User?               @relation("ReviewedApplications", fields: [reviewedBy], references: [id])
+  answers  ApplicationAnswer[]
+
+  @@unique([bootcampId, userId])
+  @@index([userId])
+  @@index([bootcampId])
+  @@index([applicationStatus])
+  @@map("bootcamp_applications")
+}
+
+model BootcampScreeningQuestion {
+  id             String  @id @default(uuid())
+  bootcampId     String  @map("bootcamp_id")
+  questionText   String  @map("question_text")
+  questionType   String  @map("question_type")
+  options        Json?
+  correctAnswer  String? @map("correct_answer")
+  isRequired     Boolean @default(true) @map("is_required")
+  orderIndex     Int?    @map("order_index")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  bootcamp Bootcamp            @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  answers  ApplicationAnswer[]
+
+  @@map("bootcamp_screening_questions")
+}
+
+model ApplicationAnswer {
+  id             String   @id @default(uuid())
+  applicationId  String   @map("application_id")
+  questionId     String   @map("question_id")
+  answerText     String?  @map("answer_text")
+  fileUrl        String?  @map("file_url")
+  isCorrect      Boolean? @map("is_correct")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  application BootcampApplication       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  question    BootcampScreeningQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("application_answers")
+}
+
+// =====================================================
+// COHORTS
+// =====================================================
+
+model Cohort {
+  id                String   @id @default(uuid())
+  bootcampId        String   @map("bootcamp_id")
+  name              String
+  startDate         DateTime @map("start_date")
+  endDate           DateTime @map("end_date")
+  status            String   @default("upcoming")
+  currentEnrollment Int      @default(0) @map("current_enrollment")
+  maxEnrollment     Int      @default(30) @map("max_enrollment")
+  scheduleDetails   Json?    @map("schedule_details")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  bootcamp      Bootcamp              @relation(fields: [bootcampId], references: [id], onDelete: Cascade)
+  enrollments   CohortEnrollment[]
+  mentors       CohortMentor[]
+  sessions      CohortSession[]
+  assignments   CohortAssignment[]
+  announcements CohortAnnouncement[]
+  messages      CohortMessage[]
+  projects      ProjectShowcase[]
+  meetings      OneOnOneMeeting[]
+
+  @@map("cohorts")
+}
+
+model CohortEnrollment {
+  id               String    @id @default(uuid())
+  cohortId         String    @map("cohort_id")
+  userId           String    @map("user_id")
+  enrollmentStatus String    @default("pending") @map("enrollment_status")
+  enrolledAt       DateTime  @default(now()) @map("enrolled_at")
+  completedAt      DateTime? @map("completed_at")
+  certificateUrl   String?   @map("certificate_url")
+  finalGrade       Decimal?  @db.Decimal(5, 2) @map("final_grade")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, userId])
+  @@map("cohort_enrollments")
+}
+
+model CohortMentor {
+  id         String   @id @default(uuid())
+  cohortId   String   @map("cohort_id")
+  mentorId   String   @map("mentor_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  mentor User   @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, mentorId])
+  @@map("cohort_mentors")
+}
+
+model CohortSession {
+  id                 String    @id @default(uuid())
+  cohortId           String    @map("cohort_id")
+  title              String
+  sessionDate        DateTime  @map("session_date")
+  durationMinutes    Int       @default(90) @map("duration_minutes")
+  meetingLink        String?   @map("meeting_link")
+  recordingUrl       String?   @map("recording_url")
+  attendanceRecorded Boolean   @default(false) @map("attendance_recorded")
+  notes              String?
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  cohort     Cohort              @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  attendance SessionAttendance[]
+
+  @@map("cohort_sessions")
+}
+
+model SessionAttendance {
+  id        String    @id @default(uuid())
+  sessionId String    @map("session_id")
+  userId    String    @map("user_id")
+  attended  Boolean   @default(false)
+  joinTime  DateTime? @map("join_time")
+  leaveTime DateTime? @map("leave_time")
+
+  session CohortSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@map("session_attendance")
+}
+
+model CohortAnnouncement {
+  id                 String   @id @default(uuid())
+  cohortId           String   @map("cohort_id")
+  title              String
+  content            String
+  announcementType   String   @map("announcement_type")
+  createdBy          String   @map("created_by")
+  isPinned           Boolean  @default(false) @map("is_pinned")
+  sendEmail          Boolean  @default(true) @map("send_email")
+  sendNotification   Boolean  @default(true) @map("send_notification")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  cohort  Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  creator User   @relation(fields: [createdBy], references: [id])
+
+  @@index([cohortId])
+  @@index([createdAt])
+  @@map("cohort_announcements")
+}
+
+model CohortMessage {
+  id              String    @id @default(uuid())
+  cohortId        String    @map("cohort_id")
+  senderId        String    @map("sender_id")
+  messageText     String    @map("message_text")
+  parentMessageId String?   @map("parent_message_id")
+  attachments     Json?
+  reactions       Json      @default("{}")
+  isPinned        Boolean   @default(false) @map("is_pinned")
+  isEdited        Boolean   @default(false) @map("is_edited")
+  editedAt        DateTime? @map("edited_at")
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  cohort        Cohort         @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  sender        User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  parentMessage CohortMessage? @relation("MessageReplies", fields: [parentMessageId], references: [id])
+  replies       CohortMessage[] @relation("MessageReplies")
+
+  @@index([cohortId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("cohort_messages")
+}
+
+// =====================================================
+// ASSIGNMENTS
+// =====================================================
+
+model CohortAssignment {
+  id                  String   @id @default(uuid())
+  cohortId            String   @map("cohort_id")
+  title               String
+  description         String
+  assignmentType      String   @map("assignment_type")
+  instructions        String?
+  resources           Json?
+  maxPoints           Int      @default(100) @map("max_points")
+  dueDate             DateTime @map("due_date")
+  allowLateSubmission Boolean  @default(false) @map("allow_late_submission")
+  latePenaltyPercent  Int      @default(20) @map("late_penalty_percent")
+  peerReviewRequired  Boolean  @default(false) @map("peer_review_required")
+  minPeerReviews      Int      @default(2) @map("min_peer_reviews")
+  autoGrading         Boolean  @default(false) @map("auto_grading")
+  testCases           Json?    @map("test_cases")
+  rubric              Json?
+  createdBy           String   @map("created_by")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  cohort      Cohort                 @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  creator     User                   @relation(fields: [createdBy], references: [id])
+  submissions AssignmentSubmission[]
+
+  @@index([cohortId])
+  @@index([dueDate])
+  @@map("cohort_assignments")
+}
+
+model AssignmentSubmission {
+  id             String    @id @default(uuid())
+  assignmentId   String    @map("assignment_id")
+  userId         String    @map("user_id")
+  submissionUrl  String?   @map("submission_url")
+  submissionText String?   @map("submission_text")
+  files          Json?
+  submittedAt    DateTime  @default(now()) @map("submitted_at")
+  isLate         Boolean   @default(false) @map("is_late")
+  grade          Decimal?  @db.Decimal(5, 2)
+  feedback       String?
+  gradedAt       DateTime? @map("graded_at")
+  gradedBy       String?   @map("graded_by")
+  status         String    @default("submitted")
+
+  assignment  CohortAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grader      User?            @relation("GradedSubmissions", fields: [gradedBy], references: [id])
+  peerReviews PeerReview[]
+
+  @@unique([assignmentId, userId])
+  @@index([assignmentId])
+  @@index([userId])
+  @@index([status])
+  @@map("assignment_submissions")
+}
+
+model PeerReview {
+  id           String   @id @default(uuid())
+  submissionId String   @map("submission_id")
+  reviewerId   String   @map("reviewer_id")
+  rating       Int
+  feedback     String?
+  rubricScores Json?    @map("rubric_scores")
+  reviewedAt   DateTime @default(now()) @map("reviewed_at")
+  isHelpful    Boolean? @map("is_helpful")
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  reviewer   User                 @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, reviewerId])
+  @@index([submissionId])
+  @@index([reviewerId])
+  @@map("peer_reviews")
+}
+
+model ProjectShowcase {
+  id           String   @id @default(uuid())
+  cohortId     String   @map("cohort_id")
+  userId       String   @map("user_id")
+  projectTitle String   @map("project_title")
+  description  String?
+  demoUrl      String?  @map("demo_url")
+  githubUrl    String?  @map("github_url")
+  videoUrl     String?  @map("video_url")
+  techStack    Json?    @map("tech_stack")
+  screenshots  Json?
+  likesCount   Int      @default(0) @map("likes_count")
+  viewsCount   Int      @default(0) @map("views_count")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("project_showcases")
+}
+
+// =====================================================
+// 1:1 MEETINGS
+// =====================================================
+
+model MentorAvailability {
+  id        String   @id @default(uuid())
+  mentorId  String   @map("mentor_id")
+  dayOfWeek Int      @map("day_of_week")
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
+  timezone  String   @default("UTC")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  mentor User @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@map("mentor_availability")
+}
+
+model OneOnOneMeeting {
+  id               String    @id @default(uuid())
+  mentorId         String    @map("mentor_id")
+  studentId        String    @map("student_id")
+  cohortId         String?   @map("cohort_id")
+  scheduledAt      DateTime  @map("scheduled_at")
+  durationMinutes  Int       @default(30) @map("duration_minutes")
+  meetingLink      String?   @map("meeting_link")
+  meetingProvider  String?   @map("meeting_provider")
+  meetingId        String?   @map("meeting_id")
+  status           String    @default("scheduled")
+  agenda           String?
+  studentNotes     String?   @map("student_notes")
+  mentorNotes      String?   @map("mentor_notes")
+  recordingUrl     String?   @map("recording_url")
+  calendarEventId  String?   @map("calendar_event_id")
+  reminderSent     Boolean   @default(false) @map("reminder_sent")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  mentor      User                 @relation("MentorMeetings", fields: [mentorId], references: [id])
+  student     User                 @relation("StudentMeetings", fields: [studentId], references: [id])
+  cohort      Cohort?              @relation(fields: [cohortId], references: [id])
+  actionItems MeetingActionItem[]
+
+  @@index([mentorId])
+  @@index([studentId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("one_on_one_meetings")
+}
+
+model MeetingActionItem {
+  id          String    @id @default(uuid())
+  meetingId   String    @map("meeting_id")
+  description String
+  assignedTo  String?   @map("assigned_to")
+  dueDate     DateTime? @map("due_date")
+  isCompleted Boolean   @default(false) @map("is_completed")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  meeting      OneOnOneMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  assignedUser User?           @relation(fields: [assignedTo], references: [id])
+
+  @@map("meeting_action_items")
+}
+
+// =====================================================
+// CERTIFICATES
+// =====================================================
+
+model CertificateTemplate {
+  id                  String   @id @default(uuid())
+  name                String
+  bootcampId          String?  @map("bootcamp_id")
+  templateType        String   @map("template_type")
+  designConfig        Json     @map("design_config")
+  backgroundImageUrl  String?  @map("background_image_url")
+  signatureImageUrl   String?  @map("signature_image_url")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdBy           String   @map("created_by")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  bootcamp     Bootcamp?     @relation(fields: [bootcampId], references: [id])
+  creator      User          @relation(fields: [createdBy], references: [id])
+  certificates Certificate[]
+
+  @@map("certificate_templates")
+}
+
+model Certificate {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  templateId        String?   @map("template_id")
+  certificateType   String    @map("certificate_type")
+  resourceId        String?   @map("resource_id")
+  certificateNumber String    @unique @map("certificate_number")
+  issueDate         DateTime  @default(now()) @map("issue_date")
+  expiryDate        DateTime? @map("expiry_date")
+  recipientName     String    @map("recipient_name")
+  certificateTitle  String    @map("certificate_title")
+  description       String?
+  pdfUrl            String    @map("pdf_url")
+  verificationUrl   String?   @map("verification_url")
+  blockchainHash    String?   @map("blockchain_hash")
+  linkedinShareUrl  String?   @map("linkedin_share_url")
+  metadata          Json?
+  isRevoked         Boolean   @default(false) @map("is_revoked")
+  revokedAt         DateTime? @map("revoked_at")
+  revokedReason     String?   @map("revoked_reason")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template CertificateTemplate? @relation(fields: [templateId], references: [id])
+
+  @@index([userId])
+  @@index([certificateNumber])
+  @@index([certificateType, resourceId])
+  @@map("certificates")
+}

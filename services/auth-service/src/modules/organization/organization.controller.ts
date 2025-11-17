@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { OrganizationService } from './organization.service';
+import { OrganizationPermissionsService } from './organization-permissions.service';
 import { JwtAuthGuard } from '../../guards/jwt-auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
 import { CurrentUser } from '../../decorators/current-user.decorator';
@@ -30,7 +31,10 @@ import { UserRole } from '@prisma/client';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class OrganizationController {
-  constructor(private readonly organizationService: OrganizationService) {}
+  constructor(
+    private readonly organizationService: OrganizationService,
+    private readonly permissionsService: OrganizationPermissionsService,
+  ) {}
 
   // =====================================================
   // ORGANIZATION CRUD
@@ -228,5 +232,31 @@ export class OrganizationController {
     return this.organizationService.getMentorsInOrganization(slug, {
       departmentId,
     });
+  }
+
+  // =====================================================
+  // CAPABILITIES & PERMISSIONS
+  // =====================================================
+
+  @Get(':slug/capabilities')
+  @ApiOperation({ summary: 'Get organization capabilities and user permissions' })
+  @ApiResponse({ status: 200, description: 'Capabilities retrieved' })
+  async getCapabilities(
+    @Param('slug') slug: string,
+    @CurrentUser() user: any,
+  ) {
+    const organization = await this.organizationService.getOrganizationBySlug(slug);
+    return this.permissionsService.getOrganizationCapabilities(organization.id, user?.id);
+  }
+
+  @Get(':slug/suggested-titles')
+  @ApiOperation({ summary: 'Get suggested titles for organization type' })
+  @ApiResponse({ status: 200, description: 'Suggested titles retrieved' })
+  async getSuggestedTitles(@Param('slug') slug: string) {
+    const organization = await this.organizationService.getOrganizationBySlug(slug);
+    const { getSuggestedTitles } = await import('./constants/title-role-mapping');
+    return {
+      titles: getSuggestedTitles(organization.type),
+    };
   }
 }

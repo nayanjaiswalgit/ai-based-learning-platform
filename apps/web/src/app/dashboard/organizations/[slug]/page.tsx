@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { OrganizationMembersList } from '@/components/organization/OrganizationMembersList';
 import { useToast } from '@/components/ui/use-toast';
 import { organizationApi, Organization, OrganizationMember } from '@/lib/api/organization-client';
+import { useOrganizationPermissions, Permission } from '@/lib/hooks/useOrganizationPermissions';
 import {
   Building2,
   Users,
@@ -34,6 +35,9 @@ export default function OrganizationDetailPage() {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [userMembership, setUserMembership] = useState<OrganizationMember | null>(null);
+
+  // Use permission hook for dynamic access control
+  const { hasPermission, hasAnyPermission, loading: permissionsLoading } = useOrganizationPermissions(organization?.id);
 
   const loadOrganization = async () => {
     try {
@@ -64,9 +68,11 @@ export default function OrganizationDetailPage() {
     loadOrganization();
   }, [slug]);
 
-  const isAdmin = userMembership?.role === 'ADMIN';
+  // Check permissions dynamically (not hardcoded!)
+  const canUpdateOrg = hasPermission(Permission.ORG_UPDATE);
+  const canManageMembers = hasAnyPermission([Permission.MEMBER_ADD, Permission.MEMBER_UPDATE, Permission.MEMBER_REMOVE]);
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -130,7 +136,7 @@ export default function OrganizationDetailPage() {
           </div>
         </div>
 
-        {isAdmin && (
+        {canUpdateOrg && (
           <Button variant="outline">
             <Settings className="mr-2 h-4 w-4" />
             Settings
@@ -206,7 +212,7 @@ export default function OrganizationDetailPage() {
                     Manage members, their roles, and permissions
                   </CardDescription>
                 </div>
-                {isAdmin && (
+                {hasPermission(Permission.MEMBER_ADD) && (
                   <Button>
                     <UserPlus className="mr-2 h-4 w-4" />
                     Add Member
@@ -217,7 +223,7 @@ export default function OrganizationDetailPage() {
             <CardContent>
               <OrganizationMembersList
                 members={members}
-                canManage={isAdmin}
+                canManage={canManageMembers}
                 onEdit={(member) => {
                   toast({ title: 'Edit member (coming soon)' });
                 }}

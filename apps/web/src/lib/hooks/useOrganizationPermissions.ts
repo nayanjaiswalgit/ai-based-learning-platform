@@ -95,11 +95,12 @@ export function useOrganizationPermissions(organizationId?: string) {
     const fetchCapabilities = async () => {
       try {
         setLoading(true);
-        // TODO: Implement API call to get capabilities
-        // const caps = await organizationApi.getCapabilities(organizationId);
-        // setCapabilities(caps);
-
-        // Mock for now
+        const { organizationApi } = await import('@/lib/api/organization-client');
+        const caps = await organizationApi.getCapabilities(organizationId);
+        setCapabilities(caps);
+      } catch (error) {
+        console.error('Failed to fetch organization capabilities:', error);
+        // Set default permissions on error
         setCapabilities({
           tier: 'FREE',
           features: [Feature.BASIC_COURSES, Feature.BASIC_FORUMS],
@@ -115,8 +116,6 @@ export function useOrganizationPermissions(organizationId?: string) {
           },
           userPermissions: [],
         });
-      } catch (error) {
-        console.error('Failed to fetch organization capabilities:', error);
       } finally {
         setLoading(false);
       }

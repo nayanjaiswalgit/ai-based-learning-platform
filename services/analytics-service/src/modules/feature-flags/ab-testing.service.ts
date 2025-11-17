@@ -105,12 +105,13 @@ export class ABTestingService {
         ([_, v]) => v === variant.id,
       )
 
+      // Conversion rate and revenue require AnalyticsEvent table for event tracking
+      // Returns 0 until event tracking system is implemented
       return {
         variant: variant.name,
         users: users.length,
-        // In production, calculate actual metrics from event data
-        conversionRate: Math.random() * 20 + 5, // Placeholder
-        revenue: Math.random() * 10000 + 1000, // Placeholder
+        conversionRate: 0, // Requires event tracking system
+        revenue: 0, // Requires event-to-revenue attribution
       }
     })
 

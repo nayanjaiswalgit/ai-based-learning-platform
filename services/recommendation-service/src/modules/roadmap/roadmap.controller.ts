@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Patch, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { RoadmapService } from './roadmap.service';
 import { GenerateRoadmapDto, UpdateRoadmapProgressDto, GetRoadmapDto } from './dto/roadmap.dto';
 
@@ -33,5 +33,39 @@ export class RoadmapController {
   @Get(':userId')
   async getRoadmap(@Param('userId') userId: string, @Query('roadmapId') roadmapId?: string) {
     return this.roadmapService.getRoadmap(userId, roadmapId);
+  }
+
+  /**
+   * GET /roadmap/list/:userId
+   * List all roadmaps for a user
+   */
+  @Get('list/:userId')
+  @HttpCode(HttpStatus.OK)
+  async listRoadmaps(@Param('userId') userId: string) {
+    return this.roadmapService.listRoadmaps(userId);
+  }
+
+  /**
+   * PATCH /roadmap/:roadmapId
+   * Update roadmap title, description, or structure
+   */
+  @Patch(':roadmapId')
+  @HttpCode(HttpStatus.OK)
+  async updateRoadmap(
+    @Param('roadmapId') roadmapId: string,
+    @Body() body: { userId: string; updates: any },
+  ) {
+    return this.roadmapService.updateRoadmap(roadmapId, body.userId, body.updates);
+  }
+
+  /**
+   * DELETE /roadmap/:roadmapId
+   * Delete a roadmap
+   */
+  @Delete(':roadmapId')
+  @HttpCode(HttpStatus.OK)
+  async deleteRoadmap(@Param('roadmapId') roadmapId: string, @Body('userId') userId: string) {
+    await this.roadmapService.deleteRoadmap(roadmapId, userId);
+    return { message: 'Roadmap deleted successfully' };
   }
 }

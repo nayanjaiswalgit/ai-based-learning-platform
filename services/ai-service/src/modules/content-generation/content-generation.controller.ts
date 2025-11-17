@@ -1,21 +1,119 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ContentGenerationService } from './content-generation.service';
+import {
+  GenerateMcqDto,
+  GenerateMcqResponseDto,
+} from './dto/generate-mcq.dto';
+import { GenerateCodingLabDto } from './dto/generate-coding-lab.dto';
+import { GenerateCourseDto, RefineCourseContentDto } from './dto/generate-course.dto';
 
 @ApiTags('Content Generation')
 @Controller('content-generation')
+@ApiBearerAuth()
 export class ContentGenerationController {
   constructor(private readonly contentGenerationService: ContentGenerationService) {}
 
+  @Post('generate-course')
+  @ApiOperation({
+    summary: 'Generate complete course with AI',
+    description:
+      'Generate a comprehensive course including modules, lessons, quizzes, coding questions, and labs based on a single prompt',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Course generated successfully',
+  })
+  async generateCourse(@Body() dto: GenerateCourseDto) {
+    return this.contentGenerationService.generateCompleteCourse(dto);
+  }
+
+  @Post('refine-content')
+  @ApiOperation({
+    summary: 'Refine course content section',
+    description: 'Refine a specific section of the course (module, lesson, quiz, etc.) based on feedback',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Content refined successfully',
+  })
+  async refineContent(@Body() dto: RefineCourseContentDto) {
+    return this.contentGenerationService.refineContent(dto);
+  }
+
+  @Post('mcq/generate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Generate MCQs using AI based on course/module/lesson content',
+    description: `Generate multiple-choice questions using AI based on specific course content.
+
+    Supports generating MCQs from:
+    - LESSON: Generate questions from a specific lesson's content
+    - MODULE: Generate questions covering all lessons in a module
+    - COURSE: Generate questions covering the entire course
+    - CUSTOM_TOPIC: Generate questions for a custom topic
+
+    The AI will analyze the content and create relevant questions with explanations.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'MCQs generated successfully',
+    type: GenerateMcqResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - invalid parameters',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Content source not found',
+  })
+  async generateMcqs(@Body() dto: GenerateMcqDto): Promise<GenerateMcqResponseDto> {
+    return this.contentGenerationService.generateMcqs(dto);
+  }
+
+  @Post('generate-coding-lab')
+  @ApiOperation({ summary: 'Generate a coding lab or terminal challenge using AI' })
+  @ApiResponse({
+    status: 200,
+    description: 'Coding lab generated successfully',
+  })
+  async generateCodingLab(@Body() dto: GenerateCodingLabDto) {
+    return this.contentGenerationService.generateCodingLab({
+      topic: dto.topic,
+      difficulty: dto.difficulty,
+      labType: dto.labType,
+      context: dto.context,
+      courseTitle: dto.courseTitle,
+      moduleTitle: dto.moduleTitle,
+    });
+  }
+
   @Post('generate-quiz')
-  @ApiOperation({ summary: 'Generate quiz questions for a topic' })
+  @ApiOperation({
+    summary: 'Generate quiz questions for a topic (Legacy)',
+    description: 'Legacy endpoint for backward compatibility. Use /mcq/generate instead.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Quiz questions generated',
+  })
   async generateQuiz(@Body() body: { topic: string; difficulty: string; count: number }) {
     return this.contentGenerationService.generateQuiz(body.topic, body.difficulty, body.count);
   }
 
   @Post('generate-explanation')
-  @ApiOperation({ summary: 'Generate explanation for a concept' })
-  async generateExplanation(@Body() body: { concept: string; level: string }) {
+  @ApiOperation({
+    summary: 'Generate AI explanation for a concept',
+    description: 'Generate a clear, level-appropriate explanation of a concept using AI.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Explanation generated successfully',
+  })
+  async generateExplanation(
+    @Body() body: { concept: string; level: string },
+  ): Promise<{ concept: string; level: string; explanation: string }> {
     return this.contentGenerationService.generateExplanation(body.concept, body.level);
   }
 }

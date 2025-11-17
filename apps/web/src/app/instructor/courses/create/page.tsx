@@ -88,9 +88,16 @@ export default function CreateCoursePage() {
   const uploadThumbnail = async (): Promise<string | undefined> => {
     if (!thumbnail) return undefined;
 
-    // TODO: Implement actual file upload to S3/Cloudinary
-    // For now, return a placeholder URL
-    // In production, this would upload to S3 and return the URL
+    // File upload requires cloud storage configuration
+    // To implement:
+    // 1. Set up AWS S3, Cloudinary, or similar service
+    // 2. Add credentials to environment variables
+    // 3. Use multipart/form-data to upload file
+    // 4. Return the public URL from cloud storage
+    //
+    // For now, using local preview URL (not persistent)
+    // Replace with actual cloud upload in production
+    console.warn('File upload not configured - using temporary preview URL');
     return thumbnailPreview;
   };
 

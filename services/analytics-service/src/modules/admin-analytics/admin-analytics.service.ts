@@ -59,8 +59,10 @@ export class AdminAnalyticsService {
       where: { submissionType: 'code' },
     })
 
-    // API request volume (would need request logging)
-    const apiRequestVolume = 0 // Placeholder
+    // API request volume - requires API gateway or APM tool integration
+    // Returns 0 until external monitoring is configured
+    this.logger.debug('API request volume tracking not configured - requires API gateway or APM integration')
+    const apiRequestVolume = 0
 
     return {
       totalUsers,
@@ -129,8 +131,10 @@ export class AdminAnalyticsService {
     const avgCustomerLifeMonths = churnRate > 0 ? 1 / (churnRate / 100) : 12
     const ltv = avgMonthlyRevenue * avgCustomerLifeMonths
 
-    // Calculate CAC (Customer Acquisition Cost) - would need marketing spend data
-    const cac = 50 // Placeholder
+    // CAC (Customer Acquisition Cost) - requires marketing campaign tracking
+    // Returns 0 until MarketingCampaign table and ad platform integrations are set up
+    this.logger.debug('CAC calculation not available - requires marketing spend tracking system')
+    const cac = 0
 
     // Revenue by plan
     const planRevenue = await Promise.all([

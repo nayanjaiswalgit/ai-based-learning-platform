@@ -306,4 +306,46 @@ Return adjusted milestones in the same JSON format, optimizing for the user's de
     const userRoadmaps = Array.from(this.roadmaps.values()).filter((r) => r.userId === userId);
     return userRoadmaps;
   }
+
+  /**
+   * Update roadmap title, description, or structure
+   */
+  async updateRoadmap(roadmapId: string, userId: string, updates: Partial<Roadmap>): Promise<Roadmap> {
+    const roadmap = this.roadmaps.get(roadmapId);
+    if (!roadmap || roadmap.userId !== userId) {
+      throw new Error('Roadmap not found');
+    }
+
+    // Update allowed fields
+    if (updates.title) roadmap.title = updates.title;
+    if (updates.description) roadmap.description = updates.description;
+    if (updates.goal) roadmap.goal = updates.goal;
+    if (updates.totalDuration) roadmap.totalDuration = updates.totalDuration;
+    if (updates.milestones) roadmap.milestones = updates.milestones;
+
+    roadmap.updatedAt = new Date();
+    this.roadmaps.set(roadmapId, roadmap);
+
+    return roadmap;
+  }
+
+  /**
+   * Delete a roadmap
+   */
+  async deleteRoadmap(roadmapId: string, userId: string): Promise<void> {
+    const roadmap = this.roadmaps.get(roadmapId);
+    if (!roadmap || roadmap.userId !== userId) {
+      throw new Error('Roadmap not found');
+    }
+
+    this.roadmaps.delete(roadmapId);
+  }
+
+  /**
+   * List all roadmaps for a user
+   */
+  async listRoadmaps(userId: string): Promise<Roadmap[]> {
+    const userRoadmaps = Array.from(this.roadmaps.values()).filter((r) => r.userId === userId);
+    return userRoadmaps.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
 }

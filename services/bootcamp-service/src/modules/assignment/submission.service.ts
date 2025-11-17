@@ -1,9 +1,13 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
 @Injectable()
 export class SubmissionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject('CODE_RUNNER_SERVICE') private readonly codeRunnerClient: HttpService,
+  ) {}
 
   /**
    * Submit assignment
@@ -68,20 +72,94 @@ export class SubmissionService {
     });
 
     // Auto-grade if enabled
-    if (assignment.autoGrading && assignment.testCases) {
-      await this.autoGrade(submission.id, assignment.testCases);
+    if (assignment.autoGrading) {
+      try {
+        const grade = await this.autoGrade(submission, assignment);
+        if (grade > 0) {
+          await this.prisma.assignmentSubmission.update({
+            where: { id: submission.id },
+            data: {
+              grade,
+              status: 'graded',
+              gradedAt: new Date(),
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Auto-grading failed:', error);
+      }
     }
 
     return submission;
   }
 
   /**
-   * Auto-grade submission
+   * Auto-grade submission based on assignment type
    */
-  private async autoGrade(submissionId: string, testCases: any) {
-    // TODO: Implement auto-grading logic
-    // This would run test cases against the submitted code
-    console.log('Auto-grading submission:', submissionId);
+  private async autoGrade(submission: any, assignment: any): Promise<number> {
+    if (assignment.type === 'MULTIPLE_CHOICE' || assignment.type === 'QUIZ') {
+      return this.gradeQuizSubmission(submission, assignment);
+    } else if (assignment.type === 'CODING') {
+      return this.gradeCodingSubmission(submission, assignment);
+    }
+    // For essays, projects, etc., auto-grading not applicable
+    return 0;
+  }
+
+  /**
+   * Grade quiz/multiple choice submissions
+   */
+  private gradeQuizSubmission(submission: any, assignment: any): number {
+    let correctAnswers = 0;
+    const totalQuestions = assignment.questions?.length || 0;
+
+    if (totalQuestions === 0) {
+      return 0;
+    }
+
+    const submissionAnswers = submission.submissionText
+      ? JSON.parse(submission.submissionText)
+      : submission.answers || [];
+
+    submissionAnswers.forEach((answer: any) => {
+      const question = assignment.questions.find((q: any) => q.id === answer.questionId);
+      if (question && answer.selectedOption === question.correctOption) {
+        correctAnswers++;
+      }
+    });
+
+    return (correctAnswers / totalQuestions) * assignment.maxPoints;
+  }
+
+  /**
+   * Grade coding submissions by running test cases
+   */
+  private async gradeCodingSubmission(submission: any, assignment: any): Promise<number> {
+    try {
+      // Extract code from submission
+      const code = submission.submissionText || submission.code;
+      const language = assignment.language || 'javascript';
+      const testCases = assignment.testCases || [];
+
+      if (!code || testCases.length === 0) {
+        return 0;
+      }
+
+      // Call code runner service to execute test cases
+      const result = await this.codeRunnerClient.axiosRef.post('/execute', {
+        code,
+        language,
+        testCases,
+      });
+
+      const passedTests = result.data.results.filter((r: any) => r.passed).length;
+      const totalTests = result.data.results.length;
+
+      return (passedTests / totalTests) * assignment.maxPoints;
+    } catch (error) {
+      console.error('Coding submission grading failed:', error);
+      return 0;
+    }
   }
 
   /**

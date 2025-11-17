@@ -1,10 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateLessonDto } from '../dto/create-lesson.dto';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 @Injectable()
 export class LessonsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly aiServiceUrl: string;
+
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    this.aiServiceUrl = this.configService.get<string>('AI_SERVICE_URL') || 'http://localhost:3006';
+  }
 
   async create(createLessonDto: CreateLessonDto) {
     // Verify module exists
@@ -170,5 +179,150 @@ export class LessonsService {
         lastWatchedAt: new Date(),
       },
     });
+  }
+
+  /**
+   * Bulk create lessons for a module
+   */
+  async bulkCreateLessons(moduleId: string, lessons: any[]) {
+    // Verify module exists
+    const module = await this.prisma.courseModule.findUnique({
+      where: { id: moduleId },
+      include: { course: true },
+    });
+
+    if (!module) {
+      throw new NotFoundException('Module not found');
+    }
+
+    const createdLessons = [];
+
+    for (const lessonData of lessons) {
+      const lesson = await this.prisma.lesson.create({
+        data: {
+          moduleId,
+          title: lessonData.title,
+          contentType: lessonData.contentType || 'text',
+          contentUrl: lessonData.contentUrl,
+          contentText: lessonData.contentText,
+          durationMinutes: lessonData.durationMinutes || 0,
+          orderIndex: lessonData.orderIndex,
+          isFreePreview: lessonData.isFreePreview || false,
+          videoTranscript: lessonData.videoTranscript,
+        },
+        include: {
+          module: {
+            include: {
+              course: true,
+            },
+          },
+        },
+      });
+
+      createdLessons.push(lesson);
+    }
+
+    return {
+      count: createdLessons.length,
+      lessons: createdLessons,
+    };
+  }
+
+  /**
+   * Get free preview lessons for a course
+   */
+  async getFreePreviews(courseId: string) {
+    return this.prisma.lesson.findMany({
+      where: {
+        module: {
+          courseId,
+        },
+        isFreePreview: true,
+      },
+      include: {
+        module: true,
+      },
+      orderBy: [
+        { module: { orderIndex: 'asc' } },
+        { orderIndex: 'asc' },
+      ],
+    });
+  }
+
+  /**
+   * Toggle free preview status for a lesson
+   */
+  async toggleFreePreview(lessonId: string) {
+    const lesson = await this.findOne(lessonId);
+
+    return this.prisma.lesson.update({
+      where: { id: lessonId },
+      data: { isFreePreview: !lesson.isFreePreview },
+      include: {
+        module: true,
+      },
+    });
+  }
+
+  /**
+   * Generate quiz for a lesson using AI
+   */
+  async generateQuizForLesson(lessonId: string, count: number = 5) {
+    const lesson = await this.findOne(lessonId);
+
+    if (!lesson.contentText && !lesson.videoTranscript) {
+      throw new NotFoundException('Lesson must have content text or video transcript to generate quiz');
+    }
+
+    try {
+      // Call AI service to generate MCQs based on lesson content
+      const response = await axios.post(
+        `${this.aiServiceUrl}/api/v1/content-generation/mcq/generate`,
+        {
+          contentSource: 'LESSON',
+          contentId: lessonId,
+          content: lesson.contentText || lesson.videoTranscript,
+          count,
+          difficulty: 'MEDIUM',
+          questionType: 'MULTIPLE_CHOICE',
+          context: {
+            courseTitle: lesson.module.course.title,
+            moduleTitle: lesson.module.title,
+            lessonTitle: lesson.title,
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to generate quiz: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate coding lab for a lesson using AI
+   */
+  async generateCodingLabForLesson(lessonId: string, topic: string) {
+    const lesson = await this.findOne(lessonId);
+
+    try {
+      // Call AI service to generate coding lab
+      const response = await axios.post(
+        `${this.aiServiceUrl}/api/v1/content-generation/generate-coding-lab`,
+        {
+          topic,
+          difficulty: 'INTERMEDIATE',
+          labType: 'coding',
+          context: lesson.contentText || lesson.videoTranscript,
+          courseTitle: lesson.module.course.title,
+          moduleTitle: lesson.module.title,
+          lessonTitle: lesson.title,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to generate coding lab: ${error.message}`);
+    }
   }
 }

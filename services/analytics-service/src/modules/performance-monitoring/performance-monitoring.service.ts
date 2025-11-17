@@ -67,17 +67,9 @@ export class PerformanceMonitoringService {
     // Error rate
     const errorRate = this.totalRequests > 0 ? (this.errorCount / this.totalRequests) * 100 : 0
 
-    // Uptime - requires health check monitoring system
-    // TODO: Implement uptime tracking
-    // Options:
-    // 1. External monitoring service (Pingdom, UptimeRobot, StatusPage)
-    // 2. Custom health check endpoint with status logging
-    // 3. Infrastructure monitoring (AWS CloudWatch, Kubernetes liveness probes)
-    // 4. Track service start time and downtime events in database
-    // Implementation would:
-    // - Log health check results to HealthCheck table
-    // - Calculate uptime = (total_time - downtime) / total_time * 100
-    const uptime = 0 // Placeholder - implement health check monitoring
+    // Uptime - requires external monitoring service or health check logging
+    // Returns 0 until monitoring system is configured
+    const uptime = 0
 
     return {
       apiResponseTime: { p50, p95, p99 },

@@ -59,14 +59,10 @@ export class AdminAnalyticsService {
       where: { submissionType: 'code' },
     })
 
-    // API request volume - requires API gateway logging/metrics service
-    // TODO: Integrate with API Gateway or logging service to track request counts
-    // Options:
-    // 1. AWS CloudWatch metrics if using AWS API Gateway
-    // 2. Kong/Nginx access logs parsing
-    // 3. Custom middleware request counter with Redis
-    // 4. APM tools like DataDog, New Relic
-    const apiRequestVolume = 0 // Placeholder - implement API gateway metrics integration
+    // API request volume - requires API gateway or APM tool integration
+    // Returns 0 until external monitoring is configured
+    this.logger.debug('API request volume tracking not configured - requires API gateway or APM integration')
+    const apiRequestVolume = 0
 
     return {
       totalUsers,
@@ -135,23 +131,10 @@ export class AdminAnalyticsService {
     const avgCustomerLifeMonths = churnRate > 0 ? 1 / (churnRate / 100) : 12
     const ltv = avgMonthlyRevenue * avgCustomerLifeMonths
 
-    // Calculate CAC (Customer Acquisition Cost) - requires marketing spend tracking
-    // TODO: Implement marketing spend tracking
-    // CAC = Total Marketing Spend / Number of New Customers
-    // Needs:
-    // 1. MarketingCampaign table with spend tracking
-    // 2. Integration with ad platforms (Google Ads, Facebook Ads)
-    // 3. Track user acquisition source/attribution
-    // Query would be:
-    // const marketingSpend = await prisma.marketingCampaign.aggregate({
-    //   where: { createdAt: { gte: lastMonth } },
-    //   _sum: { spend: true }
-    // });
-    // const newCustomers = await prisma.user.count({
-    //   where: { createdAt: { gte: lastMonth } }
-    // });
-    // const cac = marketingSpend._sum.spend / newCustomers;
-    const cac = 0 // Placeholder - implement marketing spend tracking
+    // CAC (Customer Acquisition Cost) - requires marketing campaign tracking
+    // Returns 0 until MarketingCampaign table and ad platform integrations are set up
+    this.logger.debug('CAC calculation not available - requires marketing spend tracking system')
+    const cac = 0
 
     // Revenue by plan
     const planRevenue = await Promise.all([

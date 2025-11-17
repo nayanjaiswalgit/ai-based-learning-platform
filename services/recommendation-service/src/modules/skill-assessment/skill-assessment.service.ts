@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { prisma } from '@repo/database';
 import OpenAI from 'openai';
 import {
   SkillAssessmentQuestion,
@@ -368,53 +369,198 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
     currentLevel: SkillLevel,
     targetLevel: SkillLevel,
   ): Promise<Resource[]> {
-    // TODO: Query real courses and problems from database
-    // Query Course and Question tables:
-    // const resources = await prisma.course.findMany({
-    //   where: {
-    //     topics: { has: skill },
-    //     difficulty: this.getDifficultyForLevel(targetLevel)
-    //   },
-    //   take: 5
-    // });
-    return [
-      {
-        id: '1',
-        type: 'COURSE',
-        title: `Advanced ${skill} Course`,
-        estimatedTime: 600,
-        difficulty: DifficultyLevel.MEDIUM,
-      },
-      {
-        id: '2',
-        type: 'PROBLEM',
-        title: `${skill} Practice Problems`,
-        estimatedTime: 180,
-        difficulty: DifficultyLevel.MEDIUM,
-      },
-    ];
+    try {
+      const resources: Resource[] = [];
+      const targetDifficulty = this.getDifficultyForSkillLevel(targetLevel);
+
+      // Query relevant courses from database
+      const courses = await prisma.course.findMany({
+        where: {
+          isPublished: true,
+          OR: [
+            { title: { contains: skill, mode: 'insensitive' } },
+            { description: { contains: skill, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          duration: true,
+        },
+        take: 3,
+      });
+
+      courses.forEach((course) => {
+        resources.push({
+          id: course.id,
+          type: 'COURSE',
+          title: course.title,
+          estimatedTime: course.duration || 600,
+          difficulty: DifficultyLevel.MEDIUM,
+        });
+      });
+
+      // Query practice problems from database
+      const problems = await prisma.question.findMany({
+        where: {
+          isPublic: true,
+          topics: { has: skill },
+          difficulty: targetDifficulty,
+        },
+        select: {
+          id: true,
+          title: true,
+          difficulty: true,
+        },
+        take: 5,
+      });
+
+      problems.forEach((problem) => {
+        resources.push({
+          id: problem.id,
+          type: 'PROBLEM',
+          title: problem.title,
+          estimatedTime: 60, // Estimate 60 minutes per problem
+          difficulty: this.mapQuestionDifficultyToDifficultyLevel(problem.difficulty),
+        });
+      });
+
+      return resources;
+    } catch (error) {
+      this.logger.error(`Error fetching resources for skill ${skill}:`, error);
+      // Return empty array on error
+      return [];
+    }
+  }
+
+  /**
+   * Helper: Map skill level to question difficulty
+   */
+  private getDifficultyForSkillLevel(level: SkillLevel): string {
+    switch (level) {
+      case SkillLevel.EXPERT:
+        return 'HARD';
+      case SkillLevel.ADVANCED:
+        return 'MEDIUM';
+      case SkillLevel.INTERMEDIATE:
+        return 'MEDIUM';
+      default:
+        return 'EASY';
+    }
+  }
+
+  /**
+   * Helper: Map question difficulty to DifficultyLevel enum
+   */
+  private mapQuestionDifficultyToDifficultyLevel(difficulty: string): DifficultyLevel {
+    switch (difficulty) {
+      case 'HARD':
+        return DifficultyLevel.HARD;
+      case 'MEDIUM':
+        return DifficultyLevel.MEDIUM;
+      default:
+        return DifficultyLevel.EASY;
+    }
   }
 
   /**
    * Helper: Get user's current skill levels from submission history
    */
   private async getUserCurrentSkills(userId: string): Promise<Record<string, SkillLevel>> {
-    // TODO: Implement real skill calculation from database
-    // This should:
-    // 1. Query all user submissions from UserSubmission table
-    // 2. Group by topics/skills
-    // 3. Calculate success rate and difficulty progression per skill
-    // 4. Determine skill level based on performance metrics
-    //
-    // Temporary: Return default skill levels until database integration is complete
-    this.logger.warn(`Using default skill levels for user ${userId} - database integration pending`);
+    try {
+      // Query all accepted submissions for this user with question topics
+      const submissions = await prisma.userSubmission.findMany({
+        where: {
+          userId,
+          status: 'ACCEPTED',
+        },
+        include: {
+          question: {
+            select: {
+              topics: true,
+              difficulty: true,
+            },
+          },
+        },
+      });
 
-    return {
-      'JavaScript': SkillLevel.INTERMEDIATE,
-      'React': SkillLevel.BEGINNER,
-      'Node.js': SkillLevel.BEGINNER,
-      'TypeScript': SkillLevel.BEGINNER,
-      'System Design': SkillLevel.BEGINNER,
-    };
+      if (submissions.length === 0) {
+        this.logger.debug(`No submissions found for user ${userId}, returning beginner levels`);
+        return {};
+      }
+
+      // Group submissions by topic and calculate skill levels
+      const topicStats = new Map<string, { total: number; easy: number; medium: number; hard: number }>();
+
+      submissions.forEach((submission) => {
+        const topics = submission.question.topics as string[];
+        const difficulty = submission.question.difficulty;
+
+        if (Array.isArray(topics)) {
+          topics.forEach((topic) => {
+            if (!topicStats.has(topic)) {
+              topicStats.set(topic, { total: 0, easy: 0, medium: 0, hard: 0 });
+            }
+
+            const stats = topicStats.get(topic)!;
+            stats.total++;
+
+            if (difficulty === 'EASY') stats.easy++;
+            else if (difficulty === 'MEDIUM') stats.medium++;
+            else if (difficulty === 'HARD') stats.hard++;
+          });
+        }
+      });
+
+      // Calculate skill level for each topic based on problem count and difficulty distribution
+      const skillLevels: Record<string, SkillLevel> = {};
+
+      topicStats.forEach((stats, topic) => {
+        skillLevels[topic] = this.determineSkillLevelFromStats(stats);
+      });
+
+      return skillLevels;
+    } catch (error) {
+      this.logger.error(`Error calculating user skills for ${userId}:`, error);
+      // Return empty object on error - caller will handle missing skills
+      return {};
+    }
+  }
+
+  /**
+   * Helper: Determine skill level from submission statistics
+   */
+  private determineSkillLevelFromStats(stats: {
+    total: number;
+    easy: number;
+    medium: number;
+    hard: number;
+  }): SkillLevel {
+    // Skill level criteria:
+    // BEGINNER: < 10 problems or only easy problems
+    // INTERMEDIATE: 10-30 problems with some medium, or < 50% hard
+    // ADVANCED: 30-50 problems with good medium/hard mix
+    // EXPERT: 50+ problems with significant hard problem count
+
+    if (stats.total < 10 || stats.easy === stats.total) {
+      return SkillLevel.BEGINNER;
+    }
+
+    const hardPercentage = (stats.hard / stats.total) * 100;
+    const mediumPercentage = (stats.medium / stats.total) * 100;
+
+    if (stats.total >= 50 && hardPercentage >= 30) {
+      return SkillLevel.EXPERT;
+    }
+
+    if (stats.total >= 30 && (hardPercentage >= 20 || mediumPercentage >= 40)) {
+      return SkillLevel.ADVANCED;
+    }
+
+    if (stats.total >= 10 && mediumPercentage >= 20) {
+      return SkillLevel.INTERMEDIATE;
+    }
+
+    return SkillLevel.BEGINNER;
   }
 }

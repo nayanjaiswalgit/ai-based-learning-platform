@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -13,57 +14,99 @@ import {
   Share2,
   Download,
   RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface QuizResults {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string;
+  score: number;
+  correctAnswers: number;
+  totalQuestions: number;
+  passed: boolean;
+  timeTaken?: string;
+  submittedAt: string;
+  questionResults?: Array<{
+    questionId: string;
+    question: string;
+    userAnswer: any;
+    isCorrect: boolean;
+  }>;
+}
+
 export default function QuizResultsPage({ params }: { params: { id: string } }) {
-  // Mock data - will be replaced with actual API data
-  const results = {
-    quizTitle: 'React Fundamentals Quiz',
-    score: 85,
-    totalQuestions: 20,
-    correctAnswers: 17,
-    wrongAnswers: 3,
-    timeTaken: '18:45',
-    timeLimit: '30:00',
-    passingScore: 70,
-    rank: 12,
-    totalAttempts: 145,
-    percentile: 92,
-    attemptDate: '2025-11-17',
-  };
+  const [results, setResults] = useState<QuizResults | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const questionBreakdown = [
-    {
-      id: 1,
-      question: 'What is JSX?',
-      yourAnswer: 'A syntax extension for JavaScript',
-      correctAnswer: 'A syntax extension for JavaScript',
-      isCorrect: true,
-      points: 5,
-      explanation: 'JSX stands for JavaScript XML and allows us to write HTML in React.',
-    },
-    {
-      id: 2,
-      question: 'Which hook is used for side effects?',
-      yourAnswer: 'useState',
-      correctAnswer: 'useEffect',
-      isCorrect: false,
-      points: 0,
-      explanation: 'useEffect is used for side effects like data fetching, subscriptions, etc.',
-    },
-    {
-      id: 3,
-      question: 'What does React.memo do?',
-      yourAnswer: 'Prevents unnecessary re-renders',
-      correctAnswer: 'Prevents unnecessary re-renders',
-      isCorrect: true,
-      points: 5,
-      explanation: 'React.memo is a higher order component that memoizes the result.',
-    },
-  ];
+  useEffect(() => {
+    async function fetchResults() {
+      try {
+        // The id param is the attemptId
+        const attemptId = params.id;
 
-  const isPassed = results.score >= results.passingScore;
+        // Fetch results from quiz service
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_ASSESSMENT_SERVICE_URL || 'http://localhost:3003'}/quizzes/attempts/${attemptId}/results`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch quiz results');
+        }
+
+        const data = await response.json();
+        setResults(data);
+      } catch (err) {
+        console.error('Error fetching quiz results:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load results');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchResults();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-12">
+        <div className="mx-auto max-w-4xl px-4">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !results) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-12">
+        <div className="mx-auto max-w-4xl px-4">
+          <Card className="p-12 text-center border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <XCircle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              Unable to Load Results
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              {error || 'Quiz results not found'}
+            </p>
+            <Link href="/quizzes">
+              <Button>Back to Quizzes</Button>
+            </Link>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const wrongAnswers = results.totalQuestions - results.correctAnswers;
+  const questionBreakdown = results.questionResults || [];
+
+  // Use the passed status from API
+  const isPassed = results.passed;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-12">
@@ -114,7 +157,7 @@ export default function QuizResultsPage({ params }: { params: { id: string } }) 
                 <XCircle className="h-5 w-5 text-red-600" />
               </div>
               <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                {results.wrongAnswers}
+                {wrongAnswers}
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-400">Wrong</p>
             </div>
@@ -124,7 +167,7 @@ export default function QuizResultsPage({ params }: { params: { id: string } }) 
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                {results.timeTaken}
+                {results.timeTaken || 'N/A'}
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-400">Time Taken</p>
             </div>
@@ -134,9 +177,9 @@ export default function QuizResultsPage({ params }: { params: { id: string } }) 
                 <Target className="h-5 w-5 text-purple-600" />
               </div>
               <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-                {results.percentile}%
+                {results.score}%
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Percentile</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Score</p>
             </div>
           </div>
         </Card>
@@ -160,30 +203,11 @@ export default function QuizResultsPage({ params }: { params: { id: string } }) 
                 <Progress value={results.score} className="mt-2" />
               </div>
 
-              <div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600 dark:text-slate-400">Time Efficiency</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">62.5%</span>
-                </div>
-                <Progress value={62.5} className="mt-2" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Your Rank</p>
-                  <p className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    #{results.rank}
-                  </p>
-                  <p className="text-xs text-slate-500">out of {results.totalAttempts} attempts</p>
-                </div>
-
-                <div className="rounded-lg bg-purple-50 p-4 dark:bg-purple-950">
-                  <p className="text-sm text-slate-600 dark:text-slate-400">Percentile</p>
-                  <p className="mt-1 text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {results.percentile}th
-                  </p>
-                  <p className="text-xs text-slate-500">Better than {results.percentile}% of users</p>
-                </div>
+              <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Submitted At</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
+                  {new Date(results.submittedAt).toLocaleString()}
+                </p>
               </div>
             </div>
           </div>
@@ -197,64 +221,53 @@ export default function QuizResultsPage({ params }: { params: { id: string } }) 
             </h2>
 
             <div className="mt-6 space-y-4">
-              {questionBreakdown.map((q) => (
-                <div
-                  key={q.id}
-                  className={`rounded-lg border-2 p-4 ${
-                    q.isCorrect
-                      ? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30'
-                      : 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        {q.isCorrect ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        ) : (
-                          <XCircle className="h-5 w-5 text-red-600" />
-                        )}
-                        <h3 className="font-semibold text-slate-900 dark:text-white">
-                          Question {q.id}: {q.question}
-                        </h3>
-                      </div>
-
-                      <div className="mt-3 space-y-2 text-sm">
-                        <div>
-                          <span className="text-slate-600 dark:text-slate-400">Your Answer: </span>
-                          <span className={q.isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}>
-                            {q.yourAnswer}
-                          </span>
+              {questionBreakdown.length === 0 ? (
+                <p className="text-center text-slate-600 dark:text-slate-400">
+                  Detailed question breakdown is not available for this quiz.
+                </p>
+              ) : (
+                questionBreakdown.map((q, index) => (
+                  <div
+                    key={q.questionId}
+                    className={`rounded-lg border-2 p-4 ${
+                      q.isCorrect
+                        ? 'border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30'
+                        : 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          {q.isCorrect ? (
+                            <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-red-600" />
+                          )}
+                          <h3 className="font-semibold text-slate-900 dark:text-white">
+                            Question {index + 1}: {q.question}
+                          </h3>
                         </div>
 
-                        {!q.isCorrect && (
+                        <div className="mt-3 space-y-2 text-sm">
                           <div>
-                            <span className="text-slate-600 dark:text-slate-400">Correct Answer: </span>
-                            <span className="text-green-700 dark:text-green-400">
-                              {q.correctAnswer}
+                            <span className="text-slate-600 dark:text-slate-400">Your Answer: </span>
+                            <span className={q.isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}>
+                              {typeof q.userAnswer === 'object' ? JSON.stringify(q.userAnswer) : q.userAnswer}
                             </span>
                           </div>
-                        )}
 
-                        <div className="mt-2 rounded-md bg-white/50 p-3 dark:bg-slate-900/50">
-                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            Explanation:
-                          </p>
-                          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                            {q.explanation}
-                          </p>
+                          <div>
+                            <span className="text-slate-600 dark:text-slate-400">Status: </span>
+                            <span className={q.isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}>
+                              {q.isCorrect ? 'Correct' : 'Incorrect'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="ml-4">
-                      <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                        {q.points} pts
-                      </span>
-                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </Card>

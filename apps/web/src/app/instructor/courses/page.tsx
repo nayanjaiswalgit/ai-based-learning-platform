@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import {
   Edit,
   Trash2,
   MoreVertical,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -24,65 +26,71 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface Course {
+  id: string;
+  title: string;
+  isPublished: boolean;
+  enrollmentCount: number;
+  price: number;
+  ratingAverage: number;
+  thumbnailUrl?: string;
+  updatedAt: string;
+  modules?: Array<{ lessons?: any[] }>;
+}
+
 export default function InstructorCoursesPage() {
-  // Mock data
-  const courses = [
-    {
-      id: 1,
-      title: 'Advanced React Patterns',
-      status: 'published',
-      students: 456,
-      revenue: 12345,
-      rating: 4.9,
-      modules: 12,
-      lessons: 87,
-      thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&h=250&fit=crop',
-      updatedAt: '2 days ago',
-    },
-    {
-      id: 2,
-      title: 'Node.js Masterclass',
-      status: 'published',
-      students: 234,
-      revenue: 8456,
-      rating: 4.7,
-      modules: 10,
-      lessons: 65,
-      thumbnail: 'https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=400&h=250&fit=crop',
-      updatedAt: '1 week ago',
-    },
-    {
-      id: 3,
-      title: 'TypeScript Deep Dive',
-      status: 'draft',
-      students: 0,
-      revenue: 0,
-      rating: 0,
-      modules: 8,
-      lessons: 42,
-      thumbnail: 'https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=400&h=250&fit=crop',
-      updatedAt: '3 days ago',
-    },
-    {
-      id: 4,
-      title: 'GraphQL Complete Guide',
-      status: 'published',
-      students: 189,
-      revenue: 6789,
-      rating: 4.8,
-      modules: 9,
-      lessons: 54,
-      thumbnail: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=400&h=250&fit=crop',
-      updatedAt: '2 weeks ago',
-    },
-  ];
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        // TODO: Get instructor ID from auth context
+        const instructorId = 'user_123';
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_COURSE_SERVICE_URL || 'http://localhost:3002'}/courses?instructorId=${instructorId}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch courses');
+        }
+
+        const data = await response.json();
+        setCourses(data.courses || []);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCourses();
+  }, []);
+
+  const filteredCourses = courses.filter(course =>
+    course.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const stats = {
     totalCourses: courses.length,
-    published: courses.filter((c) => c.status === 'published').length,
-    draft: courses.filter((c) => c.status === 'draft').length,
-    totalStudents: courses.reduce((acc, c) => acc + c.students, 0),
-    totalRevenue: courses.reduce((acc, c) => acc + c.revenue, 0),
+    published: courses.filter((c) => c.isPublished).length,
+    draft: courses.filter((c) => !c.isPublished).length,
+    totalStudents: courses.reduce((acc, c) => acc + c.enrollmentCount, 0),
+    totalRevenue: courses.reduce((acc, c) => acc + (Number(c.price) * c.enrollmentCount), 0),
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
   };
 
   return (
@@ -200,7 +208,12 @@ export default function InstructorCoursesPage() {
       <div className="flex gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input placeholder="Search courses..." className="pl-10" />
+          <Input
+            placeholder="Search courses..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
         <select className="rounded-lg border border-slate-300 px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-800">
           <option>All Status</option>
@@ -216,106 +229,136 @@ export default function InstructorCoursesPage() {
       </div>
 
       {/* Courses Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {courses.map((course) => (
-          <Card
-            key={course.id}
-            className="overflow-hidden border-slate-200 bg-white/80 backdrop-blur-sm transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/80"
-          >
-            <div className="relative h-48 overflow-hidden bg-slate-200">
-              <img
-                src={course.thumbnail}
-                alt={course.title}
-                className="h-full w-full object-cover"
-              />
-              <Badge
-                className={`absolute top-4 right-4 ${
-                  course.status === 'published'
-                    ? 'bg-green-600'
-                    : 'bg-yellow-600'
-                }`}
-              >
-                {course.status}
-              </Badge>
-            </div>
-
-            <div className="p-6">
-              <div className="mb-4 flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                    {course.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    Updated {course.updatedAt}
-                  </p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Preview
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-slate-600 dark:text-slate-400">Modules</p>
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {course.modules}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-slate-600 dark:text-slate-400">Lessons</p>
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {course.lessons}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 border-t border-slate-200 pt-4 text-sm dark:border-slate-700">
-                <span className="flex items-center text-slate-600 dark:text-slate-400">
-                  <Users className="mr-1 h-4 w-4" />
-                  {course.students.toLocaleString()}
-                </span>
-                {course.status === 'published' && (
-                  <>
-                    <span className="flex items-center text-slate-600 dark:text-slate-400">
-                      <Star className="mr-1 h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      {course.rating}
-                    </span>
-                    <span className="flex items-center text-slate-600 dark:text-slate-400">
-                      <DollarSign className="mr-1 h-4 w-4" />
-                      {course.revenue.toLocaleString()}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <Link href={`/instructor/courses/${course.id}/edit`}>
-                <Button className="mt-4 w-full">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Manage Course
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      ) : filteredCourses.length === 0 ? (
+        <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+          <div className="p-12 text-center">
+            <BookOpen className="mx-auto h-12 w-12 text-slate-400" />
+            <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">
+              No courses found
+            </h3>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              {searchQuery ? 'Try a different search term' : 'Create your first course to get started!'}
+            </p>
+            {!searchQuery && (
+              <Link href="/instructor/courses/create">
+                <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create Course
                 </Button>
               </Link>
-            </div>
-          </Card>
-        ))}
-      </div>
+            )}
+          </div>
+        </Card>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {filteredCourses.map((course) => (
+            <Card
+              key={course.id}
+              className="overflow-hidden border-slate-200 bg-white/80 backdrop-blur-sm transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/80"
+            >
+              <div className="relative h-48 overflow-hidden bg-slate-200">
+                {course.thumbnailUrl ? (
+                  <img
+                    src={course.thumbnailUrl}
+                    alt={course.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600">
+                    <BookOpen className="h-16 w-16 text-white opacity-50" />
+                  </div>
+                )}
+                <Badge
+                  className={`absolute top-4 right-4 ${
+                    course.isPublished ? 'bg-green-600' : 'bg-yellow-600'
+                  }`}
+                >
+                  {course.isPublished ? 'Published' : 'Draft'}
+                </Badge>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                      {course.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      Updated {formatDate(course.updatedAt)}
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Preview
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-slate-600 dark:text-slate-400">Modules</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">
+                      {course.modules?.length || 0}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-slate-600 dark:text-slate-400">Lessons</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">
+                      {course.modules?.reduce((sum, m) => sum + (m.lessons?.length || 0), 0) || 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 border-t border-slate-200 pt-4 text-sm dark:border-slate-700">
+                  <span className="flex items-center text-slate-600 dark:text-slate-400">
+                    <Users className="mr-1 h-4 w-4" />
+                    {course.enrollmentCount.toLocaleString()}
+                  </span>
+                  {course.isPublished && (
+                    <>
+                      <span className="flex items-center text-slate-600 dark:text-slate-400">
+                        <Star className="mr-1 h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        {Number(course.ratingAverage).toFixed(1)}
+                      </span>
+                      <span className="flex items-center text-slate-600 dark:text-slate-400">
+                        <DollarSign className="mr-1 h-4 w-4" />
+                        {(Number(course.price) * course.enrollmentCount).toLocaleString()}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <Link href={`/instructor/courses/${course.id}/edit`}>
+                  <Button className="mt-4 w-full">
+                    <Edit className="mr-2 h-4 w-4" />
+                    Manage Course
+                  </Button>
+                </Link>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

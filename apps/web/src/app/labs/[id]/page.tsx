@@ -16,79 +16,84 @@ import {
   BookOpen,
   Lightbulb,
   Flag,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Link from 'next/link';
 
-// Mock lab data
-const lab = {
-  id: 1,
-  title: 'Docker Basics - Container Management',
-  difficulty: 'Intermediate',
-  estimatedTime: '45 min',
-  description: 'Learn the fundamentals of Docker by creating, managing, and deploying containers.',
-  scenario: 'linux',
-  tasks: [
-    {
-      id: 1,
-      title: 'Check Docker Installation',
-      description: 'Verify that Docker is installed and running',
-      command: 'docker --version',
-      validation: 'Docker version',
-      completed: false,
-    },
-    {
-      id: 2,
-      title: 'Pull an Image',
-      description: 'Pull the nginx image from Docker Hub',
-      command: 'docker pull nginx',
-      validation: 'Status: Downloaded',
-      completed: false,
-    },
-    {
-      id: 3,
-      title: 'Run a Container',
-      description: 'Start an nginx container on port 8080',
-      command: 'docker run -d -p 8080:80 --name my-nginx nginx',
-      validation: 'container running',
-      completed: false,
-    },
-    {
-      id: 4,
-      title: 'List Running Containers',
-      description: 'View all running containers',
-      command: 'docker ps',
-      validation: 'my-nginx',
-      completed: false,
-    },
-    {
-      id: 5,
-      title: 'Stop and Remove Container',
-      description: 'Stop and remove the nginx container',
-      command: 'docker stop my-nginx && docker rm my-nginx',
-      validation: 'container stopped',
-      completed: false,
-    },
-  ],
-};
+interface LabTask {
+  id: number;
+  title: string;
+  description: string;
+  command: string;
+  validation: string;
+  completed: boolean;
+}
+
+interface Lab {
+  id: string;
+  title: string;
+  difficulty: string;
+  estimatedTime: string;
+  description: string;
+  scenario: string;
+  tasks: LabTask[];
+}
 
 export default function LabPage({ params }: { params: { id: string } }) {
-  const [tasks, setTasks] = useState(lab.tasks);
+  const [lab, setLab] = useState<Lab | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<LabTask[]>([]);
   const [currentTask, setCurrentTask] = useState(0);
-  const [terminalOutput, setTerminalOutput] = useState<string[]>([
-    '$ Welcome to the Docker Basics Lab',
-    '$ Type commands to complete the tasks',
-    '$ ',
-  ]);
+  const [terminalOutput, setTerminalOutput] = useState<string[]>([]);
   const [command, setCommand] = useState('');
   const [timeElapsed, setTimeElapsed] = useState(0);
 
+  // Fetch lab data
+  useEffect(() => {
+    async function fetchLab() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_ASSESSMENT_SERVICE_URL || 'http://localhost:3003'}/terminal-challenges/${params.id}`
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Lab not found');
+          }
+          throw new Error('Failed to load lab');
+        }
+
+        const data = await response.json();
+        setLab(data);
+        setTasks(data.tasks.map((t: any) => ({ ...t, completed: false })));
+        setTerminalOutput([
+          `$ Welcome to ${data.title}`,
+          '$ Type commands to complete the tasks',
+          '$ ',
+        ]);
+      } catch (err) {
+        console.error('Error fetching lab:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load lab');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLab();
+  }, [params.id]);
+
   // Timer
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeElapsed((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    if (!loading && lab) {
+      const timer = setInterval(() => {
+        setTimeElapsed((prev) => prev + 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [loading, lab]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -136,10 +141,11 @@ export default function LabPage({ params }: { params: { id: string } }) {
   };
 
   const handleReset = () => {
+    if (!lab) return;
     setTasks(lab.tasks.map((t) => ({ ...t, completed: false })));
     setCurrentTask(0);
     setTerminalOutput([
-      '$ Welcome to the Docker Basics Lab',
+      `$ Welcome to ${lab.title}`,
       '$ Type commands to complete the tasks',
       '$ ',
     ]);
@@ -147,8 +153,45 @@ export default function LabPage({ params }: { params: { id: string } }) {
   };
 
   const completedTasks = tasks.filter((t) => t.completed).length;
-  const progress = (completedTasks / tasks.length) * 100;
-  const allCompleted = completedTasks === tasks.length;
+  const progress = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
+  const allCompleted = tasks.length > 0 && completedTasks === tasks.length;
+
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Error state
+  if (error || !lab) {
+    return (
+      <DashboardLayout>
+        <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-orange-500 mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              Unable to Load Lab
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              {error || 'Lab not found'}
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              The terminal challenges endpoint needs to be implemented in the assessment service.
+              The TerminalChallenge model exists in the database - an API endpoint is needed.
+            </p>
+            <Link href="/labs">
+              <Button>Back to Labs</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

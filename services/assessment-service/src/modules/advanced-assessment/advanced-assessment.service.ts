@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateAdvancedAssessmentDto, AdvancedAssessmentType } from './dto/create-advanced-assessment.dto';
 
 @Injectable()
 export class AdvancedAssessmentService {
+  private readonly logger = new Logger(AdvancedAssessmentService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async create(createDto: CreateAdvancedAssessmentDto, userId: string) {
@@ -17,32 +19,38 @@ export class AdvancedAssessmentService {
   }
 
   async findAll(type?: AdvancedAssessmentType) {
-    // Mock implementation
+    // Advanced assessments require AdvancedAssessment table in database schema
+    // Feature not yet implemented in database - returning empty array
+    this.logger.warn(
+      'Advanced assessment storage not implemented - requires AdvancedAssessment table in Prisma schema'
+    );
     return [];
   }
 
   async findOne(id: string) {
-    // Mock implementation
-    return {
-      id,
-      title: 'Debug Binary Search',
-      type: 'CODE_DEBUGGING',
-      codeDebugging: {
-        description: 'Find and fix the bug',
-        buggyCode: 'def binary_search(arr, target):\n  left = 0\n  right = len(arr)\n  ...',
-        language: 'python',
-      },
-    };
+    // Advanced assessments require AdvancedAssessment table in database schema
+    // Feature not yet implemented - throwing NotFoundException
+    this.logger.warn(
+      `Advanced assessment ${id} requested but storage not implemented - requires AdvancedAssessment table in Prisma schema`
+    );
+    throw new NotFoundException(
+      `Advanced assessment storage not yet implemented. Assessment ID: ${id}`
+    );
   }
 
   /**
    * Evaluate fill-in-the-blank answer
+   * Note: Uses exact string matching. For better accuracy, consider implementing:
+   * - Fuzzy matching for typo tolerance
+   * - Semantic similarity for conceptual answers
    */
   evaluateFillInBlank(assessmentId: string, answer: string) {
-    // Mock - compare with accepted answers
+    // In production, fetch accepted answers from database based on assessmentId
+    // For now using example answers - implement database lookup when AdvancedAssessment table exists
     const acceptedAnswers = ['O(n^2)', 'O(n*n)', 'O(n²)'];
+    const normalizedAnswer = answer.trim().toLowerCase();
     const isCorrect = acceptedAnswers.some((accepted) =>
-      answer.toLowerCase() === accepted.toLowerCase()
+      normalizedAnswer === accepted.toLowerCase()
     );
 
     return {
@@ -86,11 +94,14 @@ export class AdvancedAssessmentService {
 
   /**
    * Evaluate code debugging submission
+   * Note: Uses keyword matching. For better accuracy in production, consider:
+   * - AST analysis to verify code changes
+   * - Test case execution
+   * - AI-powered code review (GPT-4/Claude)
    */
   async evaluateCodeDebugging(assessmentId: string, submittedCode: string, identifiedIssues: string[]) {
-    // In production, use AI to compare with expected fix
-    // For now, simple keyword matching
-
+    // In production, fetch expected issues from database based on assessmentId
+    // For now using example issues - implement database lookup when AdvancedAssessment table exists
     const expectedIssues = ['base case', 'stack overflow'];
     const foundIssues = identifiedIssues.filter((issue) =>
       expectedIssues.some((expected) =>

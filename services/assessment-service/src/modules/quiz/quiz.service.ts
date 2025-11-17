@@ -27,13 +27,66 @@ export class QuizService {
   }
 
   async findAll(filters?: { courseId?: string }) {
-    // Mock implementation
-    return [];
+    // For now, return dynamically generated quizzes based on question categories
+    // In the future, this should query a Quiz model
+    const questionTypes = await this.prisma.question.groupBy({
+      by: ['questionType'],
+      where: {
+        isPublic: true,
+        questionType: 'MCQ', // Only MCQ questions for quizzes
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    return questionTypes.map((type, index) => ({
+      id: `quiz_${type.questionType}_${index}`,
+      title: `${type.questionType} Quiz`,
+      description: `Test your knowledge with ${type._count.id} questions`,
+      questionCount: type._count.id,
+      questionType: type.questionType,
+    }));
   }
 
   async findOne(id: string) {
-    // Mock implementation
-    throw new NotFoundException(`Quiz with ID ${id} not found`);
+    // For now, return a dynamic quiz based on question type
+    // Extract question type from id (format: quiz_{type}_{index})
+    const parts = id.split('_');
+    if (parts.length < 2) {
+      throw new NotFoundException(`Quiz with ID ${id} not found`);
+    }
+
+    const questionType = parts[1];
+    const questions = await this.prisma.question.findMany({
+      where: {
+        isPublic: true,
+        questionType,
+      },
+      include: {
+        mcqOptions: true,
+      },
+      take: 20, // Limit to 20 questions per quiz
+    });
+
+    if (questions.length === 0) {
+      throw new NotFoundException(`Quiz with ID ${id} not found`);
+    }
+
+    return {
+      id,
+      title: `${questionType} Quiz`,
+      description: `Test your knowledge`,
+      timeLimit: 1800, // 30 minutes
+      questionCount: questions.length,
+      questions: questions.map(q => ({
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        questionType: q.questionType,
+        options: q.mcqOptions,
+      })),
+    };
   }
 
   /**
@@ -156,11 +209,61 @@ export class QuizService {
    * Get quiz results for a specific attempt
    */
   async getAttemptResults(attemptId: string, userId: string) {
-    // Mock implementation
+    // Find submissions for this attempt
+    // attemptId format: attempt_{timestamp}_{userId}_{quizId}
+    const parts = attemptId.split('_');
+    if (parts.length < 4) {
+      throw new NotFoundException('Invalid attempt ID');
+    }
+
+    const timestamp = parts[1];
+    const quizId = parts.slice(3).join('_');
+
+    // Get the quiz details
+    const quiz = await this.findOne(quizId);
+
+    // Get all submissions from this user around the attempt time
+    const attemptTime = new Date(parseInt(timestamp));
+    const submissions = await this.prisma.userSubmission.findMany({
+      where: {
+        userId,
+        questionId: {
+          in: quiz.questions.map(q => q.id),
+        },
+        submittedAt: {
+          gte: new Date(attemptTime.getTime() - 60 * 60 * 1000), // 1 hour window
+          lte: new Date(attemptTime.getTime() + 60 * 60 * 1000),
+        },
+      },
+      include: {
+        question: {
+          include: {
+            mcqOptions: true,
+          },
+        },
+      },
+    });
+
+    const totalQuestions = quiz.questionCount;
+    const correctAnswers = submissions.filter(s => s.status === 'ACCEPTED').length;
+    const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+
     return {
       attemptId,
-      score: 85,
-      passed: true,
+      quizId,
+      quizTitle: quiz.title,
+      score: percentage,
+      correctAnswers,
+      totalQuestions,
+      passed: percentage >= 70,
+      timeTaken: null, // Can be calculated if we store attempt start/end times
+      submittedAt: submissions[0]?.submittedAt || attemptTime,
+      questionResults: submissions.map(s => ({
+        questionId: s.questionId,
+        question: s.question.title,
+        userAnswer: s.submissionData,
+        isCorrect: s.status === 'ACCEPTED',
+      })),
     };
   }
 
@@ -168,12 +271,57 @@ export class QuizService {
    * Get user's attempt history for a quiz
    */
   async getUserAttemptHistory(quizId: string, userId: string) {
-    return [];
+    const quiz = await this.findOne(quizId);
+
+    // Get all submissions for questions in this quiz
+    const submissions = await this.prisma.userSubmission.findMany({
+      where: {
+        userId,
+        questionId: {
+          in: quiz.questions.map(q => q.id),
+        },
+      },
+      orderBy: {
+        submittedAt: 'desc',
+      },
+      select: {
+        submittedAt: true,
+        status: true,
+        questionId: true,
+      },
+    });
+
+    // Group submissions by date to identify attempts
+    const attemptsByDate = new Map<string, typeof submissions>();
+    submissions.forEach(sub => {
+      const dateKey = sub.submittedAt.toISOString().split('T')[0];
+      if (!attemptsByDate.has(dateKey)) {
+        attemptsByDate.set(dateKey, []);
+      }
+      attemptsByDate.get(dateKey)!.push(sub);
+    });
+
+    // Convert to attempt history
+    const history = Array.from(attemptsByDate.entries()).map(([date, subs]) => {
+      const uniqueQuestions = new Set(subs.map(s => s.questionId));
+      const correctAnswers = subs.filter(s => s.status === 'ACCEPTED').length;
+      const percentage = Math.round((correctAnswers / uniqueQuestions.size) * 100);
+
+      return {
+        attemptId: `attempt_${new Date(date).getTime()}_${userId}_${quizId}`,
+        attemptDate: date,
+        score: percentage,
+        questionsAnswered: uniqueQuestions.size,
+        passed: percentage >= 70,
+      };
+    });
+
+    return history.slice(0, 10); // Return last 10 attempts
   }
 
   private async getUserAttempts(quizId: string, userId: string): Promise<number> {
-    // Mock - return number of attempts
-    return 0;
+    const history = await this.getUserAttemptHistory(quizId, userId);
+    return history.length;
   }
 
   private shuffleArray<T>(array: T[]): T[] {

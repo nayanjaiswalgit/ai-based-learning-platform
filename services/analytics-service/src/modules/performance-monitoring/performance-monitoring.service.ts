@@ -67,8 +67,9 @@ export class PerformanceMonitoringService {
     // Error rate
     const errorRate = this.totalRequests > 0 ? (this.errorCount / this.totalRequests) * 100 : 0
 
-    // Uptime (calculate from start time)
-    const uptime = 99.9 // Placeholder
+    // Uptime - requires external monitoring service or health check logging
+    // Returns 0 until monitoring system is configured
+    const uptime = 0
 
     return {
       apiResponseTime: { p50, p95, p99 },

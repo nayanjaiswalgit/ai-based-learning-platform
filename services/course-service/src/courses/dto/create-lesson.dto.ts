@@ -47,4 +47,12 @@ export class CreateLessonDto {
   @IsString()
   @IsOptional()
   videoTranscript?: string;
+
+  @ApiPropertyOptional({
+    example: 'question-uuid-here',
+    description: 'ID of the coding lab, terminal challenge, or quiz to associate with this lesson'
+  })
+  @IsString()
+  @IsOptional()
+  questionId?: string;
 }

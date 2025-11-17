@@ -70,4 +70,18 @@ export class QuestionController {
   ) {
     return this.questionService.checkAnswer(id, body.selectedAnswers);
   }
+
+  @Post('from-ai-generation')
+  @ApiOperation({ summary: 'Create a question from AI-generated content' })
+  createFromAIGeneration(@Body() body: {
+    generatedContent: any;
+    labType: 'coding' | 'terminal';
+    createdBy?: string;
+  }) {
+    return this.questionService.createFromAIGeneration(
+      body.generatedContent,
+      body.labType,
+      body.createdBy,
+    );
+  }
 }

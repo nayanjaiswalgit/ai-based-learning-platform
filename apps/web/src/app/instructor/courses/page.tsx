@@ -97,12 +97,20 @@ export default function InstructorCoursesPage() {
             Manage and track your course performance
           </p>
         </div>
-        <Link href="/instructor/courses/create">
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Course
-          </Button>
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/instructor/courses/generate-ai">
+            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+              <span className="mr-2">✨</span>
+              Generate with AI
+            </Button>
+          </Link>
+          <Link href="/instructor/courses/create">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Manually
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

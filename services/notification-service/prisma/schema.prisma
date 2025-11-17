@@ -291,22 +291,35 @@ model MessageReadReceipt {
 // ============================================
 
 model ForumCategory {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  description String?  @db.Text
-  icon        String?
-  color       String?
-  position    Int      @default(0)
-  isActive    Boolean  @default(true) @map("is_active")
-  courseId    String?  @map("course_id") // Optional: category for specific course
-  createdAt   DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  name           String
+  slug           String   @unique
+  description    String?  @db.Text
+  icon           String?
+  color          String?
+  position       Int      @default(0)
+  isActive       Boolean  @default(true) @map("is_active")
+  courseId       String?  @map("course_id") // Optional: category for specific course
+  organizationId String?  @map("organization_id") // Optional: category for organization
+  categoryType   ForumCategoryType @default(GENERAL) @map("category_type")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   threads     ForumThread[]
 
   @@index([courseId])
+  @@index([organizationId])
   @@index([position])
+  @@index([categoryType])
   @@map("forum_categories")
+}
+
+enum ForumCategoryType {
+  GENERAL         // General platform discussions
+  COURSE          // Course-specific discussions
+  ORGANIZATION    // Organization-specific discussions
+  QUESTION        // Q&A forum
+  ISSUE           // Issue/bug reporting
+  ANNOUNCEMENT    // Announcements
 }
 
 model ForumThread {

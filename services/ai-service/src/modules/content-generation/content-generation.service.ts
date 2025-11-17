@@ -15,7 +15,7 @@ import {
 import { GenerateCourseDto, RefineCourseContentDto } from './dto/generate-course.dto';
 
 // Interfaces for Coding Lab Generation
-interface CodingLabGenerationOptions {
+export interface CodingLabGenerationOptions {
   topic: string;
   difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
   labType: 'coding' | 'terminal';
@@ -24,7 +24,7 @@ interface CodingLabGenerationOptions {
   moduleTitle?: string;
 }
 
-interface GeneratedCodingLab {
+export interface GeneratedCodingLab {
   title: string;
   description: string;
   difficulty: string;
@@ -40,7 +40,7 @@ interface GeneratedCodingLab {
   constraints?: string;
 }
 
-interface GeneratedTerminalLab {
+export interface GeneratedTerminalLab {
   title: string;
   description: string;
   difficulty: string;
@@ -217,7 +217,11 @@ Make sure to include:
         max_tokens: 16000,
       });
 
-      const generatedContent = JSON.parse(completion.choices[0].message.content);
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content in OpenAI response');
+      }
+      const generatedContent = JSON.parse(content);
 
       this.logger.log(`Successfully generated course: ${generatedContent.title}`);
 
@@ -264,7 +268,11 @@ Please refine this ${dto.sectionType} while maintaining the structure.`;
         max_tokens: 8000,
       });
 
-      const refinedContent = JSON.parse(completion.choices[0].message.content);
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content in OpenAI response');
+      }
+      const refinedContent = JSON.parse(content);
 
       return {
         success: true,
@@ -297,7 +305,7 @@ Please refine this ${dto.sectionType} while maintaining the structure.`;
     );
 
     // Map to response format
-    const generatedQuestions: GeneratedMcqDto[] = questions.map((q, index) => ({
+    const generatedQuestions: GeneratedMcqDto[] = questions.map((q: any, index: number) => ({
       id: `temp-${Date.now()}-${index}`,
       questionText: q.questionText,
       options: q.options,
@@ -404,7 +412,7 @@ Please refine this ${dto.sectionType} while maintaining the structure.`;
 
     // Combine all lesson content
     const lessonsContent = module.lessons
-      .map((l) => `${l.title}: ${l.contentText || ''}`)
+      .map((l: { title: string; contentText: string | null }) => `${l.title}: ${l.contentText || ''}`)
       .join('\n\n');
 
     return {
@@ -438,8 +446,8 @@ Please refine this ${dto.sectionType} while maintaining the structure.`;
 
     // Combine all module and lesson content
     const modulesContent = course.modules
-      .map((m) => {
-        const lessonsText = m.lessons.map((l) => `- ${l.title}`).join('\n');
+      .map((m: { title: string; description: string | null; lessons: Array<{ title: string }> }) => {
+        const lessonsText = m.lessons.map((l: { title: string }) => `- ${l.title}`).join('\n');
         return `Module: ${m.title}\n${m.description || ''}\nLessons:\n${lessonsText}`;
       })
       .join('\n\n');

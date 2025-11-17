@@ -24,23 +24,23 @@ export class PerformanceMonitoringService {
 
   async getPerformanceMetrics(): Promise<PerformanceMetrics> {
     // API Response Time
-    const responseTimes = this.apiMetrics.map((m) => m.duration).sort((a, b) => a - b)
+    const responseTimes = this.apiMetrics.map((m: any) => m.duration).sort((a: any, b: any) => a - b)
     const p50 = this.getPercentile(responseTimes, 50)
     const p95 = this.getPercentile(responseTimes, 95)
     const p99 = this.getPercentile(responseTimes, 99)
 
     // Database Query Performance
-    const queryDurations = this.queryMetrics.map((m) => m.duration)
+    const queryDurations = this.queryMetrics.map((m: any) => m.duration)
     const avgQueryTime =
       queryDurations.length > 0
-        ? queryDurations.reduce((a, b) => a + b, 0) / queryDurations.length
+        ? queryDurations.reduce((a: any, b) => a + b, 0) / queryDurations.length
         : 0
 
     // Get slow queries (>1000ms)
     const slowQueries = this.queryMetrics
-      .filter((m) => m.duration > 1000)
+      .filter((m: any) => m.duration > 1000)
       .slice(-10)
-      .map((m) => ({
+      .map((m: any) => ({
         query: m.query,
         duration: m.duration,
         timestamp: m.timestamp,
@@ -74,7 +74,7 @@ export class PerformanceMonitoringService {
     return {
       apiResponseTime: { p50, p95, p99 },
       databaseQueryPerformance: {
-        averageQueryTime,
+        averageQueryTime: avgQueryTime,
         slowQueries,
       },
       codeExecutionMetrics,

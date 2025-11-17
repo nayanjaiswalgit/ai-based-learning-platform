@@ -46,7 +46,8 @@ export class PostHogService {
       return false
     }
 
-    return await this.posthog.isFeatureEnabled(flagKey, userId)
+    const result = await this.posthog.isFeatureEnabled(flagKey, userId)
+    return result !== undefined ? result : false
   }
 
   async getAllFeatureFlags(userId: string): Promise<Record<string, boolean | string>> {

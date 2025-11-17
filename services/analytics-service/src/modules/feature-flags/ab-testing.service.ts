@@ -33,7 +33,7 @@ export class ABTestingService {
       },
     ]
 
-    defaultTests.forEach((test) => {
+    defaultTests.forEach((test: any) => {
       this.tests.set(test.id, test)
     })
   }
@@ -100,7 +100,7 @@ export class ABTestingService {
     }
 
     // Calculate results for each variant
-    const results = test.variants.map((variant) => {
+    const results = test.variants.map((variant: any) => {
       const users = Array.from(this.userVariants.get(testId)?.entries() || []).filter(
         ([_, v]) => v === variant.id,
       )

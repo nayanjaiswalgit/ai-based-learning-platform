@@ -16,12 +16,13 @@ export class LearningPathService {
     this.prisma = new PrismaClient();
   }
 
-  async generatePath(userId: string, goal: string, currentSkillLevel: string, timeCommitment: number = 10) {
+  async generatePath(userId: string, goals: string | string[], currentSkillLevel: string, timeCommitment: number = 10) {
     this.logger.log(`Generating learning path for user ${userId}`);
 
+    const goalsText = Array.isArray(goals) ? goals.join(', ') : goals;
     const prompt = `Generate a personalized learning path for a student with the following profile:
 
-  Goal: ${goal}
+  Goal: ${goalsText}
   Current Skill Level: ${currentSkillLevel}
   Time Commitment: ${timeCommitment} hours per week
 
@@ -59,13 +60,17 @@ export class LearningPathService {
         response_format: { type: 'json_object' },
       });
 
-      const learningPath = JSON.parse(response.choices[0].message.content);
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content in OpenAI response');
+      }
+      const learningPath = JSON.parse(content);
 
       // Save to database
       const savedPath = await this.prisma.learningPath.create({
         data: {
           userId,
-          goal,
+          goal: goalsText,
           content: learningPath,
           createdAt: new Date(),
         },
@@ -107,7 +112,11 @@ export class LearningPathService {
         response_format: { type: 'json_object' },
       });
 
-      const optimizedPath = JSON.parse(response.choices[0].message.content);
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content in OpenAI response');
+      }
+      const optimizedPath = JSON.parse(content);
 
       const updatedPath = await this.prisma.learningPath.update({
         where: { id: pathId },

@@ -78,7 +78,7 @@ export class DsaSheetService {
       take: 100,
     });
 
-    return problems.map(problem => ({
+    return problems.map((problem: any) => ({
       id: problem.id,
       title: problem.title,
       difficulty: problem.difficulty || 'MEDIUM',
@@ -115,7 +115,7 @@ export class DsaSheetService {
       take: 10,
     });
 
-    const solvedSubmissions = submissions.filter(s => s.status === 'ACCEPTED');
+    const solvedSubmissions = submissions.filter((s: any) => s.status === 'ACCEPTED');
     const status = solvedSubmissions.length > 0 ? 'SOLVED' :
                    submissions.length > 0 ? 'ATTEMPTED' : 'TODO';
 
@@ -152,9 +152,9 @@ export class DsaSheetService {
 
     // Calculate next review date for spaced repetition
     if (updateProgressDto.status === ProblemStatus.MASTERED) {
-      progress['nextReviewDate'] = this.calculateNextReviewDate(now, 30);
+      (progress as any)['nextReviewDate'] = this.calculateNextReviewDate(now, 30);
     } else if (updateProgressDto.status === ProblemStatus.SOLVED) {
-      progress['nextReviewDate'] = this.calculateNextReviewDate(now, 7);
+      (progress as any)['nextReviewDate'] = this.calculateNextReviewDate(now, 7);
     }
 
     return progress;
@@ -180,9 +180,9 @@ export class DsaSheetService {
     });
 
     // Get unique question IDs that were attempted and solved
-    const attemptedQuestions = new Set(submissions.map(s => s.questionId));
+    const attemptedQuestions = new Set(submissions.map((s: any) => s.questionId));
     const solvedQuestions = new Set(
-      submissions.filter(s => s.status === 'ACCEPTED').map(s => s.questionId)
+      submissions.filter((s: any) => s.status === 'ACCEPTED').map((s: any) => s.questionId)
     );
 
     // Calculate stats by difficulty
@@ -203,18 +203,18 @@ export class DsaSheetService {
 
     const categoryMap = new Map<string, { total: number; solved: number }>();
 
-    allQuestions.forEach(q => {
+    allQuestions.forEach((q: any) => {
       const diff = (q.difficulty || 'MEDIUM').toLowerCase();
       if (diff === 'easy' || diff === 'medium' || diff === 'hard') {
-        byDifficulty[diff].total++;
+        (byDifficulty as any)[diff].total++;
         if (solvedQuestions.has(q.id)) {
-          byDifficulty[diff].solved++;
+          (byDifficulty as any)[diff].solved++;
         }
       }
 
       // Count by category
       const topics = Array.isArray(q.topics) ? q.topics : [];
-      topics.forEach(topic => {
+      topics.forEach((topic: string) => {
         if (!categoryMap.has(topic)) {
           categoryMap.set(topic, { total: 0, solved: 0 });
         }
@@ -258,7 +258,7 @@ export class DsaSheetService {
       mastered: 0, // Can be enhanced with confidence tracking
       byDifficulty,
       byCategory,
-      streak: this.calculateStreak(recentSubmissions.map(s => s.submittedAt)),
+      streak: this.calculateStreak(recentSubmissions.map((s: any) => s.submittedAt)),
       lastPracticedAt,
     };
 
@@ -342,7 +342,7 @@ export class DsaSheetService {
       },
     });
 
-    return problems.map(p => ({
+    return problems.map((p: any) => ({
       id: p.id,
       title: p.title,
       description: p.description,
@@ -379,7 +379,7 @@ export class DsaSheetService {
     // Group by date
     const dateMap = new Map<string, { problemsSolved: Set<string>; totalTime: number }>();
 
-    submissions.forEach(sub => {
+    submissions.forEach((sub: any) => {
       const dateKey = sub.submittedAt.toISOString().split('T')[0];
       if (!dateMap.has(dateKey)) {
         dateMap.set(dateKey, { problemsSolved: new Set(), totalTime: 0 });
@@ -428,14 +428,14 @@ export class DsaSheetService {
       },
     });
 
-    const solvedSet = new Set(solvedQuestions.map(s => s.questionId));
+    const solvedSet = new Set(solvedQuestions.map((s: any) => s.questionId));
 
     // Calculate company-wise stats
     const companyMap = new Map<string, { total: number; solved: number }>();
 
-    questions.forEach(q => {
+    questions.forEach((q: any) => {
       const companies = Array.isArray(q.companyTags) ? q.companyTags : [];
-      companies.forEach(company => {
+      companies.forEach((company: string) => {
         if (!companyMap.has(company)) {
           companyMap.set(company, { total: 0, solved: 0 });
         }
@@ -520,7 +520,11 @@ Make the problems realistic, practical, and similar to actual interview question
         temperature: 0.8,
       });
 
-      const result = JSON.parse(completion.choices[0].message.content);
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('No content in OpenAI response');
+      }
+      const result = JSON.parse(content);
 
       if (!result.problems || !Array.isArray(result.problems)) {
         throw new Error('Invalid response format from AI');

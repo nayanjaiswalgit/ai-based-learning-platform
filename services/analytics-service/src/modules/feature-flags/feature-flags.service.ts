@@ -58,7 +58,7 @@ export class FeatureFlagsService {
       },
     ]
 
-    defaultFlags.forEach((flag) => {
+    defaultFlags.forEach((flag: any) => {
       this.flags.set(flag.key, flag)
     })
   }

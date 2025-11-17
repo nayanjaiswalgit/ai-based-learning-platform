@@ -116,7 +116,7 @@ export class AchievementService {
       orderBy: { earnedAt: 'desc' },
     })
 
-    return userAchievements.map((a) => ({
+    return userAchievements.map((a: any) => ({
       id: a.id,
       title: a.achievementTitle,
       description: a.achievementDescription || '',
@@ -131,7 +131,7 @@ export class AchievementService {
       select: { achievementType: true },
     })
 
-    const existingTypes = new Set(existingAchievements.map((a) => a.achievementType))
+    const existingTypes = new Set(existingAchievements.map((a: any) => a.achievementType))
 
     for (const achievement of this.achievements) {
       if (existingTypes.has(achievement.type)) {

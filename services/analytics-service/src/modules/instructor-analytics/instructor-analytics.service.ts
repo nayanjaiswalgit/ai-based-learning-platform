@@ -32,7 +32,7 @@ export class InstructorAnalyticsService {
 
     // Group by month
     const enrollmentsByMonth = new Map<string, number>()
-    enrollments.forEach((e) => {
+    enrollments.forEach((e: any) => {
       const month = format(e.enrolledAt, 'yyyy-MM')
       enrollmentsByMonth.set(month, (enrollmentsByMonth.get(month) || 0) + 1)
     })
@@ -78,7 +78,7 @@ export class InstructorAnalyticsService {
     })
 
     const dropOffPoints = await Promise.all(
-      lessons.map(async (lesson) => {
+      lessons.map(async (lesson: any) => {
         const totalStudents = totalEnrolled
         const completedLesson = await prisma.userProgress.count({
           where: {
@@ -100,7 +100,7 @@ export class InstructorAnalyticsService {
     )
 
     // Sort by highest drop-off rate
-    dropOffPoints.sort((a, b) => b.dropOffRate - a.dropOffRate)
+    dropOffPoints.sort((a: any, b: any) => b.dropOffRate - a.dropOffRate)
 
     // Student satisfaction (ratings)
     const reviews = await prisma.courseReview.findMany({
@@ -111,7 +111,7 @@ export class InstructorAnalyticsService {
     const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
     let totalRating = 0
 
-    reviews.forEach((r) => {
+    reviews.forEach((r: any) => {
       if (r.rating >= 1 && r.rating <= 5) {
         ratingDistribution[r.rating as keyof typeof ratingDistribution]++
         totalRating += r.rating
@@ -146,7 +146,7 @@ export class InstructorAnalyticsService {
     const transactions = await prisma.paymentTransaction.findMany({
       where: {
         transactionType: 'course',
-        resourceId: { in: courses.map((c) => c.id) },
+        resourceId: { in: courses.map((c: any) => c.id) },
         status: 'succeeded',
       },
       select: {
@@ -157,12 +157,12 @@ export class InstructorAnalyticsService {
     })
 
     // Calculate total earnings (70% instructor share)
-    const totalEarnings = transactions.reduce((sum, t) => sum + Number(t.amount) * 0.7, 0)
+    const totalEarnings = transactions.reduce((sum: any,  t: any) => sum + Number(t.amount) * 0.7, 0)
 
     // Earnings per course
-    const earningsPerCourse = courses.map((course) => {
-      const courseTransactions = transactions.filter((t) => t.resourceId === course.id)
-      const earnings = courseTransactions.reduce((sum, t) => sum + Number(t.amount) * 0.7, 0)
+    const earningsPerCourse = courses.map((course: any) => {
+      const courseTransactions = transactions.filter((t: any) => t.resourceId === course.id)
+      const earnings = courseTransactions.reduce((sum: any,  t: any) => sum + Number(t.amount) * 0.7, 0)
       const enrollments = courseTransactions.length
 
       return {
@@ -175,10 +175,10 @@ export class InstructorAnalyticsService {
 
     // Monthly revenue (last 12 months)
     const twelveMonthsAgo = subMonths(new Date(), 12)
-    const recentTransactions = transactions.filter((t) => t.createdAt >= twelveMonthsAgo)
+    const recentTransactions = transactions.filter((t: any) => t.createdAt >= twelveMonthsAgo)
 
     const revenueByMonth = new Map<string, number>()
-    recentTransactions.forEach((t) => {
+    recentTransactions.forEach((t: any) => {
       const month = format(t.createdAt, 'yyyy-MM')
       revenueByMonth.set(month, (revenueByMonth.get(month) || 0) + Number(t.amount) * 0.7)
     })
@@ -190,9 +190,9 @@ export class InstructorAnalyticsService {
 
     // Top selling courses
     const topSellingCourses = earningsPerCourse
-      .sort((a, b) => b.revenue - a.revenue)
+      .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 5)
-      .map((c) => ({
+      .map((c: any) => ({
         courseId: c.courseId,
         courseTitle: c.courseTitle,
         revenue: c.earnings,

@@ -21,7 +21,7 @@ export class AdminAnalyticsService {
     })
 
     const usersByMonth = new Map<string, number>()
-    users.forEach((u) => {
+    users.forEach((u: any) => {
       const month = format(u.createdAt, 'yyyy-MM')
       usersByMonth.set(month, (usersByMonth.get(month) || 0) + 1)
     })
@@ -181,10 +181,10 @@ export class AdminAnalyticsService {
 
     // Revenue growth (last 12 months)
     const twelveMonthsAgo = subMonths(new Date(), 12)
-    const recentTransactions = transactions.filter((t) => t.createdAt >= twelveMonthsAgo)
+    const recentTransactions = transactions.filter((t: any) => t.createdAt >= twelveMonthsAgo)
 
     const revenueByMonth = new Map<string, number>()
-    recentTransactions.forEach((t) => {
+    recentTransactions.forEach((t: any) => {
       const month = format(t.createdAt, 'yyyy-MM')
       revenueByMonth.set(month, (revenueByMonth.get(month) || 0) + Number(t.amount))
     })
@@ -218,7 +218,7 @@ export class AdminAnalyticsService {
       },
     })
 
-    const mostPopularCourses = popularCourses.map((c) => ({
+    const mostPopularCourses = popularCourses.map((c: any) => ({
       courseId: c.id,
       title: c.title,
       enrollments: c.enrollmentCount,
@@ -241,7 +241,7 @@ export class AdminAnalyticsService {
       },
     })
 
-    const highestRatedCourses = highestRated.map((c) => ({
+    const highestRatedCourses = highestRated.map((c: any) => ({
       courseId: c.id,
       title: c.title,
       rating: Number(c.ratingAverage),
@@ -286,7 +286,7 @@ export class AdminAnalyticsService {
     )
 
     // Sort by attempts and take top limit
-    problemSolveRates.sort((a, b) => b.attempts - a.attempts)
+    problemSolveRates.sort((a: any, b: any) => b.attempts - a.attempts)
 
     return {
       mostPopularCourses,

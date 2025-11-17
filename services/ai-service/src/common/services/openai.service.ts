@@ -50,13 +50,13 @@ export class OpenAIService {
     this.ensureAvailable();
 
     try {
-      const model = options.model || this.configService.get('ai.openai.model', 'gpt-4-turbo-preview');
+      const model = options.model || this.configService.get('ai.openai.model', 'gpt-4-turbo-preview') || 'gpt-4-turbo-preview';
       const temperature = options.temperature ?? 0.7;
       const maxTokens = options.maxTokens || 2000;
 
       this.logger.log(`Generating JSON completion with model: ${model}`);
 
-      const completion = await this.openai.chat.completions.create({
+      const completion = await this.openai!.chat.completions.create({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -94,13 +94,13 @@ export class OpenAIService {
     this.ensureAvailable();
 
     try {
-      const model = options.model || this.configService.get('ai.openai.model', 'gpt-4-turbo-preview');
+      const model = options.model || this.configService.get('ai.openai.model', 'gpt-4-turbo-preview') || 'gpt-4-turbo-preview';
       const temperature = options.temperature ?? 0.7;
       const maxTokens = options.maxTokens || 2000;
 
       this.logger.log(`Generating text completion with model: ${model}`);
 
-      const completion = await this.openai.chat.completions.create({
+      const completion = await this.openai!.chat.completions.create({
         model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -129,7 +129,7 @@ export class OpenAIService {
     this.ensureAvailable();
 
     try {
-      const response = await this.openai.embeddings.create({
+      const response = await this.openai!.embeddings.create({
         model: 'text-embedding-ada-002',
         input: text,
       });

@@ -56,7 +56,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, this.SALT_ROUNDS);
 
     // Create user and profile in a transaction
-    const user = await this.prisma.$transaction(async (tx) => {
+    const user = await this.prisma.$transaction(async (tx: any) => {
       const newUser = await tx.user.create({
         data: {
           email,
@@ -444,7 +444,7 @@ export class AuthService {
       600, // 10 minutes
     );
 
-    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url || '');
 
     return {
       secret: secret.base32,
@@ -566,7 +566,7 @@ export class AuthService {
       const username = email.split('@')[0] + '_' + Date.now();
       const randomPassword = uuidv4();
 
-      user = await this.prisma.$transaction(async (tx) => {
+      user = await this.prisma.$transaction(async (tx: any) => {
         const newUser = await tx.user.create({
           data: {
             email,
@@ -656,7 +656,7 @@ export class AuthService {
       const username = email.split('@')[0] + '_' + Date.now();
       const randomPassword = uuidv4();
 
-      user = await this.prisma.$transaction(async (tx) => {
+      user = await this.prisma.$transaction(async (tx: any) => {
         const newUser = await tx.user.create({
           data: {
             email,

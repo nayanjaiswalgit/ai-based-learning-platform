@@ -5,6 +5,7 @@ import { LessonsController } from './controllers/lessons.controller';
 import { BundlesController } from './controllers/bundles.controller';
 import { CouponsController } from './controllers/coupons.controller';
 import { AffiliateController } from './controllers/affiliate.controller';
+import { CourseGenerationController } from './controllers/course-generation.controller';
 import { CoursesService } from './services/courses.service';
 import { ModulesService } from './services/modules.service';
 import { LessonsService } from './services/lessons.service';
@@ -14,6 +15,7 @@ import { AffiliateService } from './services/affiliate.service';
 import { RevenueShareService } from './services/revenue-share.service';
 import { LicenseKeyService } from './services/license-key.service';
 import { GeoRestrictionService } from './services/geo-restriction.service';
+import { CourseGenerationService } from './services/course-generation.service';
 
 @Module({
   controllers: [
@@ -23,6 +25,7 @@ import { GeoRestrictionService } from './services/geo-restriction.service';
     BundlesController,
     CouponsController,
     AffiliateController,
+    CourseGenerationController,
   ],
   providers: [
     CoursesService,
@@ -34,11 +37,13 @@ import { GeoRestrictionService } from './services/geo-restriction.service';
     RevenueShareService,
     LicenseKeyService,
     GeoRestrictionService,
+    CourseGenerationService,
   ],
   exports: [
     CoursesService,
     ModulesService,
     LessonsService,
+    CourseGenerationService,
   ],
 })
 export class CoursesModule {}

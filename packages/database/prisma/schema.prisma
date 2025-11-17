@@ -55,6 +55,7 @@ model User {
   certificates         Certificate[]
   organizationMembers  OrganizationMember[]
   createdOrganizations Organization[]        @relation("OrganizationCreator")
+  courseGenerationSessions CourseGenerationSession[] @relation("CourseGenerationSessions")
 
   @@index([email])
   @@index([username])
@@ -268,6 +269,7 @@ model Course {
   enrollments  CourseEnrollment[]
   reviews      CourseReview[]
   certificates Certificate[]
+  generationSession CourseGenerationSession?
 
   @@index([slug])
   @@index([instructorId])
@@ -429,6 +431,25 @@ model CourseReview {
 
   @@unique([userId, courseId])
   @@map("course_reviews")
+}
+
+model CourseGenerationSession {
+  id                String   @id @default(uuid())
+  instructorId      String   @map("instructor_id")
+  prompt            String
+  status            String   @default("generating")
+  generatedContent  Json     @map("generated_content")
+  refinementHistory Json?    @map("refinement_history")
+  publishedCourseId String?  @unique @map("published_course_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  instructor      User    @relation("CourseGenerationSessions", fields: [instructorId], references: [id])
+  publishedCourse Course? @relation(fields: [publishedCourseId], references: [id])
+
+  @@index([instructorId])
+  @@index([status])
+  @@map("course_generation_sessions")
 }
 
 // =====================================================

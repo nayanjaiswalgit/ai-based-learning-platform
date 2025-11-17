@@ -13,16 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Upload, X, Save, Eye, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Upload, X, Save, Eye, ArrowRight, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { courseApi } from '@/lib/api-client';
+import type { CreateCourseRequest } from '@/types/api.types';
+import { useToast } from '@/components/ui/use-toast';
 
 type Step = 'basic' | 'details' | 'pricing' | 'curriculum' | 'preview';
 
 export default function CreateCoursePage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<Step>('basic');
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [createdCourseId, setCreatedCourseId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -79,16 +85,104 @@ export default function CreateCoursePage() {
     }));
   };
 
+  const uploadThumbnail = async (): Promise<string | undefined> => {
+    if (!thumbnail) return undefined;
+
+    // TODO: Implement actual file upload to S3/Cloudinary
+    // For now, return a placeholder URL
+    // In production, this would upload to S3 and return the URL
+    return thumbnailPreview;
+  };
+
   const handleSaveDraft = async () => {
-    // API call to save draft
-    console.log('Saving draft...', formData);
+    try {
+      setIsLoading(true);
+
+      // Upload thumbnail first
+      const thumbnailUrl = await uploadThumbnail();
+
+      // Prepare course data
+      const courseData: CreateCourseRequest = {
+        title: formData.title,
+        description: formData.shortDescription,
+        longDescription: formData.description,
+        instructorId: 'user_123', // TODO: Get from auth context
+        difficultyLevel: formData.difficultyLevel.toUpperCase() as any,
+        estimatedDurationHours: formData.duration ? parseFloat(formData.duration) : undefined,
+        price: parseFloat(formData.price) || 0,
+        isPublished: false,
+        isFree: parseFloat(formData.price) === 0,
+        thumbnailUrl,
+        language: formData.language.toLowerCase(),
+      };
+
+      const response = await courseApi.createCourse(courseData);
+      setCreatedCourseId((response as any).id);
+
+      toast({
+        title: 'Draft Saved',
+        description: 'Your course has been saved as a draft.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save draft',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePublish = async () => {
-    // API call to publish course
-    console.log('Publishing course...', formData);
-    // Redirect to course management
-    router.push('/instructor/courses');
+    try {
+      setIsLoading(true);
+
+      let courseId = createdCourseId;
+
+      // If course doesn't exist, create it first
+      if (!courseId) {
+        const thumbnailUrl = await uploadThumbnail();
+
+        const courseData: CreateCourseRequest = {
+          title: formData.title,
+          description: formData.shortDescription,
+          longDescription: formData.description,
+          instructorId: 'user_123', // TODO: Get from auth context
+          difficultyLevel: formData.difficultyLevel.toUpperCase() as any,
+          estimatedDurationHours: formData.duration ? parseFloat(formData.duration) : undefined,
+          price: parseFloat(formData.price) || 0,
+          isPublished: true,
+          isFree: parseFloat(formData.price) === 0,
+          thumbnailUrl,
+          language: formData.language.toLowerCase(),
+        };
+
+        const response = await courseApi.createCourse(courseData);
+        courseId = (response as any).id;
+      } else {
+        // Update existing course to published
+        await courseApi.publishCourse(courseId, true);
+      }
+
+      toast({
+        title: 'Course Published!',
+        description: 'Your course is now live and visible to students.',
+      });
+
+      // Redirect to course management
+      setTimeout(() => {
+        router.push('/instructor/courses');
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to publish course',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const steps = [

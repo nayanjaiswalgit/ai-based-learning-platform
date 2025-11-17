@@ -6,90 +6,34 @@ A next-generation learning platform that solves common problems in online educat
 
 ## 📚 Documentation
 
-This repository contains comprehensive planning documents for building a world-class learning platform:
+**📖 [Complete Documentation Index →](./DOCUMENTATION.md)**
 
-### Planning Documents
+This repository contains comprehensive documentation for building a world-class learning platform.
 
-1. **[PROJECT_PLAN.md](./PROJECT_PLAN.md)** - Complete project overview
-   - Problems we're solving
-   - Feature specifications
-   - Technology stack
-   - Development phases (24-week roadmap)
-   - API design
-   - Success metrics
+### Quick Links
 
-2. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical architecture
-   - System architecture diagrams
-   - Microservices design
-   - Service-by-service breakdown
-   - Code execution security
-   - Terminal environment setup
-   - Deployment strategies
-   - Monitoring & observability
+**Getting Started:**
+- [Windows Quick Start](./WINDOWS_QUICKSTART.md) - Get started in 5 minutes
+- [Complete Setup Guide](./SETUP.md) - Detailed setup for all platforms
+- [Command Reference](./COMMANDS.md) - Daily development commands
 
-3. **[SERVER_DRIVEN_UI.md](./SERVER_DRIVEN_UI.md)** - Server-driven UI architecture ⭐ NEW
-   - Hybrid UI configuration system
-   - Component registry pattern
-   - Dynamic rendering with React 19.2
-   - Real-time UI updates
-   - Feature flags & A/B testing
-   - Best libraries for each feature
+**Architecture & Design:**
+- [Architecture](./ARCHITECTURE.md) - System design and microservices
+- [Tech Stack](./TECH_STACK.md) - Complete technology stack
+- [Scalability](./SCALABILITY.md) - Scale to 10M+ users
+- [Best Practices](./BEST_PRACTICES.md) - Development guidelines
 
-4. **[SCALABILITY.md](./SCALABILITY.md)** - Scalability & performance ⭐ NEW
-   - Scale to 10M+ users
-   - Kubernetes auto-scaling
-   - Database sharding & read replicas
-   - Redis cluster setup
-   - CDN & caching strategies
-   - Performance targets
-   - Cost optimization
+**Features:**
+- [Organization Management](./docs/organization/) - Organizations, roles, and dynamic permissions
+- [Production Features](./PRODUCTION_FEATURES.md) - Stripe, Sentry, feature flags
+- [Project Plan](./PROJECT_PLAN.md) - 24-week roadmap
 
-5. **[TECH_STACK.md](./TECH_STACK.md)** - Complete technology stack ⭐ NEW
-   - React 19.2 + Next.js 15
-   - Latest versions of all libraries
-   - Complete package.json files
-   - Installation commands
-   - Version compatibility matrix
+**Deployment:**
+- [Docker Guide](./DOCKER.md) - Docker setup
+- [Deployment Guide](./docs/DEPLOYMENT.md) - Production deployment
+- [Testing Guide](./TESTING.md) - Testing strategies
 
-6. **[BEST_PRACTICES.md](./BEST_PRACTICES.md)** - Development best practices ⭐ NEW
-   - TypeScript strict mode
-   - React & NestJS patterns
-   - Security best practices
-   - Performance optimization
-   - Testing strategies
-   - Code review checklist
-
-7. **[DATABASE_SCHEMA.sql](./DATABASE_SCHEMA.sql)** - Database design
-   - Complete PostgreSQL schema
-   - All tables with relationships
-   - Indexes for performance
-   - Triggers and functions
-   - Sample data
-
-8. **[PRODUCTION_FEATURES.md](./PRODUCTION_FEATURES.md)** - Production-ready features ⭐ NEW
-   - Stripe subscription system
-   - Feature flags with PostHog
-   - Error boundaries & handling
-   - Sentry error tracking
-   - Real-time notifications
-   - Email templates
-   - Rate limiting
-   - Logging with Winston
-
-9. **[AI_AGENT_TASKS.md](./AI_AGENT_TASKS.md)** - Task breakdown for parallel development ⭐ NEW
-   - 13 specialized AI agent roles
-   - Week-by-week deliverables
-   - Dependencies and critical path
-   - Features from Teachyst.com
-   - White-label, DRM, PPP pricing
-   - SAML/SSO, 1:1 meetings
-   - Multi-payment gateways
-
-10. **[NEXT_STEPS.md](./NEXT_STEPS.md)** - Implementation guide
-    - Week-by-week breakdown
-    - Decision points
-    - Required services
-    - Development workflow
+**📋 For complete documentation index, see [DOCUMENTATION.md](./DOCUMENTATION.md)**
 
 ---
 

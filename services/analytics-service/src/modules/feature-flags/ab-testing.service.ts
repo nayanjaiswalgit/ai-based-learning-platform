@@ -105,12 +105,35 @@ export class ABTestingService {
         ([_, v]) => v === variant.id,
       )
 
+      // TODO: Calculate real conversion rate and revenue from event tracking
+      // Needs:
+      // 1. Event tracking system (e.g., AnalyticsEvent table)
+      // 2. Track conversion events (signup, purchase, completion)
+      // 3. Associate events with AB test variants
+      // Query would be:
+      // const conversions = await prisma.analyticsEvent.count({
+      //   where: {
+      //     userId: { in: users.map(u => u[0]) },
+      //     eventType: 'conversion',
+      //     metadata: { path: ['abTestId'], equals: testId }
+      //   }
+      // });
+      // const conversionRate = (conversions / users.length) * 100;
+      //
+      // const revenueData = await prisma.paymentTransaction.aggregate({
+      //   where: {
+      //     userId: { in: users.map(u => u[0]) },
+      //     status: 'succeeded'
+      //   },
+      //   _sum: { amount: true }
+      // });
+      // const revenue = revenueData._sum.amount || 0;
+
       return {
         variant: variant.name,
         users: users.length,
-        // In production, calculate actual metrics from event data
-        conversionRate: Math.random() * 20 + 5, // Placeholder
-        revenue: Math.random() * 10000 + 1000, // Placeholder
+        conversionRate: 0, // Placeholder - implement event tracking
+        revenue: 0, // Placeholder - implement revenue attribution
       }
     })
 

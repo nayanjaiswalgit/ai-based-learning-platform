@@ -17,12 +17,27 @@ export class AdvancedAssessmentService {
   }
 
   async findAll(type?: AdvancedAssessmentType) {
-    // Mock implementation
+    // TODO: Implement database query for advanced assessments
+    // Query AdvancedAssessment table (needs to be added to schema):
+    // return await this.prisma.advancedAssessment.findMany({
+    //   where: type ? { type } : {},
+    //   include: { createdBy: { select: { name: true } } }
+    // });
     return [];
   }
 
   async findOne(id: string) {
-    // Mock implementation
+    // TODO: Implement database query to fetch specific assessment
+    // return await this.prisma.advancedAssessment.findUnique({
+    //   where: { id },
+    //   include: {
+    //     codeDebugging: true,
+    //     fillInBlank: true,
+    //     dragDropCode: true
+    //   }
+    // });
+    //
+    // For now, returning mock data for testing purposes
     return {
       id,
       title: 'Debug Binary Search',
@@ -39,10 +54,22 @@ export class AdvancedAssessmentService {
    * Evaluate fill-in-the-blank answer
    */
   evaluateFillInBlank(assessmentId: string, answer: string) {
-    // Mock - compare with accepted answers
+    // TODO: Implement more sophisticated answer comparison
+    // Current: Simple exact string matching
+    // Improvements needed:
+    // 1. Fuzzy matching (Levenshtein distance) for typos
+    // 2. Semantic similarity using NLP/embeddings
+    // 3. Strip whitespace and normalize formatting
+    // 4. Handle mathematical notation variations (n^2 vs n²)
+    // Libraries to consider:
+    // - fuzzball (fuzzy matching)
+    // - compromise (NLP)
+    // - OpenAI embeddings for semantic similarity
+
+    // Fetch accepted answers from database
     const acceptedAnswers = ['O(n^2)', 'O(n*n)', 'O(n²)'];
     const isCorrect = acceptedAnswers.some((accepted) =>
-      answer.toLowerCase() === accepted.toLowerCase()
+      answer.trim().toLowerCase() === accepted.toLowerCase()
     );
 
     return {
@@ -88,8 +115,23 @@ export class AdvancedAssessmentService {
    * Evaluate code debugging submission
    */
   async evaluateCodeDebugging(assessmentId: string, submittedCode: string, identifiedIssues: string[]) {
-    // In production, use AI to compare with expected fix
-    // For now, simple keyword matching
+    // TODO: Implement AI-powered code analysis for debugging evaluation
+    // Current limitation: Simple keyword matching is not robust
+    // Improvements needed:
+    // 1. AST (Abstract Syntax Tree) analysis to verify actual code fixes
+    // 2. Test case execution to verify functional correctness
+    // 3. AI code review using GPT-4 or specialized code models
+    // 4. Static analysis tools integration (ESLint, Pylint, etc.)
+    // Implementation approach:
+    // - Parse buggy code and fixed code with AST parser
+    // - Run test cases against both versions
+    // - Use AI to evaluate if identified issues are valid
+    // - Compare semantic differences, not just keywords
+    //
+    // Libraries to consider:
+    // - @babel/parser for JavaScript AST
+    // - ast module for Python
+    // - OpenAI GPT-4 for semantic code analysis
 
     const expectedIssues = ['base case', 'stack overflow'];
     const foundIssues = identifiedIssues.filter((issue) =>

@@ -196,14 +196,23 @@ export class SkillAssessmentService {
   async analyzeSkillGaps(dto: GetSkillGapsDto): Promise<SkillGap[]> {
     this.logger.log(`Analyzing skill gaps for user ${dto.userId} with target goal ${dto.targetGoal}`);
 
-    // Get user's current skills (mock data - replace with database query)
-    const currentSkills = {
-      'JavaScript': SkillLevel.INTERMEDIATE,
-      'React': SkillLevel.BEGINNER,
-      'Node.js': SkillLevel.BEGINNER,
-      'TypeScript': SkillLevel.BEGINNER,
-      'System Design': SkillLevel.BEGINNER,
-    };
+    // Calculate user's current skills from submission history
+    // TODO: Implement database query to calculate real skill levels
+    // Query UserSubmission table grouped by topic/skill:
+    //   - Count total submissions per topic
+    //   - Calculate success rate per topic
+    //   - Determine skill level based on:
+    //     * Success rate: >80% = ADVANCED, 60-80% = INTERMEDIATE, <60% = BEGINNER
+    //     * Number of problems solved per topic
+    //     * Difficulty progression (easy -> medium -> hard)
+    // Example query:
+    // const submissions = await prisma.userSubmission.findMany({
+    //   where: { userId: dto.userId },
+    //   include: { question: { select: { topics: true, difficulty: true } } }
+    // });
+    // const currentSkills = this.calculateSkillLevelsFromSubmissions(submissions);
+
+    const currentSkills = await this.getUserCurrentSkills(dto.userId);
 
     // Define target skills for the goal
     const targetSkills = this.getTargetSkillsForGoal(dto.targetGoal);
@@ -359,7 +368,15 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
     currentLevel: SkillLevel,
     targetLevel: SkillLevel,
   ): Promise<Resource[]> {
-    // Mock resources - in production, query from database
+    // TODO: Query real courses and problems from database
+    // Query Course and Question tables:
+    // const resources = await prisma.course.findMany({
+    //   where: {
+    //     topics: { has: skill },
+    //     difficulty: this.getDifficultyForLevel(targetLevel)
+    //   },
+    //   take: 5
+    // });
     return [
       {
         id: '1',
@@ -376,5 +393,28 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
         difficulty: DifficultyLevel.MEDIUM,
       },
     ];
+  }
+
+  /**
+   * Helper: Get user's current skill levels from submission history
+   */
+  private async getUserCurrentSkills(userId: string): Promise<Record<string, SkillLevel>> {
+    // TODO: Implement real skill calculation from database
+    // This should:
+    // 1. Query all user submissions from UserSubmission table
+    // 2. Group by topics/skills
+    // 3. Calculate success rate and difficulty progression per skill
+    // 4. Determine skill level based on performance metrics
+    //
+    // Temporary: Return default skill levels until database integration is complete
+    this.logger.warn(`Using default skill levels for user ${userId} - database integration pending`);
+
+    return {
+      'JavaScript': SkillLevel.INTERMEDIATE,
+      'React': SkillLevel.BEGINNER,
+      'Node.js': SkillLevel.BEGINNER,
+      'TypeScript': SkillLevel.BEGINNER,
+      'System Design': SkillLevel.BEGINNER,
+    };
   }
 }

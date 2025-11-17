@@ -1,39 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, FileText, X, Send, Link as LinkIcon, CheckCircle } from 'lucide-react';
+import { Upload, FileText, X, Send, Link as LinkIcon, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+interface Assignment {
+  id: string;
+  title: string;
+  courseId?: string;
+  courseName?: string;
+  dueDate: string;
+  maxPoints: number;
+  description: string;
+  requirements?: string[];
+}
+
 export default function SubmitAssignmentPage({ params }: { params: { id: string } }) {
   const router = useRouter();
+  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [links, setLinks] = useState<string[]>(['']);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Mock assignment data
-  const assignment = {
-    id: params.id,
-    title: 'Build a Todo Application',
-    course: 'Full Stack Web Development',
-    dueDate: '2025-11-24',
-    maxPoints: 100,
-    description: 'Create a fully functional todo application using React and Node.js. The application should allow users to create, read, update, and delete tasks.',
-    requirements: [
-      'Use React for the frontend',
-      'Implement CRUD operations',
-      'Add proper error handling',
-      'Write clean, commented code',
-      'Deploy the application (optional)',
-    ],
-  };
+  // Fetch assignment data
+  useEffect(() => {
+    async function fetchAssignment() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BOOTCAMP_SERVICE_URL || 'http://localhost:3004'}/assignments/${params.id}`
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Assignment not found');
+          }
+          throw new Error('Failed to load assignment');
+        }
+
+        const data = await response.json();
+        setAssignment(data);
+      } catch (err) {
+        console.error('Error fetching assignment:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load assignment');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAssignment();
+  }, [params.id]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -60,12 +85,81 @@ export default function SubmitAssignmentPage({ params }: { params: { id: string 
   };
 
   const handleSubmit = async () => {
+    if (!assignment) return;
+
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    try {
+      // TODO: Implement file upload to cloud storage (S3/Cloudinary)
+      // For now, we'll just submit the form data without file URLs
+      const submissionData = {
+        assignmentId: params.id,
+        links: links.filter(link => link.trim() !== ''),
+        description,
+        files: files.map(f => ({ name: f.name, size: f.size })), // Placeholder - real implementation needs file upload
+      };
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BOOTCAMP_SERVICE_URL || 'http://localhost:3004'}/assignments/${params.id}/submit`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to submit assignment');
+      }
+
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('Error submitting assignment:', err);
+      alert('Failed to submit assignment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-12">
+        <div className="mx-auto max-w-4xl px-4">
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !assignment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-12">
+        <div className="mx-auto max-w-4xl px-4">
+          <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
+            <div className="p-12 text-center">
+              <AlertCircle className="mx-auto h-12 w-12 text-orange-500 mb-4" />
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+                Unable to Load Assignment
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 mb-4">
+                {error || 'Assignment not found'}
+              </p>
+              <p className="text-sm text-slate-500 mb-6">
+                The assignments endpoint needs to be implemented in the bootcamp service.
+                Assignment models exist in the database - an API endpoint is needed.
+              </p>
+              <Link href="/assignments">
+                <Button>Back to Assignments</Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -113,7 +207,7 @@ export default function SubmitAssignmentPage({ params }: { params: { id: string 
             Submit Assignment
           </h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            {assignment.course} • Due: {new Date(assignment.dueDate).toLocaleDateString()}
+            {assignment.courseName || 'Course'} • Due: {new Date(assignment.dueDate).toLocaleDateString()}
           </p>
         </div>
 
@@ -127,14 +221,16 @@ export default function SubmitAssignmentPage({ params }: { params: { id: string 
               {assignment.description}
             </p>
 
-            <div className="mt-6">
-              <h3 className="font-semibold text-slate-900 dark:text-white">Requirements:</h3>
-              <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                {assignment.requirements.map((req, index) => (
-                  <li key={index}>{req}</li>
-                ))}
-              </ul>
-            </div>
+            {assignment.requirements && assignment.requirements.length > 0 && (
+              <div className="mt-6">
+                <h3 className="font-semibold text-slate-900 dark:text-white">Requirements:</h3>
+                <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                  {assignment.requirements.map((req, index) => (
+                    <li key={index}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-4 flex items-center gap-4 text-sm">
               <span className="rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-400">

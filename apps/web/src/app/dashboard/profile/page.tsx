@@ -1,26 +1,48 @@
+'use client';
+
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Trophy, Flame, Target, Code, BookOpen, Calendar } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Trophy, Flame, Target, Code, BookOpen, Calendar, Settings, Share2, Award, Crown, Medal, Star } from 'lucide-react'
+import Link from 'next/link'
 
 export default function ProfilePage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Profile Header */}
-        <Card>
+        <Card className="overflow-hidden border-slate-200 bg-gradient-to-br from-blue-50 to-indigo-50 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800">
           <CardContent className="pt-6">
             <div className="flex flex-col items-center gap-6 sm:flex-row">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary text-4xl font-bold text-primary-foreground">
-                JD
+              <div className="relative">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-4xl font-bold text-white ring-4 ring-white dark:ring-slate-900">
+                  JD
+                </div>
+                <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-yellow-500 ring-2 ring-white dark:ring-slate-900">
+                  <Crown className="h-4 w-4 text-white" />
+                </div>
               </div>
               <div className="flex-1 text-center sm:text-left">
-                <h1 className="text-3xl font-bold">John Doe</h1>
-                <p className="text-muted-foreground">john.doe@example.com</p>
-                <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                  <Badge>Full Stack Developer</Badge>
-                  <Badge variant="outline">Pro Member</Badge>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">John Doe</h1>
+                <p className="text-slate-600 dark:text-slate-400">john.doe@example.com</p>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <Badge className="bg-blue-600 text-white">Full Stack Developer</Badge>
+                  <Badge className="bg-purple-600 text-white">Pro Member</Badge>
+                  <Badge className="bg-green-600 text-white">Level 15</Badge>
                 </div>
+              </div>
+              <div className="flex gap-2">
+                <Link href="/dashboard/settings">
+                  <Button variant="outline" size="sm">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                </Link>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share Profile
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -28,76 +50,121 @@ export default function ProfilePage() {
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Learning Streak</CardTitle>
-              <Flame className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Learning Streak</CardTitle>
+              <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-950">
+                <Flame className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">23 days</div>
-              <p className="text-xs text-muted-foreground">Your longest: 45 days</p>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">23 days</div>
+              <p className="text-xs text-green-600 dark:text-green-400">Your longest: 45 days 🎉</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Problems Solved</CardTitle>
-              <Code className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Problems Solved</CardTitle>
+              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-950">
+                <Code className="h-4 w-4 text-green-600 dark:text-green-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">247</div>
-              <p className="text-xs text-muted-foreground">85 Easy, 142 Medium, 20 Hard</p>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">247</div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">85 Easy, 142 Medium, 20 Hard</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Courses Completed</CardTitle>
-              <BookOpen className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Courses Completed</CardTitle>
+              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-950">
+                <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">9</div>
-              <p className="text-xs text-muted-foreground">3 in progress</p>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">9</div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">3 in progress</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Study Time</CardTitle>
-              <Calendar className="h-4 w-4 text-purple-500" />
+              <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Study Time</CardTitle>
+              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-950">
+                <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">142h</div>
-              <p className="text-xs text-muted-foreground">This month: 28h</p>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">142h</div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">This month: 28h</p>
             </CardContent>
           </Card>
         </div>
 
+        {/* Global Rank Card */}
+        <Card className="border-slate-200 bg-gradient-to-r from-purple-500 to-indigo-600 dark:border-slate-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between text-white">
+              <div>
+                <p className="text-sm font-medium opacity-90">Global Ranking</p>
+                <p className="mt-1 text-5xl font-bold">#142</p>
+                <p className="mt-2 text-sm opacity-90">Top 5% of all learners</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <Trophy className="mx-auto h-12 w-12" />
+                  <p className="mt-1 text-xs">12 Trophies</p>
+                </div>
+                <div className="text-center">
+                  <Medal className="mx-auto h-12 w-12" />
+                  <p className="mt-1 text-xs">3 Medals</p>
+                </div>
+                <div className="text-center">
+                  <Star className="mx-auto h-12 w-12" />
+                  <p className="mt-1 text-xs">10,450 Points</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Achievements */}
-        <Card>
+        <Card className="border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
           <CardHeader>
-            <CardTitle>Achievements</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-slate-900 dark:text-white">Achievements</CardTitle>
+              <Badge className="bg-blue-600">12/24 Unlocked</Badge>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { name: 'First Problem', icon: '🎯', unlocked: true },
-                { name: '7-Day Streak', icon: '🔥', unlocked: true },
-                { name: '100 Problems', icon: '💯', unlocked: true },
-                { name: 'First Course', icon: '📚', unlocked: true },
-                { name: '500 Problems', icon: '🏆', unlocked: false },
-                { name: '30-Day Streak', icon: '⚡', unlocked: false },
-                { name: '10 Courses', icon: '🎓', unlocked: false },
-                { name: 'Contest Winner', icon: '👑', unlocked: false },
+                { name: 'First Problem', icon: '🎯', unlocked: true, date: '2 weeks ago' },
+                { name: '7-Day Streak', icon: '🔥', unlocked: true, date: '1 week ago' },
+                { name: '100 Problems', icon: '💯', unlocked: true, date: '3 days ago' },
+                { name: 'First Course', icon: '📚', unlocked: true, date: '1 month ago' },
+                { name: '500 Problems', icon: '🏆', unlocked: false, progress: '247/500' },
+                { name: '30-Day Streak', icon: '⚡', unlocked: false, progress: '23/30' },
+                { name: '10 Courses', icon: '🎓', unlocked: false, progress: '9/10' },
+                { name: 'Contest Winner', icon: '👑', unlocked: false, progress: 'Not started' },
               ].map((achievement, i) => (
                 <div
                   key={i}
-                  className={`flex flex-col items-center gap-2 rounded-lg border p-4 text-center ${
-                    achievement.unlocked ? '' : 'opacity-40'
+                  className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-center transition-all ${
+                    achievement.unlocked
+                      ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-950/50'
+                      : 'border-slate-200 bg-slate-50 opacity-60 dark:border-slate-700 dark:bg-slate-800'
                   }`}
                 >
                   <div className="text-4xl">{achievement.icon}</div>
-                  <p className="text-sm font-medium">{achievement.name}</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">{achievement.name}</p>
+                  {achievement.unlocked ? (
+                    <p className="text-xs text-green-600 dark:text-green-400">✓ {achievement.date}</p>
+                  ) : (
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{achievement.progress}</p>
+                  )}
                 </div>
               ))}
             </div>

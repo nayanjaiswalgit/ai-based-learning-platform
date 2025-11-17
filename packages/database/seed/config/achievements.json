@@ -1,0 +1,88 @@
+{
+  "achievements": [
+    {
+      "name": "First Steps",
+      "description": "Complete your first lesson",
+      "icon": "🎯",
+      "category": "LEARNING",
+      "points": 10
+    },
+    {
+      "name": "First Problem",
+      "description": "Solve your first coding problem",
+      "icon": "💻",
+      "category": "CODING",
+      "points": 15
+    },
+    {
+      "name": "7-Day Streak",
+      "description": "Maintain a 7-day learning streak",
+      "icon": "🔥",
+      "category": "CONSISTENCY",
+      "points": 50
+    },
+    {
+      "name": "30-Day Streak",
+      "description": "Maintain a 30-day learning streak",
+      "icon": "⚡",
+      "category": "CONSISTENCY",
+      "points": 200
+    },
+    {
+      "name": "100 Problems",
+      "description": "Solve 100 coding problems",
+      "icon": "💯",
+      "category": "CODING",
+      "points": 500
+    },
+    {
+      "name": "500 Problems",
+      "description": "Solve 500 coding problems",
+      "icon": "🏆",
+      "category": "CODING",
+      "points": 2000
+    },
+    {
+      "name": "First Course",
+      "description": "Complete your first course",
+      "icon": "📚",
+      "category": "LEARNING",
+      "points": 100
+    },
+    {
+      "name": "10 Courses",
+      "description": "Complete 10 courses",
+      "icon": "🎓",
+      "category": "LEARNING",
+      "points": 1000
+    },
+    {
+      "name": "Speed Demon",
+      "description": "Beat 85%+ users in runtime",
+      "icon": "⚡",
+      "category": "CODING",
+      "points": 75
+    },
+    {
+      "name": "Contest Winner",
+      "description": "Win a coding contest",
+      "icon": "👑",
+      "category": "CODING",
+      "points": 500
+    },
+    {
+      "name": "Perfect Score",
+      "description": "Get 100% on a quiz",
+      "icon": "✨",
+      "category": "LEARNING",
+      "points": 50
+    },
+    {
+      "name": "Early Bird",
+      "description": "Complete a lesson before 8 AM",
+      "icon": "🌅",
+      "category": "CONSISTENCY",
+      "points": 25
+    }
+  ]
+}

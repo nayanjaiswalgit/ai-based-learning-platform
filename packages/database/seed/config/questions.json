@@ -1,0 +1,60 @@
+{
+  "questions": [
+    {
+      "title": "Two Sum",
+      "slug": "two-sum",
+      "type": "CODING",
+      "difficulty": "EASY",
+      "content": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+      "creatorUsername": "michael_chen",
+      "companies": ["Google", "Amazon", "Meta", "Microsoft"],
+      "topics": ["Array", "Hash Table"],
+      "codingQuestion": {
+        "starterCode": "function twoSum(nums, target) {\n    // Write your code here\n}\n\nconsole.log(twoSum([2,7,11,15], 9));",
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "testCases": [
+          {
+            "input": "[2,7,11,15], 9",
+            "expectedOutput": "[0,1]",
+            "explanation": "Because nums[0] + nums[1] == 9",
+            "isHidden": false
+          },
+          {
+            "input": "[3,2,4], 6",
+            "expectedOutput": "[1,2]",
+            "explanation": "3 + 3 = 6",
+            "isHidden": false
+          }
+        ]
+      }
+    },
+    {
+      "title": "Valid Parentheses",
+      "slug": "valid-parentheses",
+      "type": "CODING",
+      "difficulty": "EASY",
+      "content": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+      "creatorUsername": "michael_chen",
+      "companies": ["Amazon", "Bloomberg", "Meta"],
+      "topics": ["String", "Stack"],
+      "codingQuestion": {
+        "starterCode": "function isValid(s) {\n    // Write your code here\n}\n\nconsole.log(isValid('()[]{}'));",
+        "timeLimit": 1000,
+        "memoryLimit": 128,
+        "testCases": [
+          {
+            "input": "'()[]{}'",
+            "expectedOutput": "true",
+            "isHidden": false
+          },
+          {
+            "input": "'([)]'",
+            "expectedOutput": "false",
+            "isHidden": false
+          }
+        ]
+      }
+    }
+  ]
+}

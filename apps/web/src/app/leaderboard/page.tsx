@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,94 +15,85 @@ import {
   Target,
   Crown,
   Star,
+  Loader2,
 } from 'lucide-react';
+
+interface LeaderboardUser {
+  rank: number;
+  userId: string;
+  name: string;
+  avatar?: string;
+  points: number;
+  streak: number;
+  coursesCompleted: number;
+  badge: string;
+  change: number;
+  isCurrentUser?: boolean;
+}
 
 export default function LeaderboardPage() {
   const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly' | 'alltime'>('weekly');
+  const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUserStats, setCurrentUserStats] = useState({
+    rank: 0,
+    points: 0,
+    streak: 0,
+    change: 0,
+  });
 
-  // Mock data
-  const globalLeaderboard = [
-    {
-      rank: 1,
-      userId: '1',
-      name: 'Sarah Johnson',
-      avatar: '',
-      points: 12450,
-      streak: 45,
-      coursesCompleted: 12,
-      badge: 'Elite',
-      change: 2,
-    },
-    {
-      rank: 2,
-      userId: '2',
-      name: 'Michael Chen',
-      avatar: '',
-      points: 11890,
-      streak: 38,
-      coursesCompleted: 10,
-      badge: 'Expert',
-      change: -1,
-    },
-    {
-      rank: 3,
-      userId: '3',
-      name: 'Emma Williams',
-      avatar: '',
-      points: 11200,
-      streak: 52,
-      coursesCompleted: 11,
-      badge: 'Master',
-      change: 0,
-    },
-    {
-      rank: 4,
-      userId: '4',
-      name: 'James Rodriguez',
-      avatar: '',
-      points: 10800,
-      streak: 30,
-      coursesCompleted: 9,
-      badge: 'Expert',
-      change: 3,
-    },
-    {
-      rank: 5,
-      userId: '5',
-      name: 'You',
-      avatar: '',
-      points: 10450,
-      streak: 25,
-      coursesCompleted: 8,
-      badge: 'Advanced',
-      change: 1,
-      isCurrentUser: true,
-    },
-  ];
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        // TODO: Get current user ID from auth context
+        const currentUserId = 'user_123';
 
-  const courseLeaderboard = [
-    {
-      rank: 1,
-      name: 'Alex Turner',
-      score: 98.5,
-      completionTime: '24 hours',
-      attempts: 1,
-    },
-    {
-      rank: 2,
-      name: 'Jessica Brown',
-      score: 96.8,
-      completionTime: '28 hours',
-      attempts: 1,
-    },
-    {
-      rank: 3,
-      name: 'David Kim',
-      score: 95.2,
-      completionTime: '26 hours',
-      attempts: 2,
-    },
-  ];
+        // Fetch leaderboard data - Note: This endpoint needs to be created in analytics service
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_ANALYTICS_SERVICE_URL || 'http://localhost:3005'}/analytics/leaderboard?period=${timeFilter}`
+        );
+
+        if (!response.ok) {
+          // If endpoint doesn't exist yet, show helpful message
+          console.error('Leaderboard endpoint not yet implemented');
+          setGlobalLeaderboard([]);
+          setLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        const leaderboardData = data.leaderboard || [];
+
+        // Mark current user
+        const processedData = leaderboardData.map((user: any, index: number) => ({
+          ...user,
+          rank: index + 1,
+          isCurrentUser: user.userId === currentUserId,
+        }));
+
+        setGlobalLeaderboard(processedData);
+
+        // Find current user's stats
+        const currentUser = processedData.find((u: any) => u.userId === currentUserId);
+        if (currentUser) {
+          setCurrentUserStats({
+            rank: currentUser.rank,
+            points: currentUser.points,
+            streak: currentUser.streak,
+            change: currentUser.change || 0,
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLeaderboard();
+  }, [timeFilter]);
+
+  const courseLeaderboard: any[] = []; // Will be populated when course-specific leaderboard is implemented
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -189,8 +180,14 @@ export default function LeaderboardPage() {
               </div>
               <div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Your Rank</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">#5</p>
-                <p className="text-xs text-green-600">↑ 1 position</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {loading ? '...' : currentUserStats.rank > 0 ? `#${currentUserStats.rank}` : 'N/A'}
+                </p>
+                {!loading && currentUserStats.change !== 0 && (
+                  <p className={`text-xs ${currentUserStats.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {currentUserStats.change > 0 ? '↑' : '↓'} {Math.abs(currentUserStats.change)} position
+                  </p>
+                )}
               </div>
             </div>
           </Card>
@@ -202,7 +199,9 @@ export default function LeaderboardPage() {
               </div>
               <div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Current Streak</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">25 days</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {loading ? '...' : `${currentUserStats.streak} days`}
+                </p>
                 <p className="text-xs text-slate-500">Keep it going!</p>
               </div>
             </div>
@@ -215,8 +214,10 @@ export default function LeaderboardPage() {
               </div>
               <div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">Total Points</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">10,450</p>
-                <p className="text-xs text-green-600">+250 this week</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {loading ? '...' : currentUserStats.points.toLocaleString()}
+                </p>
+                <p className="text-xs text-green-600">Track your progress!</p>
               </div>
             </div>
           </Card>
@@ -237,8 +238,23 @@ export default function LeaderboardPage() {
                   Global Leaderboard
                 </h2>
 
-                <div className="space-y-3">
-                  {globalLeaderboard.map((user) => (
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  </div>
+                ) : globalLeaderboard.length === 0 ? (
+                  <div className="py-12 text-center text-slate-600 dark:text-slate-400">
+                    <Trophy className="mx-auto h-12 w-12 text-slate-400 mb-4" />
+                    <p className="text-lg font-semibold mb-2">No Leaderboard Data Yet</p>
+                    <p className="text-sm">
+                      The leaderboard endpoint needs to be implemented in the analytics service.
+                      <br />
+                      Start completing courses and solving problems to build your ranking!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {globalLeaderboard.map((user) => (
                     <div
                       key={user.userId}
                       className={`flex items-center justify-between rounded-lg p-4 transition-all ${
@@ -299,9 +315,10 @@ export default function LeaderboardPage() {
                           <div className="text-sm text-slate-500">-</div>
                         )}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </Card>
           </TabsContent>

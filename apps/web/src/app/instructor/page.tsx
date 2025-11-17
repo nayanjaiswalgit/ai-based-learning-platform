@@ -1,23 +1,101 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, DollarSign, TrendingUp, Eye, Star, PlusCircle } from 'lucide-react';
+import { BookOpen, Users, DollarSign, TrendingUp, Eye, Star, PlusCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function InstructorDashboard() {
-  // Mock data - will be replaced with actual API calls
-  const stats = [
-    { name: 'Total Courses', value: '12', icon: BookOpen, change: '+2', trend: 'up' },
-    { name: 'Total Students', value: '1,234', icon: Users, change: '+123', trend: 'up' },
-    { name: 'Total Revenue', value: '$45,678', icon: DollarSign, change: '+12%', trend: 'up' },
-    { name: 'Avg. Rating', value: '4.8', icon: Star, change: '+0.2', trend: 'up' },
-  ];
+interface Course {
+  id: string;
+  title: string;
+  enrollmentCount: number;
+  price: number;
+  ratingAverage: number;
+  isPublished: boolean;
+}
 
-  const recentCourses = [
-    { id: 1, title: 'Advanced React Patterns', students: 456, revenue: '$12,345', rating: 4.9, status: 'Published' },
-    { id: 2, title: 'Node.js Masterclass', students: 234, revenue: '$8,456', rating: 4.7, status: 'Published' },
-    { id: 3, title: 'TypeScript Deep Dive', students: 123, revenue: '$4,567', rating: 4.8, status: 'Draft' },
+export default function InstructorDashboard() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    totalStudents: 0,
+    totalRevenue: 0,
+    avgRating: 0,
+  });
+
+  useEffect(() => {
+    async function fetchInstructorData() {
+      try {
+        // TODO: Get instructor ID from auth context
+        const instructorId = 'user_123';
+
+        // Fetch instructor's courses
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_COURSE_SERVICE_URL || 'http://localhost:3002'}/courses?instructorId=${instructorId}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch courses');
+        }
+
+        const data = await response.json();
+        const coursesData = data.courses || [];
+        setCourses(coursesData.slice(0, 3)); // Get top 3 courses for dashboard
+
+        // Calculate stats from courses
+        const totalStudents = coursesData.reduce((sum: number, c: Course) => sum + c.enrollmentCount, 0);
+        const totalRevenue = coursesData.reduce((sum: number, c: Course) => sum + (Number(c.price) * c.enrollmentCount), 0);
+        const avgRating = coursesData.length > 0
+          ? coursesData.reduce((sum: number, c: Course) => sum + Number(c.ratingAverage), 0) / coursesData.length
+          : 0;
+
+        setStats({
+          totalCourses: coursesData.length,
+          totalStudents,
+          totalRevenue,
+          avgRating: Math.round(avgRating * 10) / 10,
+        });
+      } catch (error) {
+        console.error('Error fetching instructor data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchInstructorData();
+  }, []);
+
+  const statsDisplay = [
+    {
+      name: 'Total Courses',
+      value: loading ? '...' : stats.totalCourses.toString(),
+      icon: BookOpen,
+      change: '+2',
+      trend: 'up'
+    },
+    {
+      name: 'Total Students',
+      value: loading ? '...' : stats.totalStudents.toLocaleString(),
+      icon: Users,
+      change: '+123',
+      trend: 'up'
+    },
+    {
+      name: 'Total Revenue',
+      value: loading ? '...' : `$${stats.totalRevenue.toLocaleString()}`,
+      icon: DollarSign,
+      change: '+12%',
+      trend: 'up'
+    },
+    {
+      name: 'Avg. Rating',
+      value: loading ? '...' : stats.avgRating.toFixed(1),
+      icon: Star,
+      change: '+0.2',
+      trend: 'up'
+    },
   ];
 
   return (
@@ -42,7 +120,7 @@ export default function InstructorDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {statsDisplay.map((stat) => (
           <Card key={stat.name} className="overflow-hidden border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
             <div className="p-6">
               <div className="flex items-center justify-between">
@@ -80,48 +158,58 @@ export default function InstructorDashboard() {
             </Link>
           </div>
           <div className="space-y-4">
-            {recentCourses.map((course) => (
-              <div
-                key={course.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 p-4 transition-all hover:border-blue-300 hover:shadow-md dark:border-slate-700 dark:hover:border-blue-700"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                    {course.title}
-                  </h3>
-                  <div className="mt-2 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                    <span className="flex items-center">
-                      <Users className="mr-1 h-4 w-4" />
-                      {course.students} students
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+            ) : courses.length === 0 ? (
+              <div className="text-center py-8 text-slate-600 dark:text-slate-400">
+                <p>No courses yet. Create your first course to get started!</p>
+              </div>
+            ) : (
+              courses.map((course) => (
+                <div
+                  key={course.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 p-4 transition-all hover:border-blue-300 hover:shadow-md dark:border-slate-700 dark:hover:border-blue-700"
+                >
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                      {course.title}
+                    </h3>
+                    <div className="mt-2 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                      <span className="flex items-center">
+                        <Users className="mr-1 h-4 w-4" />
+                        {course.enrollmentCount} students
+                      </span>
+                      <span className="flex items-center">
+                        <DollarSign className="mr-1 h-4 w-4" />
+                        ${(Number(course.price) * course.enrollmentCount).toLocaleString()}
+                      </span>
+                      <span className="flex items-center">
+                        <Star className="mr-1 h-4 w-4" />
+                        {Number(course.ratingAverage).toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        course.isPublished
+                          ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
+                          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400'
+                      }`}
+                    >
+                      {course.isPublished ? 'Published' : 'Draft'}
                     </span>
-                    <span className="flex items-center">
-                      <DollarSign className="mr-1 h-4 w-4" />
-                      {course.revenue}
-                    </span>
-                    <span className="flex items-center">
-                      <Star className="mr-1 h-4 w-4" />
-                      {course.rating}
-                    </span>
+                    <Link href={`/instructor/courses/${course.id}/edit`}>
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      course.status === 'Published'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400'
-                    }`}
-                  >
-                    {course.status}
-                  </span>
-                  <Link href={`/instructor/courses/${course.id}/edit`}>
-                    <Button variant="outline" size="sm">
-                      Edit
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </Card>

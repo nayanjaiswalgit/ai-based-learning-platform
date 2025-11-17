@@ -8,11 +8,13 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { ContentGenerationModule } from './modules/content-generation/content-generation.module';
 import { LearningPathModule } from './modules/learning-path/learning-path.module';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import aiConfig from './config/ai.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [aiConfig],
       envFilePath: ['.env.local', '.env'],
     }),
     CacheModule.register({

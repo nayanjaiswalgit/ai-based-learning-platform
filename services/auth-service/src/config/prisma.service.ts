@@ -23,7 +23,10 @@ export class PrismaService
   async cleanDatabase() {
     if (process.env.NODE_ENV === 'production') return;
 
-    const models = Reflect.ownKeys(this).filter((key) => key[0] !== '_');
+    const models = Reflect.ownKeys(this).filter((key) => {
+      const keyStr = String(key);
+      return keyStr[0] !== '_';
+    });
 
     return Promise.all(
       models.map((modelKey) => (this as any)[modelKey].deleteMany()),

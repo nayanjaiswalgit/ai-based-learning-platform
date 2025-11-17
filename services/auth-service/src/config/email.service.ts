@@ -14,11 +14,11 @@ export class EmailService {
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     const verificationLink = `${frontendUrl}/verify-email?token=${token}`;
 
     await this.resend.emails.send({
-      from: this.configService.get<string>('SMTP_FROM'),
+      from: this.configService.get<string>('SMTP_FROM') || 'noreply@example.com',
       to: email,
       subject: 'Verify your email address',
       html: `
@@ -39,11 +39,11 @@ export class EmailService {
   }
 
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
     await this.resend.emails.send({
-      from: this.configService.get<string>('SMTP_FROM'),
+      from: this.configService.get<string>('SMTP_FROM') || 'noreply@example.com',
       to: email,
       subject: 'Reset your password',
       html: `
@@ -68,7 +68,7 @@ export class EmailService {
 
   async sendWelcomeEmail(email: string, name: string): Promise<void> {
     await this.resend.emails.send({
-      from: this.configService.get<string>('SMTP_FROM'),
+      from: this.configService.get<string>('SMTP_FROM') || 'noreply@example.com',
       to: email,
       subject: 'Welcome to AI Learning Platform!',
       html: `
@@ -83,7 +83,7 @@ export class EmailService {
             <li>Practice coding challenges</li>
             <li>Join bootcamp cohorts</li>
           </ul>
-          <a href="${this.configService.get<string>('FRONTEND_URL')}/dashboard" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+          <a href="${this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000'}/dashboard" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
             Go to Dashboard
           </a>
         </div>

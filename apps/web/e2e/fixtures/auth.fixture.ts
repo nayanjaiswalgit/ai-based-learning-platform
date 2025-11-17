@@ -1,8 +1,8 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, Page } from '@playwright/test';
 import { login, signup, generateTestEmail, generateTestPassword } from '../helpers/test-helpers';
 
 type AuthFixtures = {
-  authenticatedPage: any;
+  authenticatedPage: Page;
   testUser: { email: string; password: string; name: string };
 };
 
@@ -10,7 +10,7 @@ type AuthFixtures = {
  * Extended test with authentication fixtures
  */
 export const test = base.extend<AuthFixtures>({
-  testUser: async ({}, use) => {
+  testUser: async ({}, use: (r: { email: string; password: string; name: string }) => Promise<void>) => {
     // Generate a new test user for each test
     const user = {
       name: 'Test User',
@@ -20,7 +20,7 @@ export const test = base.extend<AuthFixtures>({
     await use(user);
   },
 
-  authenticatedPage: async ({ page, testUser }, use) => {
+  authenticatedPage: async ({ page, testUser }: { page: Page; testUser: { email: string; password: string; name: string } }, use: (r: Page) => Promise<void>) => {
     // Sign up and login before the test
     try {
       await signup(page, testUser.name, testUser.email, testUser.password);

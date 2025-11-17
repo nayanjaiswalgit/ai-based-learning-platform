@@ -384,31 +384,69 @@ This repository contains comprehensive planning documents for building a world-c
 - Docker
 - pnpm 9.15.1+
 
-### Option 1: Quick Start with Docker (Recommended)
+### Option 1: Quick Start (Automated - Recommended)
+
+The fastest way to get started is using our automated setup script:
 
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/ai-learning-platform.git
 cd ai-learning-platform
 
-# Copy environment variables
-cp .env.example .env
+# Make setup script executable
+chmod +x scripts/setup.sh
 
-# Start everything with Docker (interactive script)
-./scripts/docker-start.sh
+# Run automated setup (checks dependencies, installs, starts services, seeds database)
+./scripts/setup.sh
 ```
 
-**Two modes available:**
+**What the setup script does:**
+- ✅ Checks Docker, Docker Compose, and pnpm installation
+- ✅ Creates .env file from .env.example
+- ✅ Installs all dependencies with pnpm
+- ✅ Starts infrastructure services (PostgreSQL, Redis, Meilisearch)
+- ✅ Generates Prisma Client
+- ✅ Runs database migrations
+- ✅ Seeds database with sample data (users, courses, questions, labs)
+
+After setup completes, start the development servers:
+
+```bash
+pnpm dev
+```
+
+### Option 2: Docker Compose (Full Stack)
+
+Run the entire application stack in Docker:
+
+```bash
+# Clone and setup
+git clone https://github.com/yourusername/ai-learning-platform.git
+cd ai-learning-platform
+cp .env.example .env
+
+# Start infrastructure services
+docker compose up -d postgres redis meilisearch
+
+# Seed the database (first time only)
+docker compose --profile seed up db-seed
+
+# Start all application services
+docker compose up -d
+```
+
+**Two deployment modes:**
 1. **Development Mode**: Infrastructure in Docker + Apps with hot reload
-   - Choose option 1, then run `pnpm dev`
+   - Start infrastructure: `docker compose up -d postgres redis meilisearch`
+   - Run apps locally: `pnpm dev`
    - Fast iteration, code changes instantly reflected
 2. **Production Mode**: Everything in Docker
-   - Choose option 2
+   - Start all services: `docker compose up -d`
    - Full production-like environment
 
 📚 **Full Docker documentation**: See [DOCKER.md](./DOCKER.md)
 
-### Option 2: Local Development (Manual Setup)
+### Option 3: Local Development (Manual Setup)
 
 ```bash
 # Clone repository
@@ -422,18 +460,34 @@ pnpm install
 cp .env.example .env
 # Edit .env with your database credentials
 
-# Start infrastructure (PostgreSQL, Redis, etc.)
-docker-compose -f docker-compose.dev.yml up -d
+# Start infrastructure (PostgreSQL, Redis, Meilisearch)
+docker compose up -d postgres redis meilisearch
+
+# Wait for services to be ready (10-15 seconds)
+sleep 10
+
+# Generate Prisma Client
+cd packages/database && pnpm db:generate && cd ../..
 
 # Run database migrations
-pnpm --filter @ai-learning/database prisma migrate dev
+cd packages/database && pnpm db:migrate && cd ../..
 
-# Seed database
-pnpm --filter @ai-learning/database prisma db seed
+# Seed database with sample data
+cd packages/database && pnpm db:seed && cd ../..
 
 # Start development server
 pnpm dev
 ```
+
+**Database Seed Data Includes:**
+- 5 users (1 admin, 2 instructors, 2 students) with secure passwords
+- 3 complete courses with modules and lessons
+- 2 coding questions (Two Sum, Valid Parentheses) with test cases
+- 3 terminal labs (Docker, Linux, Git basics)
+- 12 achievement definitions
+- Sample enrollments and 30 days of learning analytics per student
+
+All seed data is config-driven from JSON files in `packages/database/seed/config/`
 
 ### Available Services
 
@@ -459,19 +513,88 @@ pnpm build                  # Build all services
 pnpm lint                   # Lint all code
 pnpm test                   # Run tests
 
-# Docker
-./scripts/docker-start.sh   # Interactive startup
-./scripts/docker-stop.sh    # Stop all containers
-./scripts/docker-logs.sh    # View logs
-./scripts/docker-clean.sh   # Clean up (removes data!)
+# Database Management (from packages/database)
+cd packages/database
+pnpm db:generate           # Generate Prisma client
+pnpm db:migrate            # Run database migrations
+pnpm db:seed               # Seed database with sample data
+pnpm db:reset              # Reset database (drop, migrate, seed)
+pnpm db:setup              # Complete setup (generate, migrate, seed)
+pnpm db:studio             # Open Prisma Studio (GUI)
 
-# Database
-cd services/api
-pnpm prisma:generate        # Generate Prisma client
-pnpm prisma:migrate         # Run migrations
-pnpm prisma:studio          # Open Prisma Studio
+# Docker - Infrastructure Only
+docker compose up -d postgres redis meilisearch  # Start infrastructure
+docker compose --profile seed up db-seed         # Run database seed
+docker compose down                               # Stop all services
+docker compose logs -f [service-name]            # View logs
+
+# Docker - Full Stack
+docker compose up -d                             # Start all services
+docker compose ps                                 # View running services
+docker compose down --volumes                     # Stop and remove volumes
+
+# Useful Scripts
+./scripts/setup.sh         # Complete automated setup
+chmod +x scripts/*.sh      # Make scripts executable
 ```
 
+### Database Seed Configuration
+
+The platform uses a **config-driven seeding system** with JSON files. All seed data is located in `packages/database/seed/config/`:
+
+#### Seed Data Files
+
+1. **`users.json`** - User accounts
+   - Admin: `admin@example.com` / `Admin123!`
+   - Instructor 1: `instructor1@example.com` / `Instructor123!` (Sarah Johnson)
+   - Instructor 2: `instructor2@example.com` / `Instructor123!` (Michael Chen)
+   - Student 1: `student1@example.com` / `Student123!` (John Doe)
+   - Student 2: `student2@example.com` / `Student123!` (Jane Smith)
+
+2. **`courses.json`** - Course catalog
+   - Full Stack Web Development (Intermediate, $79.99)
+   - Data Structures & Algorithms (Intermediate, $69.99)
+   - Machine Learning Fundamentals (Advanced, $99.99)
+
+3. **`questions.json`** - Coding challenges
+   - Two Sum (Easy, Array manipulation)
+   - Valid Parentheses (Easy, Stack problem)
+
+4. **`labs.json`** - Terminal challenges
+   - Docker Basics - Container Management (45 min)
+   - Linux Basics - File System Navigation (30 min)
+   - Git Basics - Version Control (40 min)
+
+5. **`achievements.json`** - Achievement definitions
+   - 12 achievements across Learning, Coding, and Consistency categories
+
+#### Customizing Seed Data
+
+To modify seed data, edit the JSON files in `packages/database/seed/config/` and run:
+
+```bash
+cd packages/database
+pnpm db:reset  # This will drop, migrate, and re-seed
+```
+
+**Example - Adding a new user to `users.json`:**
+
+```json
+{
+  "email": "newuser@example.com",
+  "username": "new_user",
+  "password": "SecurePassword123!",
+  "role": "STUDENT",
+  "fullName": "New User",
+  "isEmailVerified": true,
+  "profile": {
+    "bio": "New student learning web development",
+    "location": "San Francisco, CA"
+  }
+}
+```
+
+**Security Note:** Passwords in seed files are automatically hashed using bcrypt before database insertion.
 
 ---
 

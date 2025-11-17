@@ -1,0 +1,122 @@
+{
+  "courses": [
+    {
+      "title": "Full Stack Web Development",
+      "slug": "full-stack-web-development",
+      "instructorUsername": "sarah_johnson",
+      "description": "Master the complete web development stack from frontend to backend. Learn React, Node.js, databases, and deployment.",
+      "shortDescription": "Learn full-stack web development with React and Node.js",
+      "difficultyLevel": "INTERMEDIATE",
+      "price": 99.99,
+      "discountedPrice": 79.99,
+      "isPublished": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1280&h=720&fit=crop",
+      "modules": [
+        {
+          "title": "Introduction to Web Development",
+          "description": "Get started with web development fundamentals",
+          "order": 1,
+          "lessons": [
+            {
+              "title": "What is Web Development?",
+              "contentType": "VIDEO",
+              "content": "Introduction to web development concepts",
+              "duration": 15,
+              "isFree": true,
+              "order": 1
+            },
+            {
+              "title": "Setting Up Your Development Environment",
+              "contentType": "ARTICLE",
+              "content": "Learn how to set up your coding environment",
+              "duration": 10,
+              "isFree": true,
+              "order": 2
+            }
+          ]
+        },
+        {
+          "title": "Frontend with React",
+          "description": "Build modern user interfaces with React",
+          "order": 2,
+          "lessons": [
+            {
+              "title": "React Basics",
+              "contentType": "VIDEO",
+              "content": "Learn React fundamentals",
+              "duration": 25,
+              "isFree": false,
+              "order": 1
+            },
+            {
+              "title": "State Management",
+              "contentType": "VIDEO",
+              "content": "Managing state in React applications",
+              "duration": 30,
+              "isFree": false,
+              "order": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Data Structures & Algorithms",
+      "slug": "data-structures-algorithms",
+      "instructorUsername": "michael_chen",
+      "description": "Master essential data structures and algorithms. Prepare for technical interviews at top companies.",
+      "shortDescription": "Essential DSA for coding interviews",
+      "difficultyLevel": "INTERMEDIATE",
+      "price": 89.99,
+      "discountedPrice": 69.99,
+      "isPublished": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=1280&h=720&fit=crop",
+      "modules": [
+        {
+          "title": "Arrays and Strings",
+          "description": "Master array and string manipulation",
+          "order": 1,
+          "lessons": [
+            {
+              "title": "Array Fundamentals",
+              "contentType": "VIDEO",
+              "content": "Learn array basics",
+              "duration": 20,
+              "isFree": true,
+              "order": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Machine Learning Fundamentals",
+      "slug": "machine-learning-fundamentals",
+      "instructorUsername": "michael_chen",
+      "description": "Learn the basics of machine learning, from supervised to unsupervised learning, neural networks, and more.",
+      "shortDescription": "Start your ML journey with fundamentals",
+      "difficultyLevel": "ADVANCED",
+      "price": 129.99,
+      "discountedPrice": 99.99,
+      "isPublished": true,
+      "thumbnailUrl": "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=1280&h=720&fit=crop",
+      "modules": [
+        {
+          "title": "Introduction to Machine Learning",
+          "description": "Understand ML concepts and terminology",
+          "order": 1,
+          "lessons": [
+            {
+              "title": "What is Machine Learning?",
+              "contentType": "VIDEO",
+              "content": "ML introduction",
+              "duration": 18,
+              "isFree": true,
+              "order": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

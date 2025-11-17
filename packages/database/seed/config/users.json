@@ -1,0 +1,75 @@
+{
+  "users": [
+    {
+      "email": "admin@example.com",
+      "username": "admin",
+      "password": "Admin123!",
+      "role": "ADMIN",
+      "fullName": "Admin User",
+      "isEmailVerified": true,
+      "profile": {
+        "bio": "Platform Administrator",
+        "location": "San Francisco, CA"
+      }
+    },
+    {
+      "email": "instructor1@example.com",
+      "username": "sarah_johnson",
+      "password": "Instructor123!",
+      "role": "INSTRUCTOR",
+      "fullName": "Sarah Johnson",
+      "isEmailVerified": true,
+      "profile": {
+        "bio": "Senior Software Engineer with 10+ years of experience in web development",
+        "location": "New York, NY",
+        "githubUrl": "https://github.com/sarahjohnson",
+        "linkedinUrl": "https://linkedin.com/in/sarahjohnson",
+        "experienceLevel": "expert"
+      }
+    },
+    {
+      "email": "instructor2@example.com",
+      "username": "michael_chen",
+      "password": "Instructor123!",
+      "role": "INSTRUCTOR",
+      "fullName": "Michael Chen",
+      "isEmailVerified": true,
+      "profile": {
+        "bio": "Data Science expert and ML practitioner",
+        "location": "Seattle, WA",
+        "githubUrl": "https://github.com/michaelchen",
+        "experienceLevel": "expert"
+      }
+    },
+    {
+      "email": "student1@example.com",
+      "username": "john_doe",
+      "password": "Student123!",
+      "role": "STUDENT",
+      "fullName": "John Doe",
+      "isEmailVerified": true,
+      "profile": {
+        "bio": "Aspiring full-stack developer",
+        "location": "Austin, TX",
+        "currentGoal": "Master web development",
+        "experienceLevel": "intermediate",
+        "dailyLearningTimeMinutes": 60
+      }
+    },
+    {
+      "email": "student2@example.com",
+      "username": "jane_smith",
+      "password": "Student123!",
+      "role": "STUDENT",
+      "fullName": "Jane Smith",
+      "isEmailVerified": true,
+      "profile": {
+        "bio": "Computer Science student",
+        "location": "Boston, MA",
+        "currentGoal": "Learn data structures and algorithms",
+        "experienceLevel": "beginner",
+        "dailyLearningTimeMinutes": 90
+      }
+    }
+  ]
+}

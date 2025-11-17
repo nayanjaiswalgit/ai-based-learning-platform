@@ -1,0 +1,121 @@
+{
+  "labs": [
+    {
+      "title": "Docker Basics - Container Management",
+      "slug": "docker-basics",
+      "description": "Learn the fundamentals of Docker by creating, managing, and deploying containers.",
+      "difficulty": "INTERMEDIATE",
+      "estimatedMinutes": 45,
+      "scenario": "docker",
+      "creatorUsername": "sarah_johnson",
+      "tasks": [
+        {
+          "title": "Check Docker Installation",
+          "description": "Verify that Docker is installed and running",
+          "order": 1,
+          "hintCommand": "docker --version",
+          "validationString": "Docker version"
+        },
+        {
+          "title": "Pull an Image",
+          "description": "Pull the nginx image from Docker Hub",
+          "order": 2,
+          "hintCommand": "docker pull nginx",
+          "validationString": "Status: Downloaded"
+        },
+        {
+          "title": "Run a Container",
+          "description": "Start an nginx container on port 8080",
+          "order": 3,
+          "hintCommand": "docker run -d -p 8080:80 --name my-nginx nginx",
+          "validationString": "container running"
+        },
+        {
+          "title": "List Running Containers",
+          "description": "View all running containers",
+          "order": 4,
+          "hintCommand": "docker ps",
+          "validationString": "my-nginx"
+        },
+        {
+          "title": "Stop and Remove Container",
+          "description": "Stop and remove the nginx container",
+          "order": 5,
+          "hintCommand": "docker stop my-nginx && docker rm my-nginx",
+          "validationString": "container stopped"
+        }
+      ]
+    },
+    {
+      "title": "Linux Command Line Basics",
+      "slug": "linux-basics",
+      "description": "Master essential Linux commands and file system navigation.",
+      "difficulty": "BEGINNER",
+      "estimatedMinutes": 30,
+      "scenario": "linux",
+      "creatorUsername": "sarah_johnson",
+      "tasks": [
+        {
+          "title": "Check Current Directory",
+          "description": "Display your current working directory",
+          "order": 1,
+          "hintCommand": "pwd",
+          "validationString": "/"
+        },
+        {
+          "title": "List Files",
+          "description": "List all files in the current directory",
+          "order": 2,
+          "hintCommand": "ls -la",
+          "validationString": "total"
+        },
+        {
+          "title": "Create a Directory",
+          "description": "Create a new directory called 'test'",
+          "order": 3,
+          "hintCommand": "mkdir test",
+          "validationString": "test"
+        },
+        {
+          "title": "Navigate to Directory",
+          "description": "Change into the test directory",
+          "order": 4,
+          "hintCommand": "cd test && pwd",
+          "validationString": "/test"
+        }
+      ]
+    },
+    {
+      "title": "Git Version Control",
+      "slug": "git-basics",
+      "description": "Learn Git basics including branching, merging, and collaboration.",
+      "difficulty": "BEGINNER",
+      "estimatedMinutes": 40,
+      "scenario": "git",
+      "creatorUsername": "sarah_johnson",
+      "tasks": [
+        {
+          "title": "Initialize Repository",
+          "description": "Create a new Git repository",
+          "order": 1,
+          "hintCommand": "git init",
+          "validationString": "Initialized empty Git repository"
+        },
+        {
+          "title": "Check Status",
+          "description": "Check the repository status",
+          "order": 2,
+          "hintCommand": "git status",
+          "validationString": "On branch"
+        },
+        {
+          "title": "Create a File",
+          "description": "Create README.md file",
+          "order": 3,
+          "hintCommand": "echo '# My Project' > README.md",
+          "validationString": "README.md"
+        }
+      ]
+    }
+  ]
+}

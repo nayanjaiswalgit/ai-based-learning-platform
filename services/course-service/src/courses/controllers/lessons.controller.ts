@@ -68,4 +68,28 @@ export class LessonsController {
       data.completed,
     );
   }
+
+  @Post('module/:moduleId/bulk-import')
+  @ApiOperation({ summary: 'Bulk import lessons from CSV or JSON' })
+  bulkImport(@Param('moduleId') moduleId: string, @Body() dto: { lessons: any[] }) {
+    return this.lessonsService.bulkCreateLessons(moduleId, dto.lessons);
+  }
+
+  @Patch(':id/toggle-preview')
+  @ApiOperation({ summary: 'Toggle free preview status for a lesson' })
+  toggleFreePreview(@Param('id') lessonId: string) {
+    return this.lessonsService.toggleFreePreview(lessonId);
+  }
+
+  @Post(':id/generate-quiz')
+  @ApiOperation({ summary: 'Generate quiz for a lesson using AI' })
+  generateQuiz(@Param('id') lessonId: string, @Body() dto: { count?: number }) {
+    return this.lessonsService.generateQuizForLesson(lessonId, dto.count || 5);
+  }
+
+  @Post(':id/generate-coding-lab')
+  @ApiOperation({ summary: 'Generate coding lab for a lesson using AI' })
+  generateCodingLab(@Param('id') lessonId: string, @Body() dto: { topic: string }) {
+    return this.lessonsService.generateCodingLabForLesson(lessonId, dto.topic);
+  }
 }

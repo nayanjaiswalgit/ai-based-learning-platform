@@ -1,7 +1,8 @@
-import { Controller, Post, Headers, Body, RawBodyRequest, Req, Logger, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Headers, Body, RawBodyRequest, Req, Logger, BadRequestException, Inject } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 import Stripe from 'stripe';
 import { StripeService } from './stripe.service';
 import { PrismaService } from '../../database/prisma.service';
@@ -15,6 +16,7 @@ export class StripeWebhookController {
     private readonly stripeService: StripeService,
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    @Inject('NOTIFICATION_SERVICE') private readonly notificationClient: HttpService,
   ) {}
 
   @Post('stripe')
@@ -175,7 +177,26 @@ export class StripeWebhookController {
 
   private async handleTrialWillEnd(subscription: Stripe.Subscription) {
     this.logger.log(`Trial will end for subscription: ${subscription.id}`);
-    // TODO: Send notification email to user
+
+    const userId = subscription.metadata.userId;
+    if (!userId) {
+      this.logger.error('Missing userId in subscription metadata');
+      return;
+    }
+
+    try {
+      await this.notificationClient.axiosRef.post('/notifications/send', {
+        userId,
+        type: 'email',
+        template: 'trial_ending',
+        data: {
+          subscriptionId: subscription.id,
+          trialEndDate: new Date(subscription.trial_end * 1000),
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send trial ending notification: ${error.message}`);
+    }
   }
 
   private async handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
@@ -213,7 +234,7 @@ export class StripeWebhookController {
       return;
     }
 
-    await this.prisma.paymentTransaction.updateMany({
+    const transaction = await this.prisma.paymentTransaction.updateMany({
       where: { stripePaymentIntentId: paymentIntent.id },
       data: {
         status: 'failed',
@@ -221,7 +242,19 @@ export class StripeWebhookController {
       },
     });
 
-    // TODO: Send payment failure notification
+    try {
+      await this.notificationClient.axiosRef.post('/notifications/send', {
+        userId,
+        type: 'email',
+        template: 'payment_failed',
+        data: {
+          reason: paymentIntent.last_payment_error?.message,
+          amount: paymentIntent.amount / 100,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send payment failure notification: ${error.message}`);
+    }
   }
 
   private async handleInvoicePaid(invoice: Stripe.Invoice) {
@@ -231,7 +264,29 @@ export class StripeWebhookController {
 
   private async handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     this.logger.log(`Invoice payment failed: ${invoice.id}`);
-    // TODO: Send payment failure notification
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { stripeSubscriptionId: invoice.subscription as string },
+    });
+
+    if (!subscription) {
+      this.logger.error('Subscription not found for failed invoice');
+      return;
+    }
+
+    try {
+      await this.notificationClient.axiosRef.post('/notifications/send', {
+        userId: subscription.userId,
+        type: 'email',
+        template: 'payment_failed',
+        data: {
+          reason: 'Invoice payment failed',
+          amount: invoice.amount_due / 100,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send invoice payment failure notification: ${error.message}`);
+    }
   }
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
@@ -252,7 +307,20 @@ export class StripeWebhookController {
       // Subscription will be handled by subscription events
     }
 
-    // TODO: Send purchase confirmation email
+    try {
+      await this.notificationClient.axiosRef.post('/notifications/send', {
+        userId,
+        type: 'email',
+        template: 'purchase_confirmation',
+        data: {
+          productName: session.metadata?.productType || 'Purchase',
+          amount: session.amount_total / 100,
+          invoiceUrl: session.invoice ? `https://dashboard.stripe.com/invoices/${session.invoice}` : null,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send purchase confirmation: ${error.message}`);
+    }
   }
 
   private async handleChargeRefunded(charge: Stripe.Charge) {
@@ -260,6 +328,15 @@ export class StripeWebhookController {
 
     const paymentIntentId = charge.payment_intent as string;
     if (!paymentIntentId) {
+      return;
+    }
+
+    const transaction = await this.prisma.paymentTransaction.findFirst({
+      where: { stripePaymentIntentId: paymentIntentId },
+    });
+
+    if (!transaction) {
+      this.logger.error('Transaction not found for refunded charge');
       return;
     }
 
@@ -272,6 +349,18 @@ export class StripeWebhookController {
       },
     });
 
-    // TODO: Send refund confirmation email
+    try {
+      await this.notificationClient.axiosRef.post('/notifications/send', {
+        userId: transaction.userId,
+        type: 'email',
+        template: 'refund_confirmation',
+        data: {
+          amount: charge.amount_refunded / 100,
+          refundReason: charge.refunds?.data[0]?.reason || 'Refund processed',
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send refund confirmation: ${error.message}`);
+    }
   }
 }

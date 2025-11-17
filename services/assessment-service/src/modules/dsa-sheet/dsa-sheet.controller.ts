@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Param,
   Patch,
@@ -89,5 +91,39 @@ export class DsaSheetController {
   getCompanyStats() {
     const userId = 'user_123'; // Extract from JWT
     return this.dsaSheetService.getCompanyWiseStats(userId);
+  }
+
+  @Post('generate-sheet')
+  @ApiOperation({ summary: 'Generate DSA problem sheet using AI' })
+  generateDsaSheet(
+    @Body()
+    dto: {
+      targetCompany?: string;
+      difficulty: string;
+      problemCount: number;
+      focusTopics?: string[];
+    },
+  ) {
+    const userId = 'user_123'; // Extract from JWT
+    return this.dsaSheetService.generateDsaSheet({ ...dto, userId });
+  }
+
+  @Post('problems/bulk-import')
+  @ApiOperation({ summary: 'Bulk import problems from JSON' })
+  bulkImportProblems(@Body() dto: { problems: any[] }) {
+    const userId = 'user_123'; // Extract from JWT
+    return this.dsaSheetService.bulkCreateProblems(dto.problems, userId);
+  }
+
+  @Put('problems/:id')
+  @ApiOperation({ summary: 'Update a problem' })
+  updateProblem(@Param('id') id: string, @Body() updates: Partial<any>) {
+    return this.dsaSheetService.updateProblem(id, updates);
+  }
+
+  @Delete('problems/:id')
+  @ApiOperation({ summary: 'Delete a problem' })
+  deleteProblem(@Param('id') id: string) {
+    return this.dsaSheetService.deleteProblem(id);
   }
 }

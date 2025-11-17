@@ -1,11 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateProblemDto, ProblemDifficulty, ProblemCategory, ProblemStatus } from './dto/create-problem.dto';
 import { UpdateProgressDto } from './dto/update-progress.dto';
+import { ConfigService } from '@nestjs/config';
+import OpenAI from 'openai';
 
 @Injectable()
 export class DsaSheetService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(DsaSheetService.name);
+  private readonly openai: OpenAI;
+
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+    if (apiKey) {
+      this.openai = new OpenAI({ apiKey });
+    }
+  }
 
   async createProblem(createProblemDto: CreateProblemDto, userId: string) {
     return {
@@ -455,5 +468,175 @@ export class DsaSheetService {
 
   private generateId(): string {
     return `dsa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Generate DSA sheet with AI based on criteria
+   */
+  async generateDsaSheet(dto: {
+    targetCompany?: string;
+    difficulty: string;
+    problemCount: number;
+    focusTopics?: string[];
+    userId: string;
+  }) {
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    this.logger.log(`Generating DSA sheet with ${dto.problemCount} problems`);
+
+    const prompt = `Generate ${dto.problemCount} DSA (Data Structures and Algorithms) coding problems for ${dto.targetCompany || 'general interview preparation'} at ${dto.difficulty} difficulty level.
+${dto.focusTopics ? `Focus on these topics: ${dto.focusTopics.join(', ')}` : ''}
+
+Return a JSON object with a "problems" array containing problem objects with these fields:
+- title: string (problem title)
+- description: string (detailed problem description with examples)
+- difficulty: "EASY" | "MEDIUM" | "HARD"
+- category: string (e.g., "Arrays", "Strings", "Trees", "Graphs", etc.)
+- hints: string[] (array of 2-3 hints)
+- companies: string[] (companies that ask this problem)
+- topics: string[] (relevant topics/tags)
+- constraints: string (time/space complexity constraints)
+- timeLimit: number (seconds)
+- memoryLimit: number (MB)
+
+Make the problems realistic, practical, and similar to actual interview questions.`;
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert coding interviewer and problem setter specializing in data structures and algorithms.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.8,
+      });
+
+      const result = JSON.parse(completion.choices[0].message.content);
+
+      if (!result.problems || !Array.isArray(result.problems)) {
+        throw new Error('Invalid response format from AI');
+      }
+
+      // Bulk insert into database
+      return this.bulkCreateProblems(result.problems, dto.userId);
+    } catch (error) {
+      this.logger.error('Error generating DSA sheet:', error);
+      throw new Error(`Failed to generate DSA sheet: ${error.message}`);
+    }
+  }
+
+  /**
+   * Bulk create problems
+   */
+  async bulkCreateProblems(problems: any[], userId: string) {
+    const createdProblems = [];
+
+    for (const problemData of problems) {
+      try {
+        // Create the question
+        const question = await this.prisma.question.create({
+          data: {
+            questionType: 'CODING_QUESTION',
+            title: problemData.title,
+            description: problemData.description,
+            difficulty: problemData.difficulty || 'MEDIUM',
+            topics: problemData.topics || [problemData.category],
+            companyTags: problemData.companies || [],
+            createdBy: userId,
+            isPublic: true,
+          },
+        });
+
+        // Create coding question details
+        const codingQuestion = await this.prisma.codingQuestion.create({
+          data: {
+            questionId: question.id,
+            starterCode: {
+              python: `def solution():\n    # Your code here\n    pass`,
+              javascript: `function solution() {\n    // Your code here\n}`,
+              java: `public class Solution {\n    public void solution() {\n        // Your code here\n    }\n}`,
+              cpp: `class Solution {\npublic:\n    void solution() {\n        // Your code here\n    }\n};`,
+            },
+            testCases: [],
+            constraints: problemData.constraints || 'Standard constraints apply',
+            hints: problemData.hints || [],
+            timeLimitSeconds: problemData.timeLimit || 10,
+            memoryLimitMb: problemData.memoryLimit || 256,
+            allowedLanguages: ['python', 'javascript', 'java', 'cpp'],
+          },
+        });
+
+        createdProblems.push({
+          ...question,
+          codingQuestion,
+        });
+      } catch (error) {
+        this.logger.error(`Error creating problem: ${problemData.title}`, error);
+      }
+    }
+
+    return {
+      created: createdProblems.length,
+      problems: createdProblems,
+    };
+  }
+
+  /**
+   * Update a problem
+   */
+  async updateProblem(id: string, updates: Partial<any>) {
+    const question = await this.prisma.question.findUnique({
+      where: { id },
+    });
+
+    if (!question) {
+      throw new Error('Problem not found');
+    }
+
+    return this.prisma.question.update({
+      where: { id },
+      data: {
+        title: updates.title,
+        description: updates.description,
+        difficulty: updates.difficulty,
+        topics: updates.topics,
+        companyTags: updates.companyTags,
+        updatedAt: new Date(),
+      },
+      include: {
+        codingQuestion: true,
+        mcqOptions: true,
+        terminalChallenge: true,
+      },
+    });
+  }
+
+  /**
+   * Delete a problem
+   */
+  async deleteProblem(id: string) {
+    const question = await this.prisma.question.findUnique({
+      where: { id },
+    });
+
+    if (!question) {
+      throw new Error('Problem not found');
+    }
+
+    // Delete related data first (cascade delete if not configured in Prisma)
+    await this.prisma.question.delete({
+      where: { id },
+    });
+
+    return { message: 'Problem deleted successfully' };
   }
 }

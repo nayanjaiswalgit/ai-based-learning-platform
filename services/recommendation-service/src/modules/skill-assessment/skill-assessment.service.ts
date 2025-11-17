@@ -198,22 +198,7 @@ export class SkillAssessmentService {
     this.logger.log(`Analyzing skill gaps for user ${dto.userId} with target goal ${dto.targetGoal}`);
 
     // Calculate user's current skills from submission history
-    // TODO: Implement database query to calculate real skill levels
-    // Query UserSubmission table grouped by topic/skill:
-    //   - Count total submissions per topic
-    //   - Calculate success rate per topic
-    //   - Determine skill level based on:
-    //     * Success rate: >80% = ADVANCED, 60-80% = INTERMEDIATE, <60% = BEGINNER
-    //     * Number of problems solved per topic
-    //     * Difficulty progression (easy -> medium -> hard)
-    // Example query:
-    // const submissions = await prisma.userSubmission.findMany({
-    //   where: { userId: dto.userId },
-    //   include: { question: { select: { topics: true, difficulty: true } } }
-    // });
-    // const currentSkills = this.calculateSkillLevelsFromSubmissions(submissions);
-
-    const currentSkills = await this.getUserCurrentSkills(dto.userId);
+    const currentSkills = await this.calculateRealSkillLevels(dto.userId);
 
     // Define target skills for the goal
     const targetSkills = this.getTargetSkillsForGoal(dto.targetGoal);
@@ -562,5 +547,74 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
     }
 
     return SkillLevel.BEGINNER;
+  }
+
+  /**
+   * Calculate real skill levels from database
+   * Implements comprehensive skill analysis based on quiz results and coding submissions
+   */
+  private async calculateRealSkillLevels(userId: string): Promise<Record<string, number>> {
+    // Get user's quiz results
+    const quizResults = await prisma.quizAttempt.findMany({
+      where: { userId },
+      include: {
+        quiz: {
+          include: {
+            questions: {
+              include: {
+                topics: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Get coding submissions
+    const codingSubmissions = await prisma.codingSubmission.findMany({
+      where: { userId, status: 'PASSED' },
+      include: {
+        question: {
+          include: {
+            topics: true,
+          },
+        },
+      },
+    });
+
+    // Calculate skill levels by topic
+    const skillLevels: Record<string, { correct: number; total: number }> = {};
+
+    quizResults.forEach((attempt) => {
+      attempt.quiz.questions.forEach((question) => {
+        question.topics.forEach((topic) => {
+          if (!skillLevels[topic.name]) {
+            skillLevels[topic.name] = { correct: 0, total: 0 };
+          }
+          skillLevels[topic.name].total++;
+          if (attempt.answers[question.id] === question.correctAnswer) {
+            skillLevels[topic.name].correct++;
+          }
+        });
+      });
+    });
+
+    codingSubmissions.forEach((submission) => {
+      submission.question.topics.forEach((topic) => {
+        if (!skillLevels[topic.name]) {
+          skillLevels[topic.name] = { correct: 0, total: 0 };
+        }
+        skillLevels[topic.name].total++;
+        skillLevels[topic.name].correct++;
+      });
+    });
+
+    // Convert to percentages
+    const result: Record<string, number> = {};
+    Object.entries(skillLevels).forEach(([skill, stats]) => {
+      result[skill] = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+    });
+
+    return result;
   }
 }

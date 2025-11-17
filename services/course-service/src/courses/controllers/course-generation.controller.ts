@@ -1,5 +1,7 @@
 import { Controller, Post, Get, Patch, Delete, Body, Param, Request, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../decorators/current-user.decorator';
 import { CourseGenerationService } from '../services/course-generation.service';
 
 @ApiTags('Course Generation')
@@ -9,6 +11,8 @@ export class CourseGenerationController {
   constructor(private readonly courseGenerationService: CourseGenerationService) {}
 
   @Post('generate')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Generate a complete course using AI',
     description:
@@ -23,10 +27,9 @@ export class CourseGenerationController {
       estimatedHours?: number;
       moduleCount?: number;
     },
-    @Request() req?: any,
+    @CurrentUser() user: any,
   ) {
-    // TODO: Get instructor ID from auth token
-    const instructorId = req?.user?.id || '00000000-0000-0000-0000-000000000001';
+    const instructorId = user.id || user.sub;
 
     return this.courseGenerationService.generateCourse(instructorId, body.prompt, {
       difficulty: body.difficulty,
@@ -36,20 +39,26 @@ export class CourseGenerationController {
   }
 
   @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'List all course generation sessions for the instructor' })
-  async listSessions(@Request() req?: any) {
-    const instructorId = req?.user?.id || '00000000-0000-0000-0000-000000000001';
+  async listSessions(@CurrentUser() user: any) {
+    const instructorId = user.id || user.sub;
     return this.courseGenerationService.listGenerationSessions(instructorId);
   }
 
   @Get('sessions/:sessionId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a specific generation session with full content' })
-  async getSession(@Param('sessionId') sessionId: string, @Request() req?: any) {
-    const instructorId = req?.user?.id || '00000000-0000-0000-0000-000000000001';
+  async getSession(@Param('sessionId') sessionId: string, @CurrentUser() user: any) {
+    const instructorId = user.id || user.sub;
     return this.courseGenerationService.getGenerationSession(sessionId, instructorId);
   }
 
   @Patch('sessions/:sessionId/refine')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Refine a specific section of the generated course',
     description:
@@ -64,9 +73,9 @@ export class CourseGenerationController {
       sectionId: string;
       refinementPrompt: string;
     },
-    @Request() req?: any,
+    @CurrentUser() user: any,
   ) {
-    const instructorId = req?.user?.id || '00000000-0000-0000-0000-000000000001';
+    const instructorId = user.id || user.sub;
 
     return this.courseGenerationService.refineSection(
       sessionId,
@@ -78,20 +87,24 @@ export class CourseGenerationController {
   }
 
   @Post('sessions/:sessionId/publish')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Publish the generated course',
     description: 'Convert the AI-generated draft into an actual published course with all modules and lessons',
   })
   @ApiResponse({ status: 200, description: 'Course published successfully' })
-  async publishCourse(@Param('sessionId') sessionId: string, @Request() req?: any) {
-    const instructorId = req?.user?.id || '00000000-0000-0000-0000-000000000001';
+  async publishCourse(@Param('sessionId') sessionId: string, @CurrentUser() user: any) {
+    const instructorId = user.id || user.sub;
     return this.courseGenerationService.publishGeneratedCourse(sessionId, instructorId);
   }
 
   @Delete('sessions/:sessionId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a generation session' })
-  async deleteSession(@Param('sessionId') sessionId: string, @Request() req?: any) {
-    const instructorId = req?.user?.id || '00000000-0000-0000-0000-000000000001';
+  async deleteSession(@Param('sessionId') sessionId: string, @CurrentUser() user: any) {
+    const instructorId = user.id || user.sub;
     return this.courseGenerationService.deleteGenerationSession(sessionId, instructorId);
   }
 }

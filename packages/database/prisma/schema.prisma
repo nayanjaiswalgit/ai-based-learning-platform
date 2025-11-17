@@ -52,6 +52,7 @@ model User {
   createdQuestions     Question[]            @relation("QuestionCreator")
   mentorCohorts        CohortMentor[]
   sessionAttendances   SessionAttendance[]
+  certificates         Certificate[]
 
   @@index([email])
   @@index([username])
@@ -190,6 +191,7 @@ model Course {
   skills       CourseSkill[]
   enrollments  CourseEnrollment[]
   reviews      CourseReview[]
+  certificates Certificate[]
 
   @@index([slug])
   @@index([instructorId])
@@ -276,6 +278,64 @@ model CourseEnrollment {
   @@map("course_enrollments")
 }
 
+model Certificate {
+  id                String    @id @default(uuid())
+  verificationCode  String    @unique @map("verification_code")
+  userId            String    @map("user_id")
+  certificateType   String    @map("certificate_type") // COURSE, BOOTCAMP, QUIZ, ACHIEVEMENT
+
+  // References (one of these will be set based on type)
+  courseId          String?   @map("course_id")
+  cohortId          String?   @map("cohort_id")
+
+  // Certificate details
+  recipientName     String    @map("recipient_name")
+  title             String    // e.g., "Full Stack Web Development"
+  description       String?   // Achievement description
+  issuer            String    @default("AI Learning Platform") // Platform name
+
+  // Dates
+  issuedAt          DateTime  @default(now()) @map("issued_at")
+  completedAt       DateTime  @map("completed_at") // Actual completion date
+  expiresAt         DateTime? @map("expires_at") // Optional expiry
+
+  // Metadata
+  grade             String?   // e.g., "A+", "Pass", "Distinction"
+  score             Decimal?  @db.Decimal(5, 2) // Final score percentage
+  duration          Int?      // Course/bootcamp duration in hours
+  skills            Json?     // Skills acquired
+
+  // File & validation
+  pdfUrl            String?   @map("pdf_url")
+  imageUrl          String?   @map("image_url")
+  templateId        String    @default("default") @map("template_id")
+  digitalSignature  String?   @map("digital_signature") // Hash for verification
+  blockchainTxHash  String?   @map("blockchain_tx_hash") // Optional blockchain verification
+
+  // Status
+  isRevoked         Boolean   @default(false) @map("is_revoked")
+  revokedAt         DateTime? @map("revoked_at")
+  revokeReason      String?   @map("revoke_reason")
+
+  // Visibility
+  isPublic          Boolean   @default(true) @map("is_public")
+
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  cohort Cohort?  @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([verificationCode])
+  @@index([courseId])
+  @@index([cohortId])
+  @@map("certificates")
+}
+
 model CourseReview {
   id         String   @id @default(uuid())
   userId     String   @map("user_id")
@@ -335,6 +395,7 @@ model Cohort {
   enrollments  CohortEnrollment[]
   mentors      CohortMentor[]
   sessions     CohortSession[]
+  certificates Certificate[]
 
   @@map("cohorts")
 }

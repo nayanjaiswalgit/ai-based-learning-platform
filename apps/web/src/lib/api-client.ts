@@ -276,4 +276,49 @@ export const assessmentApi = {
     request(`${ASSESSMENT_SERVICE_URL}/quizzes/${quizId}/attempts`, { token }),
 };
 
+// Certificate API
+const CERTIFICATE_SERVICE_URL = process.env.NEXT_PUBLIC_CERTIFICATE_SERVICE_URL || 'http://localhost:3014';
+
+export const certificateApi = {
+  // Generate certificate
+  createCertificate: (data: any, token?: string) =>
+    request(`${CERTIFICATE_SERVICE_URL}/certificates`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      token,
+    }),
+
+  // Get user's certificates
+  getUserCertificates: (userId: string, token?: string) =>
+    request(`${CERTIFICATE_SERVICE_URL}/certificates/user/${userId}`, { token }),
+
+  // Get single certificate
+  getCertificate: (id: string, token?: string) =>
+    request(`${CERTIFICATE_SERVICE_URL}/certificates/${id}`, { token }),
+
+  // Verify certificate by verification code
+  verifyCertificate: (verificationCode: string) =>
+    request(`${CERTIFICATE_SERVICE_URL}/certificates/verify/${verificationCode}`),
+
+  // Download certificate PDF
+  downloadCertificate: (id: string, token?: string): string =>
+    `${CERTIFICATE_SERVICE_URL}/certificates/${id}/download${token ? `?token=${token}` : ''}`,
+
+  // Get certificate image URL
+  getCertificateImage: (id: string): string =>
+    `${CERTIFICATE_SERVICE_URL}/certificates/${id}/image`,
+
+  // Revoke certificate (admin/instructor only)
+  revokeCertificate: (id: string, reason: string, token?: string) =>
+    request(`${CERTIFICATE_SERVICE_URL}/certificates/${id}/revoke`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+      token,
+    }),
+
+  // Get course certificates
+  getCourseCertificates: (courseId: string, token?: string) =>
+    request(`${CERTIFICATE_SERVICE_URL}/certificates/course/${courseId}`, { token }),
+};
+
 export { ApiError };

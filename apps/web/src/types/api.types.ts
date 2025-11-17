@@ -230,3 +230,70 @@ export interface SubmitQuizRequest {
   }[];
   totalTime: number;
 }
+
+// Certificate Types
+export type CertificateType = 'COURSE' | 'BOOTCAMP' | 'QUIZ' | 'ACHIEVEMENT';
+
+export interface Certificate {
+  id: string;
+  verificationCode: string;
+  userId: string;
+  certificateType: CertificateType;
+  courseId?: string;
+  cohortId?: string;
+  recipientName: string;
+  title: string;
+  description?: string;
+  issuer: string;
+  issuedAt: string;
+  completedAt: string;
+  expiresAt?: string;
+  grade?: string;
+  score?: number;
+  duration?: number;
+  skills?: string[];
+  pdfUrl?: string;
+  imageUrl?: string;
+  templateId: string;
+  digitalSignature?: string;
+  blockchainTxHash?: string;
+  isRevoked: boolean;
+  revokedAt?: string;
+  revokeReason?: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    username: string;
+    fullName: string;
+  };
+  course?: {
+    id: string;
+    title: string;
+    slug: string;
+  };
+}
+
+export interface CreateCertificateRequest {
+  userId: string;
+  certificateType: CertificateType;
+  courseId?: string;
+  cohortId?: string;
+  recipientName: string;
+  title: string;
+  description?: string;
+  completedAt: string;
+  grade?: string;
+  score?: number;
+  duration?: number;
+  skills?: string[];
+  templateId?: string;
+  expiresAt?: string;
+}
+
+export interface VerifyCertificateResponse {
+  isValid: boolean;
+  certificate?: Certificate;
+  error?: string;
+}

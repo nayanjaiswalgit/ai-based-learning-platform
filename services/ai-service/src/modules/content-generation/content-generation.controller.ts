@@ -5,6 +5,7 @@ import {
   GenerateMcqDto,
   GenerateMcqResponseDto,
 } from './dto/generate-mcq.dto';
+import { GenerateCodingLabDto } from './dto/generate-coding-lab.dto';
 
 @ApiTags('Content Generation')
 @Controller('content-generation')
@@ -41,6 +42,23 @@ export class ContentGenerationController {
   })
   async generateMcqs(@Body() dto: GenerateMcqDto): Promise<GenerateMcqResponseDto> {
     return this.contentGenerationService.generateMcqs(dto);
+  }
+
+  @Post('generate-coding-lab')
+  @ApiOperation({ summary: 'Generate a coding lab or terminal challenge using AI' })
+  @ApiResponse({
+    status: 200,
+    description: 'Coding lab generated successfully',
+  })
+  async generateCodingLab(@Body() dto: GenerateCodingLabDto) {
+    return this.contentGenerationService.generateCodingLab({
+      topic: dto.topic,
+      difficulty: dto.difficulty,
+      labType: dto.labType,
+      context: dto.context,
+      courseTitle: dto.courseTitle,
+      moduleTitle: dto.moduleTitle,
+    });
   }
 
   @Post('generate-quiz')

@@ -315,10 +315,12 @@ model Lesson {
   orderIndex      Int      @map("order_index")
   isFreePreview   Boolean  @default(false) @map("is_free_preview")
   videoTranscript String?  @map("video_transcript")
+  questionId      String?  @map("question_id") // For coding labs, terminal challenges, quizzes
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   module    CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  question  Question?        @relation(fields: [questionId], references: [id], onDelete: SetNull)
   resources LessonResource[]
 
   @@map("lessons")
@@ -568,6 +570,7 @@ model Question {
   terminalChallenge  TerminalChallenge?
   submissions        UserSubmission[]
   dsaSheetProblems   DsaSheetProblem[]
+  lessons            Lesson[]
 
   @@index([questionType])
   @@index([difficulty])

@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationGateway } from './notification.gateway';
 
 // Local type definition (not in Prisma schema yet)
-enum NotificationType {
+export enum NotificationType {
   ACHIEVEMENT = 'ACHIEVEMENT',
   COURSE_UPDATE = 'COURSE_UPDATE',
   MESSAGE = 'MESSAGE',
@@ -20,7 +20,7 @@ enum NotificationType {
 
 export interface CreateNotificationDto {
   userId: string;
-  type: NotificationType;
+  type: NotificationType | string;
   title: string;
   message: string;
   data?: any;

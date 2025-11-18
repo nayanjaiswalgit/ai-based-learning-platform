@@ -259,7 +259,7 @@ export class AdminAnalyticsService {
     })
 
     const problemSolveRates = await Promise.all(
-      questions.map(async (q) => {
+      questions.map(async (q: any) => {
         const totalAttempts = await prisma.userSubmission.groupBy({
           by: ['userId'],
           where: { questionId: q.id },

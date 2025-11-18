@@ -25,7 +25,7 @@ export class SkillProgressionService {
     const lastMonth = subMonths(new Date(), 1)
 
     const progression = await Promise.all(
-      userSkills.map(async (userSkill) => {
+      userSkills.map(async (userSkill: any) => {
         // Get historical data (this would require a skill_history table in production)
         // For now, we'll calculate based on recent activity
         const recentActivity = await prisma.learningAnalytics.aggregate({

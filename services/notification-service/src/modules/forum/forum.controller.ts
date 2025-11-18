@@ -8,7 +8,7 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { ForumService } from './forum.service';
+import { ForumService, VoteType } from './forum.service';
 
 @Controller('forum')
 export class ForumController {
@@ -90,12 +90,12 @@ export class ForumController {
 
   // Voting
   @Post('threads/:id/vote')
-  async voteThread(@Param('id') id: string, @Body() body: { userId: string; voteType: 'UPVOTE' | 'DOWNVOTE' }) {
+  async voteThread(@Param('id') id: string, @Body() body: { userId: string; voteType: VoteType }) {
     return this.forumService.voteThread(id, body.userId, body.voteType);
   }
 
   @Post('replies/:id/vote')
-  async voteReply(@Param('id') id: string, @Body() body: { userId: string; voteType: 'UPVOTE' | 'DOWNVOTE' }) {
+  async voteReply(@Param('id') id: string, @Body() body: { userId: string; voteType: VoteType }) {
     return this.forumService.voteReply(id, body.userId, body.voteType);
   }
 

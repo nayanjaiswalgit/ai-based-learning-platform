@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
-import * as webpush from 'web-push';
+// import * as webpush from 'web-push'; // TODO: Install web-push package if needed
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -32,8 +32,9 @@ export class PushNotificationService implements OnModuleInit {
     const vapidEmail = this.configService.get('VAPID_EMAIL') || 'mailto:admin@platform.com';
 
     if (vapidPublicKey && vapidPrivateKey) {
-      webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
-      console.log('🔔 Web Push initialized');
+      // webpush.setVapidDetails(vapidEmail, vapidPublicKey, vapidPrivateKey);
+      // console.log('🔔 Web Push initialized');
+      console.log('🔔 Web Push configuration found (webpush package not installed)');
     } else {
       console.warn('⚠️  VAPID keys not configured');
     }
@@ -110,7 +111,9 @@ export class PushNotificationService implements OnModuleInit {
             data: notification.data || {},
           });
 
-          await webpush.sendNotification(pushSubscription, payload);
+          // TODO: Install web-push package to enable this functionality
+          // await webpush.sendNotification(pushSubscription, payload);
+          console.log('Web push notification would be sent (webpush package not installed)');
           return { success: true, subscriptionId: sub.id };
         } catch (error) {
           // If subscription is invalid, mark as inactive

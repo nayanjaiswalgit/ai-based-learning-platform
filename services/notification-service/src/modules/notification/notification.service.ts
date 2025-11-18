@@ -1,7 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationGateway } from './notification.gateway';
-import { NotificationType } from '@prisma/client';
+
+// Local type definition (not in Prisma schema yet)
+enum NotificationType {
+  ACHIEVEMENT = 'ACHIEVEMENT',
+  COURSE_UPDATE = 'COURSE_UPDATE',
+  MESSAGE = 'MESSAGE',
+  SYSTEM = 'SYSTEM',
+  COURSE_ENROLLMENT = 'COURSE_ENROLLMENT',
+  NEW_LESSON = 'NEW_LESSON',
+  CODE_EXECUTION_COMPLETE = 'CODE_EXECUTION_COMPLETE',
+  DAILY_CHALLENGE = 'DAILY_CHALLENGE',
+  BOOTCAMP_SESSION_REMINDER = 'BOOTCAMP_SESSION_REMINDER',
+  ASSIGNMENT_DUE = 'ASSIGNMENT_DUE',
+  MENTOR_REPLY = 'MENTOR_REPLY',
+  ACHIEVEMENT_UNLOCKED = 'ACHIEVEMENT_UNLOCKED',
+}
 
 export interface CreateNotificationDto {
   userId: string;

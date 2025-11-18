@@ -1,7 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagingGateway } from './messaging.gateway';
-import { ConversationType, MessageType } from '@prisma/client';
+
+// Local type definitions (not in Prisma schema yet)
+enum ConversationType {
+  DIRECT = 'DIRECT',
+  GROUP = 'GROUP',
+}
+
+enum MessageType {
+  TEXT = 'TEXT',
+  IMAGE = 'IMAGE',
+  FILE = 'FILE',
+}
 
 @Injectable()
 export class MessagingService {

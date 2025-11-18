@@ -7,7 +7,7 @@ import {
   UpdateMemberDto,
   CreateDepartmentDto,
 } from './dto';
-import { UserRole } from '@prisma/client';
+import { UserRole } from './constants/title-role-mapping';
 
 @Injectable()
 export class OrganizationService {
@@ -552,7 +552,7 @@ export class OrganizationService {
       orderBy: { joinedAt: 'desc' },
     });
 
-    return memberships.map(m => ({
+    return memberships.map((m: any) => ({
       ...m.organization,
       membership: {
         role: m.role,

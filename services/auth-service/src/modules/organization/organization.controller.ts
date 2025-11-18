@@ -24,7 +24,7 @@ import {
   UpdateMemberDto,
   CreateDepartmentDto,
 } from './dto';
-import { UserRole } from '@prisma/client';
+import { UserRole } from './constants/title-role-mapping';
 
 @ApiTags('Organizations')
 @Controller('organizations')

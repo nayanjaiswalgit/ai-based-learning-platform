@@ -79,7 +79,7 @@ export default function PerformancePage() {
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Average Query Time</span>
                     <span className="text-sm text-gray-600">
-                      {metrics.databaseQueryPerformance.averageQueryTime.toFixed(2)}ms
+                      {(metrics.databaseQueryPerformance.averageQueryTime || metrics.databaseQueryPerformance.avgTime || 0).toFixed(2)}ms
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -87,7 +87,7 @@ export default function PerformancePage() {
                       className="bg-blue-600 h-2 rounded-full"
                       style={{
                         width: `${Math.min(
-                          (metrics.databaseQueryPerformance.averageQueryTime / 1000) * 100,
+                          ((metrics.databaseQueryPerformance.averageQueryTime || metrics.databaseQueryPerformance.avgTime || 0) / 1000) * 100,
                           100
                         )}%`,
                       }}
@@ -95,7 +95,7 @@ export default function PerformancePage() {
                   </div>
                 </div>
 
-                {metrics.databaseQueryPerformance.slowQueries.length > 0 && (
+                {Array.isArray(metrics.databaseQueryPerformance.slowQueries) && metrics.databaseQueryPerformance.slowQueries.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -132,14 +132,14 @@ export default function PerformancePage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Error Rate</span>
-                    <span className="text-sm text-gray-600">{metrics.errorRate.toFixed(2)}%</span>
+                    <span className="text-sm text-gray-600">{(typeof metrics.errorRate === 'number' ? metrics.errorRate : metrics.errorRate.rate).toFixed(2)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${
-                        metrics.errorRate < 1 ? 'bg-green-600' : metrics.errorRate < 5 ? 'bg-yellow-600' : 'bg-red-600'
+                        (typeof metrics.errorRate === 'number' ? metrics.errorRate : metrics.errorRate.rate) < 1 ? 'bg-green-600' : (typeof metrics.errorRate === 'number' ? metrics.errorRate : metrics.errorRate.rate) < 5 ? 'bg-yellow-600' : 'bg-red-600'
                       }`}
-                      style={{ width: `${Math.min(metrics.errorRate * 10, 100)}%` }}
+                      style={{ width: `${Math.min((typeof metrics.errorRate === 'number' ? metrics.errorRate : metrics.errorRate.rate) * 10, 100)}%` }}
                     />
                   </div>
                 </div>
@@ -147,20 +147,20 @@ export default function PerformancePage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Uptime</span>
-                    <span className="text-sm text-green-600">{metrics.uptime}%</span>
+                    <span className="text-sm text-green-600">{typeof metrics.uptime === 'number' ? metrics.uptime : metrics.uptime.percentage}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: `${metrics.uptime}%` }} />
+                    <div className="bg-green-600 h-2 rounded-full" style={{ width: `${typeof metrics.uptime === 'number' ? metrics.uptime : metrics.uptime.percentage}%` }} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{metrics.codeExecutionMetrics.queueLength}</div>
+                    <div className="text-2xl font-bold">{metrics.codeExecutionMetrics.queueLength || 0}</div>
                     <p className="text-xs text-gray-500">Queue Length</p>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{metrics.codeExecutionMetrics.errors}</div>
+                    <div className="text-2xl font-bold">{metrics.codeExecutionMetrics.errors || 0}</div>
                     <p className="text-xs text-gray-500">Execution Errors</p>
                   </div>
                 </div>
@@ -186,11 +186,11 @@ export default function PerformancePage() {
                 <p className="text-sm text-gray-600 mt-1">DB Performance</p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-3xl font-bold text-green-600">{metrics.uptime}%</div>
+                <div className="text-3xl font-bold text-green-600">{typeof metrics.uptime === 'number' ? metrics.uptime : metrics.uptime.percentage}%</div>
                 <p className="text-sm text-gray-600 mt-1">Uptime</p>
               </div>
               <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <div className="text-3xl font-bold text-yellow-600">{metrics.errorRate.toFixed(1)}%</div>
+                <div className="text-3xl font-bold text-yellow-600">{(typeof metrics.errorRate === 'number' ? metrics.errorRate : metrics.errorRate.rate).toFixed(1)}%</div>
                 <p className="text-sm text-gray-600 mt-1">Error Rate</p>
               </div>
             </div>

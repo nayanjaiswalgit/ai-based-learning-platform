@@ -59,7 +59,7 @@ export const signupFormConfig: FormConfig = {
           type: 'password',
           placeholder: 'Create a password',
           showPasswordToggle: true,
-          helperText: 'Must be at least 8 characters with uppercase, lowercase, number, and special character',
+          helpText: 'Must be at least 8 characters with uppercase, lowercase, number, and special character',
           validation: [
             {
               type: 'required',

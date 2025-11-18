@@ -24,7 +24,7 @@ async function request<T>(
 ): Promise<T> {
   const { token, headers = {}, ...restOptions } = options;
 
-  const defaultHeaders: HeadersInit = {
+  const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...headers,
   };
@@ -321,4 +321,4 @@ export const certificateApi = {
     request(`${CERTIFICATE_SERVICE_URL}/certificates/course/${courseId}`, { token }),
 };
 
-export { ApiError };
+export { ApiError, request };

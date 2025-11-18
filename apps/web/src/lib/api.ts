@@ -19,9 +19,12 @@ export interface WeeklyReport {
     coursesCompleted: number;
     problemsSolved: number;
     averageScore: number;
+    lessonsWatched?: number;
+    timeSpent?: number;
+    streakDays?: number;
   };
-  topAchievements: Array<{ title: string; description: string; date: string }>;
-  recommendations: Array<{ title: string; description: string }>;
+  topAchievements: string[] | Array<{ title: string; description: string; date: string }>;
+  recommendations: string[] | Array<{ title: string; description: string }>;
 }
 
 export interface MonthlyReport {
@@ -32,6 +35,9 @@ export interface MonthlyReport {
     coursesInProgress: number;
     totalTimeSpent: number;
     averageScore: number;
+    problemsSolved?: number;
+    timeSpent?: number;
+    skillsImproved?: number;
   };
   highlights: string[];
   nextSteps: string[];
@@ -88,7 +94,12 @@ export interface AdminDashboard {
   revenue: {
     monthly: number;
     yearly: number;
-    revenueByPlan?: any[];
+    revenueByPlan?: {
+      free?: number;
+      pro?: number;
+      enterprise?: number;
+      [key: string]: number | undefined;
+    };
     mrr?: number;
     churnRate?: number;
     ltv?: number;
@@ -107,13 +118,18 @@ export interface PerformanceMetrics {
   databaseQueryPerformance: {
     avgTime: number;
     averageQueryTime?: number;
-    slowQueries: any[] | number;
+    slowQueries: any[];
     totalQueries: number;
     queries: any[];
   };
-  errorRate: { rate: number; total: number; lastHour: number };
-  uptime: { percentage: number; downtime: number };
-  codeExecutionMetrics: { avgTime: number; totalExecutions: number };
+  errorRate: number | { rate: number; total: number; lastHour: number };
+  uptime: number | { percentage: number; downtime: number };
+  codeExecutionMetrics: {
+    avgTime: number;
+    totalExecutions: number;
+    queueLength?: number;
+    errors?: number;
+  };
 }
 
 export interface FeatureFlag {

@@ -35,15 +35,15 @@ export default function UserAnalyticsPage({ params }: { params: Promise<{ userId
   }
 
   const problemsByDifficulty = [
-    { name: 'Easy', value: analytics.problemsSolved.byDifficulty.easy },
-    { name: 'Medium', value: analytics.problemsSolved.byDifficulty.medium },
-    { name: 'Hard', value: analytics.problemsSolved.byDifficulty.hard },
+    { name: 'Easy', value: analytics.problemsSolved.byDifficulty?.easy || analytics.problemsSolved.easy || 0 },
+    { name: 'Medium', value: analytics.problemsSolved.byDifficulty?.medium || analytics.problemsSolved.medium || 0 },
+    { name: 'Hard', value: analytics.problemsSolved.byDifficulty?.hard || analytics.problemsSolved.hard || 0 },
   ]
 
   const timeSpentData = [
-    { name: 'Daily', minutes: analytics.timeSpent.daily },
-    { name: 'Weekly', minutes: analytics.timeSpent.weekly },
-    { name: 'Monthly', minutes: analytics.timeSpent.monthly },
+    { name: 'Daily', minutes: analytics.timeSpent.daily || 0 },
+    { name: 'Weekly', minutes: analytics.timeSpent.weekly || analytics.timeSpent.thisWeek || 0 },
+    { name: 'Monthly', minutes: analytics.timeSpent.monthly || analytics.timeSpent.thisMonth || 0 },
   ]
 
   const topTopics = Object.entries(analytics.problemsSolved.byTopic || {})
@@ -68,9 +68,9 @@ export default function UserAnalyticsPage({ params }: { params: Promise<{ userId
               <Flame className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{analytics.learningStreak.currentStreakDays} days</div>
+              <div className="text-3xl font-bold">{analytics.learningStreak.currentStreakDays || analytics.learningStreak.current || 0} days</div>
               <p className="text-xs text-muted-foreground mt-2">
-                Longest: {analytics.learningStreak.longestStreakDays} days
+                Longest: {analytics.learningStreak.longestStreakDays || analytics.learningStreak.longest || 0} days
               </p>
             </CardContent>
           </Card>

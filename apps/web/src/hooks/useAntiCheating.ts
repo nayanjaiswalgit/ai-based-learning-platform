@@ -55,7 +55,7 @@ export function useAntiCheating(
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [copyAttemptCount, setCopyAttemptCount] = useState(0);
 
-  const devToolsCheckInterval = useRef<NodeJS.Timeout>();
+  const devToolsCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   const recordViolation = useCallback(
     (type: Violation['type']) => {

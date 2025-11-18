@@ -24,9 +24,9 @@ async function request<T>(
 ): Promise<T> {
   const { token, headers = {}, ...restOptions } = options;
 
-  const defaultHeaders: Record<string, string> = {
+  const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
-    ...headers,
+    ...(headers as Record<string, string>),
   };
 
   if (token) {

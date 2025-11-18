@@ -74,6 +74,7 @@ export type FormSection = {
   fields: FormField[];
   conditionalDisplay?: ConditionalRule;
   columns?: number; // For grid layout
+  layout?: 'grid' | 'flex' | 'default';
 };
 
 export type FormAction = {

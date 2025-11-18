@@ -123,7 +123,7 @@ export const Terminal: React.FC<TerminalProps> = ({
     });
 
     // Handle paste
-    xterm.onPaste((data) => {
+    xterm.onPaste((data: { data: string }) => {
       sendInput(data.data);
     });
 

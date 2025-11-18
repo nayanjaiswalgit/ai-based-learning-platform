@@ -127,10 +127,10 @@ export default function CodeEditor({
   return (
     <div className="border rounded-lg overflow-hidden">
       {/* Toolbar */}
-      <div className="bg-gray-900 border-b border-gray-700 p-2 flex items-center justify-between">
+      <div className="bg-muted border-b border-border p-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-            <SelectTrigger className="w-[150px] bg-gray-800 border-gray-700">
+            <SelectTrigger className="w-[150px] bg-card border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -143,7 +143,7 @@ export default function CodeEditor({
           </Select>
 
           <Select value={theme} onValueChange={setTheme}>
-            <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700">
+            <SelectTrigger className="w-[120px] bg-card border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -156,7 +156,7 @@ export default function CodeEditor({
           </Select>
 
           <Select value={fontSize.toString()} onValueChange={(v) => setFontSize(Number(v))}>
-            <SelectTrigger className="w-[80px] bg-gray-800 border-gray-700">
+            <SelectTrigger className="w-[80px] bg-card border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -172,7 +172,7 @@ export default function CodeEditor({
             variant="ghost"
             size="sm"
             onClick={formatCode}
-            className="text-gray-300 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             Format
           </Button>
@@ -183,7 +183,7 @@ export default function CodeEditor({
             <Button
               onClick={handleRun}
               size="sm"
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-success hover:bg-success/90 btn-modern"
             >
               <Play className="w-4 h-4 mr-2" />
               Run (Ctrl+Enter)

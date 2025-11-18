@@ -254,7 +254,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -266,7 +266,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
           <h2 className="text-2xl font-bold">
             {problemId ? 'Edit DSA Problem' : 'Create DSA Problem'}
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Add or update a data structures and algorithms problem
           </p>
         </div>
@@ -320,7 +320,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
               placeholder="Describe the problem in detail..."
             />
             {form.formState.errors.description && (
-              <p className="text-sm text-red-500 mt-1">
+              <p className="text-sm text-destructive mt-1">
                 {form.formState.errors.description.message}
               </p>
             )}
@@ -362,7 +362,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
                 </SelectContent>
               </Select>
               {form.formState.errors.category && (
-                <p className="text-sm text-red-500 mt-1">
+                <p className="text-sm text-destructive mt-1">
                   {form.formState.errors.category.message}
                 </p>
               )}
@@ -397,7 +397,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
               placeholder="https://leetcode.com/problems/..."
             />
             {form.formState.errors.url && (
-              <p className="text-sm text-red-500 mt-1">
+              <p className="text-sm text-destructive mt-1">
                 {form.formState.errors.url.message}
               </p>
             )}
@@ -424,7 +424,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
             ))}
           </div>
           {form.formState.errors.companies && (
-            <p className="text-sm text-red-500 mt-2">
+            <p className="text-sm text-destructive mt-2">
               {form.formState.errors.companies.message}
             </p>
           )}
@@ -439,7 +439,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
         <CardContent className="space-y-4">
           {/* Selected Tags */}
           {selectedTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 p-3 bg-blue-50 rounded">
+            <div className="flex flex-wrap gap-2 p-3 bg-primary/10 rounded">
               {selectedTags.map((tag) => (
                 <Badge key={tag} className="gap-1">
                   {tag}
@@ -454,7 +454,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
 
           {/* Common Tags */}
           <div>
-            <Label className="text-xs text-gray-600 mb-2">Common Tags</Label>
+            <Label className="text-xs text-muted-foreground mb-2">Common Tags</Label>
             <div className="flex flex-wrap gap-2">
               {COMMON_TAGS.map((tag) => (
                 <Badge
@@ -471,7 +471,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
 
           {/* Custom Tag Input */}
           <div>
-            <Label className="text-xs text-gray-600 mb-2">Add Custom Tag</Label>
+            <Label className="text-xs text-muted-foreground mb-2">Add Custom Tag</Label>
             <div className="flex gap-2">
               <Input
                 value={customTag}
@@ -491,7 +491,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
           </div>
 
           {form.formState.errors.tags && (
-            <p className="text-sm text-red-500">
+            <p className="text-sm text-destructive">
               {form.formState.errors.tags.message}
             </p>
           )}
@@ -507,7 +507,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
           {hints.map((hint, index) => (
             <div key={index} className="flex gap-2">
               <div className="flex-1">
-                <Label className="text-xs text-gray-600">Hint {index + 1}</Label>
+                <Label className="text-xs text-muted-foreground">Hint {index + 1}</Label>
                 <Input
                   value={hint}
                   onChange={(e) => handleUpdateHint(index, e.target.value)}
@@ -522,7 +522,7 @@ export function DSAProblemEditor({ problemId, onSave, onCancel }: DSAProblemEdit
                 className="mt-5"
                 disabled={hints.length === 1}
               >
-                <Trash2 className="h-4 w-4 text-red-500" />
+                <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
             </div>
           ))}

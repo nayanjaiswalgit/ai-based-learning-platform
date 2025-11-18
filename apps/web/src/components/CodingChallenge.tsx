@@ -39,9 +39,9 @@ export default function CodingChallenge({
   const [activeTab, setActiveTab] = useState('description');
 
   const difficultyColors = {
-    EASY: 'text-green-500',
-    MEDIUM: 'text-yellow-500',
-    HARD: 'text-red-500',
+    EASY: 'text-success',
+    MEDIUM: 'text-warning',
+    HARD: 'text-destructive',
   };
 
   async function handleRun() {
@@ -103,14 +103,14 @@ export default function CodingChallenge({
             <TabsContent value="examples" className="mt-4">
               <div className="space-y-4">
                 {testCases.slice(0, 2).map((testCase, index) => (
-                  <div key={index} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                  <div key={index} className="bg-muted p-4 rounded-lg">
                     <h3 className="font-semibold mb-2">Example {index + 1}</h3>
                     <div className="space-y-2 font-mono text-sm">
                       <div>
-                        <span className="text-gray-500">Input:</span> {testCase.input}
+                        <span className="text-muted-foreground">Input:</span> {testCase.input}
                       </div>
                       <div>
-                        <span className="text-gray-500">Output:</span> {testCase.expectedOutput}
+                        <span className="text-muted-foreground">Output:</span> {testCase.expectedOutput}
                       </div>
                     </div>
                   </div>
@@ -125,16 +125,16 @@ export default function CodingChallenge({
                   <span className="ml-2">Running tests...</span>
                 </div>
               ) : testResults.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   Run your code to see test results
                 </div>
               ) : (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 mb-4">
                     {passedTests === totalTests ? (
-                      <CheckCircle className="w-6 h-6 text-green-500" />
+                      <CheckCircle className="w-6 h-6 text-success" />
                     ) : (
-                      <XCircle className="w-6 h-6 text-red-500" />
+                      <XCircle className="w-6 h-6 text-destructive" />
                     )}
                     <span className="font-semibold">
                       {passedTests}/{totalTests} test cases passed
@@ -145,27 +145,27 @@ export default function CodingChallenge({
                     <div
                       key={index}
                       className={`border rounded-lg p-4 ${
-                        result.passed ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                        result.passed ? 'border-success bg-success/10' : 'border-destructive bg-destructive/10'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold">Test Case {index + 1}</span>
                         {result.passed ? (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
+                          <CheckCircle className="w-5 h-5 text-success" />
                         ) : (
-                          <XCircle className="w-5 h-5 text-red-500" />
+                          <XCircle className="w-5 h-5 text-destructive" />
                         )}
                       </div>
                       <div className="space-y-1 text-sm font-mono">
                         <div>
-                          <span className="text-gray-500">Input:</span> {result.input}
+                          <span className="text-muted-foreground">Input:</span> {result.input}
                         </div>
                         <div>
-                          <span className="text-gray-500">Expected:</span> {result.expectedOutput}
+                          <span className="text-muted-foreground">Expected:</span> {result.expectedOutput}
                         </div>
                         <div>
-                          <span className="text-gray-500">Got:</span>{' '}
-                          <span className={result.passed ? 'text-green-600' : 'text-red-600'}>
+                          <span className="text-muted-foreground">Got:</span>{' '}
+                          <span className={result.passed ? 'text-success' : 'text-destructive'}>
                             {result.actualOutput}
                           </span>
                         </div>
@@ -191,13 +191,13 @@ export default function CodingChallenge({
         </div>
 
         <div className="border-t p-4 flex justify-between items-center">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {isRunning ? 'Running...' : 'Ready'}
           </div>
           <Button
             onClick={handleRun}
             disabled={isRunning}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-success hover:bg-success/90 btn-modern"
           >
             {isRunning ? (
               <>

@@ -34,6 +34,15 @@ const nextConfig = {
       },
     ];
   },
+  // Next.js 16 optimizations
+  images: {
+    // Default cache TTL updated to 4 hours (Next.js 16 default)
+    minimumCacheTTL: 14400,
+  },
+  experimental: {
+    // Enable React Compiler for better performance
+    reactCompiler: true,
+  },
 }
 
 module.exports = nextConfig

@@ -211,8 +211,9 @@ export class AuthClient {
 }
 
 // Server-side auth functions (for app router)
+// Updated for Next.js 16: cookies() now requires await
 export async function getServerSession(): Promise<User | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get('accessToken')?.value;
 
   if (!token) {

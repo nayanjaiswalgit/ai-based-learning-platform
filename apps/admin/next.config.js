@@ -7,10 +7,22 @@ const nextConfig = {
   },
   // Admin-specific configurations
   images: {
-    domains: ['localhost'],
+    // Updated from deprecated 'domains' to 'remotePatterns' for Next.js 16
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+      },
+    ],
   },
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons'],
+    // Enable React Compiler for better performance
+    reactCompiler: true,
   },
 }
 

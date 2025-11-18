@@ -5,7 +5,7 @@ import { ChatAnthropic } from '@langchain/anthropic';
 import { BufferMemory } from 'langchain/memory';
 import { ConversationChain } from 'langchain/chains';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { ChatMessage, ChatResponse, UserProgress } from '@/types';
+import { ChatMessage, ChatResponse, UserProgress, SkillLevel } from '@/types';
 import { SendMessageDto, GetChatHistoryDto, GetHintDto, HintLevel } from './dto/chatbot.dto';
 
 interface UserChatSession {
@@ -267,7 +267,7 @@ Your response:`);
       });
     }
 
-    return this.sessions.get(userId);
+    return this.sessions.get(userId) || { messages: [], context: {} };
   }
 
   /**
@@ -376,9 +376,9 @@ Your response:`);
       problemsSolved: 42,
       currentStreak: 7,
       skillLevels: {
-        JavaScript: 'INTERMEDIATE',
-        React: 'INTERMEDIATE',
-        Algorithms: 'BEGINNER',
+        JavaScript: SkillLevel.INTERMEDIATE,
+        React: SkillLevel.INTERMEDIATE,
+        Algorithms: SkillLevel.BEGINNER,
       },
     };
   }

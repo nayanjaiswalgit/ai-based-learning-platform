@@ -26,6 +26,11 @@ export interface CreateNotificationDto {
   data?: any;
 }
 
+// Type guard helper
+function toNotificationType(type: string): NotificationType {
+  return type as NotificationType;
+}
+
 @Injectable()
 export class NotificationService {
   constructor(
@@ -181,7 +186,7 @@ export class NotificationService {
   async notifyCourseEnrollment(userId: string, courseTitle: string, courseId: string) {
     return this.createNotification({
       userId,
-      type: 'COURSE_ENROLLMENT',
+      type: NotificationType.COURSE_ENROLLMENT,
       title: 'Course Enrollment Successful',
       message: `You have successfully enrolled in "${courseTitle}"`,
       data: { courseId, courseTitle },
@@ -191,7 +196,7 @@ export class NotificationService {
   async notifyNewLesson(userId: string, lessonTitle: string, courseTitle: string, lessonId: string) {
     return this.createNotification({
       userId,
-      type: 'NEW_LESSON',
+      type: NotificationType.NEW_LESSON,
       title: 'New Lesson Available',
       message: `A new lesson "${lessonTitle}" is now available in "${courseTitle}"`,
       data: { lessonId, lessonTitle, courseTitle },
@@ -206,7 +211,7 @@ export class NotificationService {
   ) {
     return this.createNotification({
       userId,
-      type: 'CODE_EXECUTION_COMPLETE',
+      type: NotificationType.CODE_EXECUTION_COMPLETE,
       title: passed ? 'Code Execution Passed! ✅' : 'Code Execution Failed ❌',
       message: passed
         ? `Your solution for "${questionTitle}" passed all test cases!`
@@ -218,7 +223,7 @@ export class NotificationService {
   async notifyDailyChallenge(userId: string, challengeTitle: string, challengeId: string) {
     return this.createNotification({
       userId,
-      type: 'DAILY_CHALLENGE',
+      type: NotificationType.DAILY_CHALLENGE,
       title: 'Daily Challenge Available',
       message: `Today's challenge: "${challengeTitle}"`,
       data: { challengeId, challengeTitle },
@@ -233,7 +238,7 @@ export class NotificationService {
   ) {
     return this.createNotification({
       userId,
-      type: 'BOOTCAMP_SESSION_REMINDER',
+      type: NotificationType.BOOTCAMP_SESSION_REMINDER,
       title: 'Bootcamp Session Reminder',
       message: `"${sessionTitle}" starts at ${sessionTime.toLocaleString()}`,
       data: { sessionId, sessionTitle, sessionTime },
@@ -248,7 +253,7 @@ export class NotificationService {
   ) {
     return this.createNotification({
       userId,
-      type: 'ASSIGNMENT_DUE',
+      type: NotificationType.ASSIGNMENT_DUE,
       title: 'Assignment Due Soon',
       message: `"${assignmentTitle}" is due on ${dueDate.toLocaleDateString()}`,
       data: { assignmentId, assignmentTitle, dueDate },
@@ -258,7 +263,7 @@ export class NotificationService {
   async notifyMentorReply(userId: string, mentorName: string, threadTitle: string, replyId: string) {
     return this.createNotification({
       userId,
-      type: 'MENTOR_REPLY',
+      type: NotificationType.MENTOR_REPLY,
       title: 'Mentor Replied',
       message: `${mentorName} replied to your question in "${threadTitle}"`,
       data: { mentorName, threadTitle, replyId },
@@ -273,7 +278,7 @@ export class NotificationService {
   ) {
     return this.createNotification({
       userId,
-      type: 'ACHIEVEMENT_UNLOCKED',
+      type: NotificationType.ACHIEVEMENT_UNLOCKED,
       title: '🏆 Achievement Unlocked!',
       message: `You earned "${achievementTitle}": ${achievementDescription}`,
       data: { achievementId, achievementTitle, achievementDescription },

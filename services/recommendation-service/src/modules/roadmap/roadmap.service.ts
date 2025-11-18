@@ -68,8 +68,8 @@ export class RoadmapService {
 
     try {
       const message = await this.anthropic.messages.create({
-        model: this.configService.get('ai.anthropic.model'),
-        max_tokens: this.configService.get('ai.anthropic.maxTokens'),
+        model: this.configService.get('ai.anthropic.model') || 'claude-3-5-sonnet-20241022',
+        max_tokens: this.configService.get('ai.anthropic.maxTokens') || 4096,
         messages: [
           {
             role: 'user',
@@ -98,7 +98,7 @@ export class RoadmapService {
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: this.configService.get('ai.openai.model'),
+        model: this.configService.get('ai.openai.model') || 'gpt-4-turbo-preview',
         messages: [
           {
             role: 'system',
@@ -113,7 +113,7 @@ export class RoadmapService {
         temperature: 0.7,
       });
 
-      return JSON.parse(completion.choices[0].message.content);
+      return JSON.parse(completion.choices[0].message.content || "{}");
     } catch (error) {
       this.logger.error('Failed to generate roadmap with GPT-4:', error);
       throw error;
@@ -212,7 +212,7 @@ Create 4-6 milestones covering ${Math.ceil(dto.availableHoursPerWeek * 16 / 40)}
    */
   private async shouldUpdateRoadmap(roadmap: Roadmap): Promise<boolean> {
     // Check if user is progressing faster/slower than expected
-    const completedMilestones = roadmap.milestones.filter((m) => m.isCompleted).length;
+    const completedMilestones = roadmap.milestones.filter((m: any) => m.isCompleted).length;
     const totalMilestones = roadmap.milestones.length;
     const expectedProgress = this.calculateExpectedProgress(roadmap);
 
@@ -228,21 +228,21 @@ Create 4-6 milestones covering ${Math.ceil(dto.availableHoursPerWeek * 16 / 40)}
   private async dynamicallyUpdateRoadmap(roadmap: Roadmap): Promise<void> {
     this.logger.log(`Dynamically updating roadmap ${roadmap.id}`);
 
-    const completedMilestones = roadmap.milestones.filter((m) => m.isCompleted);
-    const upcomingMilestones = roadmap.milestones.filter((m) => !m.isCompleted);
+    const completedMilestones = roadmap.milestones.filter((m: any) => m.isCompleted);
+    const upcomingMilestones = roadmap.milestones.filter((m: any) => !m.isCompleted);
 
     // Use AI to adjust remaining milestones
     const prompt = `Given a learning roadmap where the user has completed:
-${completedMilestones.map((m) => `- ${m.title}`).join('\n')}
+${completedMilestones.map((m: any) => `- ${m.title}`).join('\n')}
 
 Adjust the following upcoming milestones to better match the user's pace and learning:
-${upcomingMilestones.map((m) => `- ${m.title}`).join('\n')}
+${upcomingMilestones.map((m: any) => `- ${m.title}`).join('\n')}
 
 Return adjusted milestones in the same JSON format, optimizing for the user's demonstrated learning pace.`;
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: this.configService.get('ai.openai.model'),
+        model: this.configService.get('ai.openai.model') || 'gpt-4-turbo-preview',
         messages: [
           {
             role: 'system',
@@ -256,7 +256,7 @@ Return adjusted milestones in the same JSON format, optimizing for the user's de
         response_format: { type: 'json_object' },
       });
 
-      const adjustedData = JSON.parse(completion.choices[0].message.content);
+      const adjustedData = JSON.parse(completion.choices[0].message.content || "{}");
 
       // Update upcoming milestones
       if (adjustedData.milestones) {
@@ -303,7 +303,7 @@ Return adjusted milestones in the same JSON format, optimizing for the user's de
     }
 
     // Get all roadmaps for user
-    const userRoadmaps = Array.from(this.roadmaps.values()).filter((r) => r.userId === userId);
+    const userRoadmaps = Array.from(this.roadmaps.values()).filter((r: any) => r.userId === userId);
     return userRoadmaps;
   }
 
@@ -345,7 +345,7 @@ Return adjusted milestones in the same JSON format, optimizing for the user's de
    * List all roadmaps for a user
    */
   async listRoadmaps(userId: string): Promise<Roadmap[]> {
-    const userRoadmaps = Array.from(this.roadmaps.values()).filter((r) => r.userId === userId);
+    const userRoadmaps = Array.from(this.roadmaps.values()).filter((r: any) => r.userId === userId);
     return userRoadmaps.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 }

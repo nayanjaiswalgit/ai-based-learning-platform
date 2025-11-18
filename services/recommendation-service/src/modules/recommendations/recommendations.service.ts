@@ -50,7 +50,7 @@ export class RecommendationsService {
 
     // Check cache
     if (this.dailyRecommendations.has(cacheKey)) {
-      return this.dailyRecommendations.get(cacheKey);
+      return this.dailyRecommendations.get(cacheKey)!;
     }
 
     // Get or create user profile
@@ -117,7 +117,7 @@ Return JSON format:
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: this.configService.get('ai.openai.model'),
+        model: this.configService.get('ai.openai.model') || 'gpt-4-turbo-preview',
         messages: [
           {
             role: 'system',
@@ -131,7 +131,7 @@ Return JSON format:
         response_format: { type: 'json_object' },
       });
 
-      const challenge = JSON.parse(completion.choices[0].message.content);
+      const challenge = JSON.parse(completion.choices[0].message.content || "{}");
       return challenge as Challenge;
     } catch (error) {
       this.logger.error('Failed to generate daily challenge:', error);
@@ -315,7 +315,7 @@ Return JSON format:
       });
     }
 
-    return this.userProfiles.get(userId);
+    return this.userProfiles.get(userId)!;
   }
 
   /**

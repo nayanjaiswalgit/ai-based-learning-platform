@@ -26,7 +26,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
-        store: redisStore,
+        store: redisStore as any,
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT || '6379', 10),
         password: process.env.REDIS_PASSWORD,

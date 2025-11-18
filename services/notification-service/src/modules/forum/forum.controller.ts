@@ -8,7 +8,10 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { ForumService, VoteType } from './forum.service';
+import { ForumService, VoteType, ModerationAction, ModerationTargetType } from './forum.service';
+
+// Re-export types for external use
+export { VoteType, ModerationAction, ModerationTargetType };
 
 @Controller('forum')
 export class ForumController {
@@ -90,12 +93,18 @@ export class ForumController {
 
   // Voting
   @Post('threads/:id/vote')
-  async voteThread(@Param('id') id: string, @Body() body: { userId: string; voteType: VoteType }) {
+  async voteThread(
+    @Param('id') id: string,
+    @Body() body: { userId: string; voteType: VoteType }
+  ): Promise<{ action: string; voteType: VoteType }> {
     return this.forumService.voteThread(id, body.userId, body.voteType);
   }
 
   @Post('replies/:id/vote')
-  async voteReply(@Param('id') id: string, @Body() body: { userId: string; voteType: VoteType }) {
+  async voteReply(
+    @Param('id') id: string,
+    @Body() body: { userId: string; voteType: VoteType }
+  ): Promise<{ action: string; voteType: VoteType }> {
     return this.forumService.voteReply(id, body.userId, body.voteType);
   }
 

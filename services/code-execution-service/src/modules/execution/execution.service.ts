@@ -52,6 +52,8 @@ export class ExecutionService {
       passedTests: 0,
       failedTests: 0,
       testResults: [] as any[],
+      allPassed: false,
+      similarityWarning: false,
     };
 
     for (const testCase of runTestsDto.testCases) {
@@ -79,7 +81,7 @@ export class ExecutionService {
       }
     }
 
-    results['allPassed'] = results.passedTests === results.totalTests;
+    results.allPassed = results.passedTests === results.totalTests;
 
     // Check for plagiarism/code similarity if all tests pass
     if (results.allPassed && runTestsDto.problemId) {
@@ -88,7 +90,7 @@ export class ExecutionService {
         runTestsDto.problemId,
         userId,
       );
-      results['similarityWarning'] = similarityScore > 0.9;
+      results.similarityWarning = similarityScore > 0.9;
     }
 
     return results;

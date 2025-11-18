@@ -111,7 +111,7 @@ export class AnalyticsService {
 
     // Pattern 1: Time of day preference
     const hourCounts = new Map<number, number>();
-    activities.forEach((activity) => {
+    activities.forEach((activity: any) => {
       const hour = activity.timestamp.getHours();
       hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
     });
@@ -129,7 +129,7 @@ export class AnalyticsService {
 
     // Pattern 2: Day of week preference
     const dayCounts = new Map<number, number>();
-    activities.forEach((activity) => {
+    activities.forEach((activity: any) => {
       const day = activity.timestamp.getDay();
       dayCounts.set(day, (dayCounts.get(day) || 0) + 1);
     });
@@ -238,8 +238,8 @@ export class AnalyticsService {
     });
 
     // Separate strengths and weaknesses
-    const topicStrengths = topicAnalyses.filter((t) => t.successRate >= 0.6).slice(0, 5);
-    const topicWeaknesses = topicAnalyses.filter((t) => t.successRate < 0.5).slice(0, 5);
+    const topicStrengths = topicAnalyses.filter((t: any) => t.successRate >= 0.6).slice(0, 5);
+    const topicWeaknesses = topicAnalyses.filter((t: any) => t.successRate < 0.5).slice(0, 5);
 
     return { topicStrengths, topicWeaknesses };
   }
@@ -286,7 +286,7 @@ export class AnalyticsService {
    */
   private async generateStudyPlan(userId: string, userData: UserActivityData): Promise<StudyPlan> {
     // Calculate recommended weekly goal based on current activity
-    const recentActivities = userData.activities.filter((a) => {
+    const recentActivities = userData.activities.filter((a: any) => {
       const weekAgo = dayjs().subtract(7, 'days');
       return dayjs(a.timestamp).isAfter(weekAgo);
     });
@@ -296,7 +296,7 @@ export class AnalyticsService {
 
     // Get weak topics for focus areas
     const { topicWeaknesses } = this.analyzeTopics(userData);
-    const focusAreas = topicWeaknesses.slice(0, 3).map((t) => t.topic);
+    const focusAreas = topicWeaknesses.slice(0, 3).map((t: any) => t.topic);
 
     // Get topics that need review (haven't practiced recently)
     const reviewTopics = this.getTopicsNeedingReview(userData);
@@ -362,7 +362,7 @@ export class AnalyticsService {
       });
     }
 
-    return this.userActivityData.get(userId);
+    return this.userActivityData.get(userId)!!;
   }
 
   /**
@@ -382,7 +382,7 @@ export class AnalyticsService {
       });
     }
 
-    const data = userData.problemAttempts.get(problemId);
+    const data = userData.problemAttempts.get(problemId)!;
     data.attempts++;
     if (success) data.successes++;
     data.totalTime += dto.duration;
@@ -400,7 +400,7 @@ export class AnalyticsService {
       });
     }
 
-    const data = userData.sessionTimes.get(hourOfDay);
+    const data = userData.sessionTimes.get(hourOfDay)!;
     data.count++;
     data.totalDuration += duration;
     data.avgPerformance = (data.avgPerformance * (data.count - 1) + performance) / data.count;
@@ -429,7 +429,7 @@ export class AnalyticsService {
       }
     }
 
-    return activities.filter((a) => {
+    return activities.filter((a: any) => {
       const activityDate = dayjs(a.timestamp);
       return activityDate.isAfter(startDate) && activityDate.isBefore(endDate);
     });
@@ -460,7 +460,7 @@ export class AnalyticsService {
   private getTopicsNeedingReview(userData: UserActivityData): string[] {
     const topicLastPracticed = new Map<string, Date>();
 
-    userData.activities.forEach((activity) => {
+    userData.activities.forEach((activity: any) => {
       if (activity.type === 'PROBLEM_ATTEMPT') {
         const problem = userData.problemAttempts.get(activity.resourceId);
         if (problem) {

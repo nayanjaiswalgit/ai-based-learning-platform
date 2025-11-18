@@ -23,7 +23,7 @@ export class TestCaseService {
       this.testCases.set(problemId, []);
     }
 
-    this.testCases.get(problemId).push(newTestCase);
+    this.testCases.get(problemId)!.push(newTestCase);
     return newTestCase;
   }
 

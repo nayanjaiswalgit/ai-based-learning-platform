@@ -1,4 +1,11 @@
 import { Injectable } from '@nestjs/common';
+
+// Declare module for similarity package
+declare module 'similarity' {
+  function similarity(s1: string, s2: string): number;
+  export = similarity;
+}
+
 import * as similarity from 'similarity';
 
 @Injectable()
@@ -31,7 +38,7 @@ export class AntiCheatService {
     if (!this.submissions.has(problemId)) {
       this.submissions.set(problemId, []);
     }
-    this.submissions.get(problemId).push({ userId, code });
+    this.submissions.get(problemId)!.push({ userId, code });
 
     return maxSimilarity;
   }

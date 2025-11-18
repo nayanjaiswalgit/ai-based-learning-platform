@@ -19,10 +19,10 @@ const nextConfig = {
       },
     ],
   },
+  // Enable React Compiler for better performance (moved to root in Next.js 16)
+  reactCompiler: false, // Disabled temporarily due to babel-plugin-react-compiler dependency
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons'],
-    // Enable React Compiler for better performance
-    reactCompiler: true,
   },
 }
 

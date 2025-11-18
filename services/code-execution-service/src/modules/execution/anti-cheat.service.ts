@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-// Declare module for similarity package
-declare module 'similarity' {
-  function similarity(s1: string, s2: string): number;
-  export = similarity;
-}
-
-import * as similarity from 'similarity';
+// Type for similarity function
+const similarity: (s1: string, s2: string) => number = require('similarity');
 
 @Injectable()
 export class AntiCheatService {

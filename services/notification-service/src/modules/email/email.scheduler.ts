@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from './email.service';
-import { ScheduledStatus } from '@prisma/client';
+import { ScheduledStatus } from './email-types';
 
 @Injectable()
 export class EmailScheduler {

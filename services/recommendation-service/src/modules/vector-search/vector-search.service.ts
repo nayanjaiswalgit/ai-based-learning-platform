@@ -62,7 +62,7 @@ export class VectorSearchService {
   private async generateEmbedding(text: string): Promise<number[]> {
     try {
       const response = await this.openai.embeddings.create({
-        model: this.configService.get('ai.openai.embeddingModel'),
+        model: this.configService.get('ai.openai.embeddingModel') || 'text-embedding-3-small',
         input: text,
       });
 
@@ -315,7 +315,7 @@ export class VectorSearchService {
         score: this.cosineSimilarity(queryEmbedding, data.embedding),
         metadata: data.metadata as SearchMetadata,
       }))
-      .filter((result) => {
+      .filter((result: any) => {
         // Apply filters
         if (dto.difficulty && dto.difficulty.length > 0) {
           if (!dto.difficulty.includes(result.metadata.difficulty as any)) {
@@ -324,7 +324,7 @@ export class VectorSearchService {
         }
 
         if (dto.topics && dto.topics.length > 0) {
-          if (!result.metadata.topics?.some((t) => dto.topics.includes(t))) {
+          if (!result.metadata.topics?.some((t: any) => dto.topics!.includes(t))) {
             return false;
           }
         }

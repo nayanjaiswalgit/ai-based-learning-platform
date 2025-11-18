@@ -1,6 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { VoteType, ModerationAction, ModerationTargetType } from '@prisma/client';
+
+// Local type definitions (not in Prisma schema yet)
+export enum VoteType {
+  UP = 'UP',
+  DOWN = 'DOWN',
+  UPVOTE = 'UPVOTE',
+  DOWNVOTE = 'DOWNVOTE',
+}
+
+export enum ModerationAction {
+  APPROVE = 'APPROVE',
+  REJECT = 'REJECT',
+  DELETE = 'DELETE',
+  PIN = 'PIN',
+  UNPIN = 'UNPIN',
+  LOCK = 'LOCK',
+  RESTORE = 'RESTORE',
+}
+
+export enum ModerationTargetType {
+  POST = 'POST',
+  COMMENT = 'COMMENT',
+  THREAD = 'THREAD',
+  REPLY = 'REPLY',
+}
 
 @Injectable()
 export class ForumService {

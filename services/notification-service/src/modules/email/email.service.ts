@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailTemplateType, EmailStatus } from '@prisma/client';
+import { EmailTemplateType, EmailStatus } from './email-types';
 import Handlebars from 'handlebars';
 
 @Injectable()

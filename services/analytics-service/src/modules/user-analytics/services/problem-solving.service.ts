@@ -38,7 +38,7 @@ export class ProblemSolvingService {
     for (const submission of solvedSubmissions) {
       const difficulty = submission.question.difficulty?.toLowerCase()
       if (difficulty === 'easy' || difficulty === 'medium' || difficulty === 'hard') {
-        byDifficulty[difficulty]++
+        (byDifficulty as any)[difficulty]++
       }
 
       // Count topics
@@ -70,7 +70,7 @@ export class ProblemSolvingService {
       total,
       byDifficulty,
       byTopic,
-      recentSubmissions: recentSubmissions.map((s) => ({
+      recentSubmissions: recentSubmissions.map((s: any) => ({
         questionId: s.questionId,
         questionTitle: s.question.title,
         difficulty: s.question.difficulty,

@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailTemplateType } from '@prisma/client';
+import { EmailTemplateType } from './email-types';
 
 @Injectable()
 export class EmailTemplateService implements OnModuleInit {

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsUrl, IsBoolean, IsObject, MinLength, MaxLength, Matches } from 'class-validator';
-import { OrganizationType } from '@prisma/client';
+import { OrganizationType } from '../constants/title-role-mapping';
 
 export class CreateOrganizationDto {
   @ApiProperty({ description: 'Organization name' })

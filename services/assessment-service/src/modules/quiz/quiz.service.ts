@@ -40,7 +40,7 @@ export class QuizService {
       },
     });
 
-    return questionTypes.map((type, index) => ({
+    return questionTypes.map((type: any, index: number) => ({
       id: `quiz_${type.questionType}_${index}`,
       title: `${type.questionType} Quiz`,
       description: `Test your knowledge with ${type._count.id} questions`,
@@ -79,7 +79,7 @@ export class QuizService {
       description: `Test your knowledge`,
       timeLimit: 1800, // 30 minutes
       questionCount: questions.length,
-      questions: questions.map(q => ({
+      questions: questions.map((q: any) => ({
         id: q.id,
         title: q.title,
         description: q.description,
@@ -115,7 +115,7 @@ export class QuizService {
     const startTime = new Date();
 
     // Get questions
-    let questions = quiz.questionIds.map((id) => ({
+    let questions = quiz.questionIds.map((id: string) => ({
       id,
       questionText: 'Sample question',
       type: 'MULTIPLE_CHOICE',
@@ -129,11 +129,11 @@ export class QuizService {
 
     // Shuffle answers for each question
     if (quiz.shuffleAnswers) {
-      questions = questions.map((q) => this.questionService.shuffleOptions(q));
+      questions = questions.map((q: any) => this.questionService.shuffleOptions(q));
     }
 
     // Sanitize questions (remove correct answers)
-    questions = questions.map((q) => this.questionService.sanitizeQuestion(q));
+    questions = questions.map((q: any) => this.questionService.sanitizeQuestion(q));
 
     return {
       attemptId,
@@ -228,7 +228,7 @@ export class QuizService {
       where: {
         userId,
         questionId: {
-          in: quiz.questions.map(q => q.id),
+          in: quiz.questions.map((q: any) => q.id),
         },
         submittedAt: {
           gte: new Date(attemptTime.getTime() - 60 * 60 * 1000), // 1 hour window
@@ -245,7 +245,7 @@ export class QuizService {
     });
 
     const totalQuestions = quiz.questionCount;
-    const correctAnswers = submissions.filter(s => s.status === 'ACCEPTED').length;
+    const correctAnswers = submissions.filter((s: any) => s.status === 'ACCEPTED').length;
     const percentage = Math.round((correctAnswers / totalQuestions) * 100);
 
     return {
@@ -258,7 +258,7 @@ export class QuizService {
       passed: percentage >= 70,
       timeTaken: null, // Can be calculated if we store attempt start/end times
       submittedAt: submissions[0]?.submittedAt || attemptTime,
-      questionResults: submissions.map(s => ({
+      questionResults: submissions.map((s: any) => ({
         questionId: s.questionId,
         question: s.question.title,
         userAnswer: s.submissionData,
@@ -278,7 +278,7 @@ export class QuizService {
       where: {
         userId,
         questionId: {
-          in: quiz.questions.map(q => q.id),
+          in: quiz.questions.map((q: any) => q.id),
         },
       },
       orderBy: {
@@ -293,7 +293,7 @@ export class QuizService {
 
     // Group submissions by date to identify attempts
     const attemptsByDate = new Map<string, typeof submissions>();
-    submissions.forEach(sub => {
+    submissions.forEach((sub: any) => {
       const dateKey = sub.submittedAt.toISOString().split('T')[0];
       if (!attemptsByDate.has(dateKey)) {
         attemptsByDate.set(dateKey, []);
@@ -303,8 +303,8 @@ export class QuizService {
 
     // Convert to attempt history
     const history = Array.from(attemptsByDate.entries()).map(([date, subs]) => {
-      const uniqueQuestions = new Set(subs.map(s => s.questionId));
-      const correctAnswers = subs.filter(s => s.status === 'ACCEPTED').length;
+      const uniqueQuestions = new Set(subs.map((s: any) => s.questionId));
+      const correctAnswers = subs.filter((s: any) => s.status === 'ACCEPTED').length;
       const percentage = Math.round((correctAnswers / uniqueQuestions.size) * 100);
 
       return {

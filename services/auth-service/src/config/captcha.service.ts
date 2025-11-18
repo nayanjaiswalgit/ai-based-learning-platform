@@ -4,7 +4,7 @@ import axios from 'axios';
 
 @Injectable()
 export class CaptchaService {
-  private readonly secretKey: string;
+  private readonly secretKey: string | undefined;
 
   constructor(private configService: ConfigService) {
     this.secretKey = this.configService.get<string>('RECAPTCHA_SECRET_KEY');

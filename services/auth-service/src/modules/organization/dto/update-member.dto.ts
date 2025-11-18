@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsUUID, IsBoolean, IsObject } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../constants/title-role-mapping';
 
 export class UpdateMemberDto {
   @ApiPropertyOptional({ enum: UserRole, description: 'Core role' })

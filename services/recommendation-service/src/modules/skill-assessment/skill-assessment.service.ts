@@ -43,7 +43,7 @@ export class SkillAssessmentService {
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: this.configService.get('ai.openai.model'),
+        model: this.configService.get('ai.openai.model') || 'gpt-4-turbo-preview',
         messages: [
           {
             role: 'system',
@@ -58,7 +58,7 @@ export class SkillAssessmentService {
         response_format: { type: 'json_object' },
       });
 
-      const response = JSON.parse(completion.choices[0].message.content);
+      const response = JSON.parse(completion.choices[0].message.content || '{}');
       return response.questions || [];
     } catch (error) {
       this.logger.error('Failed to generate questions:', error);
@@ -106,13 +106,13 @@ export class SkillAssessmentService {
       throw new Error('Assessment not found');
     }
 
-    const question = assessment.questions.find((q) => q.id === dto.questionId);
+    const question = assessment.questions.find((q: any) => q.id === dto.questionId);
     if (!question) {
       throw new Error('Question not found');
     }
 
     const userAnswersMap = this.userAnswers.get(dto.assessmentId);
-    userAnswersMap.set(dto.questionId, dto.selectedAnswer);
+    userAnswersMap!.set(dto.questionId, dto.selectedAnswer);
 
     const correct = dto.selectedAnswer === question.correctAnswer;
 
@@ -137,8 +137,8 @@ export class SkillAssessmentService {
     let correctAnswers = 0;
     const topicPerformance = new Map<string, { correct: number; total: number }>();
 
-    questions.forEach((question) => {
-      const userAnswer = userAnswersMap.get(question.id);
+    questions.forEach((question: any) => {
+      const userAnswer = userAnswersMap!.get(question.id);
       if (userAnswer === question.correctAnswer) {
         correctAnswers++;
       }
@@ -148,9 +148,9 @@ export class SkillAssessmentService {
         topicPerformance.set(question.topic, { correct: 0, total: 0 });
       }
       const topicStats = topicPerformance.get(question.topic);
-      topicStats.total++;
+      topicStats!.total++;
       if (userAnswer === question.correctAnswer) {
-        topicStats.correct++;
+        topicStats!.correct++;
       }
     });
 
@@ -279,7 +279,7 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: this.configService.get('ai.openai.model'),
+        model: this.configService.get('ai.openai.model') || 'gpt-4-turbo-preview',
         messages: [
           { role: 'system', content: 'You are a learning advisor.' },
           { role: 'user', content: prompt },
@@ -287,7 +287,7 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
         response_format: { type: 'json_object' },
       });
 
-      const response = JSON.parse(completion.choices[0].message.content);
+      const response = JSON.parse(completion.choices[0].message.content || '{}');
       return response.recommendations || [];
     } catch (error) {
       this.logger.error('Failed to generate recommendations:', error);
@@ -375,7 +375,7 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
         take: 3,
       });
 
-      courses.forEach((course) => {
+      courses.forEach((course: any) => {
         resources.push({
           id: course.id,
           type: 'COURSE',
@@ -400,7 +400,7 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
         take: 5,
       });
 
-      problems.forEach((problem) => {
+      problems.forEach((problem: any) => {
         resources.push({
           id: problem.id,
           type: 'PROBLEM',
@@ -477,12 +477,12 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
       // Group submissions by topic and calculate skill levels
       const topicStats = new Map<string, { total: number; easy: number; medium: number; hard: number }>();
 
-      submissions.forEach((submission) => {
+      submissions.forEach((submission: any) => {
         const topics = submission.question.topics as string[];
         const difficulty = submission.question.difficulty;
 
         if (Array.isArray(topics)) {
-          topics.forEach((topic) => {
+          topics.forEach((topic: any) => {
             if (!topicStats.has(topic)) {
               topicStats.set(topic, { total: 0, easy: 0, medium: 0, hard: 0 });
             }
@@ -585,9 +585,9 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
     // Calculate skill levels by topic
     const skillLevels: Record<string, { correct: number; total: number }> = {};
 
-    quizResults.forEach((attempt) => {
-      attempt.quiz.questions.forEach((question) => {
-        question.topics.forEach((topic) => {
+    quizResults.forEach((attempt: any) => {
+      attempt.quiz.questions.forEach((question: any) => {
+        question.topics.forEach((topic: any) => {
           if (!skillLevels[topic.name]) {
             skillLevels[topic.name] = { correct: 0, total: 0 };
           }
@@ -599,8 +599,8 @@ Provide 5 personalized learning recommendations. Return as JSON array of strings
       });
     });
 
-    codingSubmissions.forEach((submission) => {
-      submission.question.topics.forEach((topic) => {
+    codingSubmissions.forEach((submission: any) => {
+      submission.question.topics.forEach((topic: any) => {
         if (!skillLevels[topic.name]) {
           skillLevels[topic.name] = { correct: 0, total: 0 };
         }

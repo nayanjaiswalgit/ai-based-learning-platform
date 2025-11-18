@@ -42,7 +42,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
       if (!this.userSockets.has(userId)) {
         this.userSockets.set(userId, new Set());
       }
-      this.userSockets.get(userId).add(client.id);
+      this.userSockets.get(userId)!.add(client.id);
 
       // Join user-specific room
       client.join(`user:${userId}`);
@@ -141,7 +141,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
   // Check if user is online
   isUserOnline(userId: string): boolean {
-    return this.userSockets.has(userId) && this.userSockets.get(userId).size > 0;
+    return this.userSockets.has(userId) && this.userSockets.get(userId)!.size > 0;
   }
 
   // Get online user count

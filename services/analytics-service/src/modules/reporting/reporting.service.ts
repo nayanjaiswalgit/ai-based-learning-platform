@@ -50,7 +50,7 @@ export class ReportingService {
         timeSpent: weeklyStats._sum.timeSpentMinutes || 0,
         streakDays: analytics.learningStreak.currentStreakDays,
       },
-      topAchievements: analytics.achievements.slice(0, 3).map((a) => a.title),
+      topAchievements: analytics.achievements.slice(0, 3).map((a: any) => a.title),
       recommendations: [
         'Continue your learning streak!',
         'Try solving medium-difficulty problems',

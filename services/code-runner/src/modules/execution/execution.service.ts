@@ -115,11 +115,12 @@ export class ExecutionService {
   private async executePython(code: string, timeLimit: number): Promise<{ output: string; error: string | null; executionTime: number }> {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'code-exec-'));
     const filePath = path.join(tempDir, 'code.py');
+    let startTime = Date.now();
 
     try {
       await fs.writeFile(filePath, code);
 
-      const startTime = Date.now();
+      startTime = Date.now();
       const { stdout, stderr } = await execPromise(`python3 ${filePath}`, {
         timeout: timeLimit,
         maxBuffer: 1024 * 1024, // 1MB
@@ -134,7 +135,7 @@ export class ExecutionService {
     } catch (err) {
       // Try with 'python' command if 'python3' not found
       try {
-        const startTime = Date.now();
+        startTime = Date.now();
         const { stdout, stderr } = await execPromise(`python ${filePath}`, {
           timeout: timeLimit,
           maxBuffer: 1024 * 1024,

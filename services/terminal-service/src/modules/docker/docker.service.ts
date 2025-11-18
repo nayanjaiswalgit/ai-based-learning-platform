@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as Docker from 'dockerode';
+import Docker from 'dockerode';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface ContainerConfig {
@@ -100,9 +100,10 @@ export class DockerService implements OnModuleInit {
 
           // Auto-remove container when stopped
           AutoRemove: true,
+
+          // Security options
+          SecurityOpt: ['no-new-privileges'],
         },
-        // Security options
-        SecurityOpt: ['no-new-privileges'],
       });
 
       // Start container

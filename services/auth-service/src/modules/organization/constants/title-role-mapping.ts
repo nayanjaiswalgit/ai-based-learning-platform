@@ -1,4 +1,20 @@
-import { UserRole, OrganizationType } from '@prisma/client';
+// Local type definitions (not in Prisma schema yet)
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  INSTRUCTOR = 'INSTRUCTOR',
+  STUDENT = 'STUDENT',
+  MENTOR = 'MENTOR',
+}
+
+export enum OrganizationType {
+  UNIVERSITY = 'UNIVERSITY',
+  COMPANY = 'COMPANY',
+  BOOTCAMP = 'BOOTCAMP',
+  SCHOOL = 'SCHOOL',
+  COLLEGE = 'COLLEGE',
+  TRAINING_CENTER = 'TRAINING_CENTER',
+  OTHER = 'OTHER',
+}
 
 /**
  * Title-to-Role Mapping
@@ -46,7 +62,6 @@ export const TITLE_ROLE_MAPPING: Record<string, UserRole> = {
   'Instructor': UserRole.INSTRUCTOR,
   'Mentor': UserRole.MENTOR,
   'Teaching Fellow': UserRole.MENTOR,
-  'Student': UserRole.STUDENT,
   'Participant': UserRole.STUDENT,
 
   // Default
@@ -135,7 +150,7 @@ export function getRoleFromTitle(title: string): UserRole {
  * Get suggested titles for organization type
  */
 export function getSuggestedTitles(orgType: OrganizationType): string[] {
-  return ORGANIZATION_TITLES[orgType] || ORGANIZATION_TITLES[OrganizationType.OTHER];
+  return ORGANIZATION_TITLES[orgType as keyof typeof ORGANIZATION_TITLES] || ORGANIZATION_TITLES[OrganizationType.OTHER];
 }
 
 /**

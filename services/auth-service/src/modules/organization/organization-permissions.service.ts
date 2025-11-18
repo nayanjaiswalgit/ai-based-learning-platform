@@ -73,7 +73,7 @@ export class OrganizationPermissionsService {
   /**
    * Check if user has a specific permission in an organization
    */
-  async checkPermission(userId: string, organizationId: string, permission: Permission): boolean {
+  async checkPermission(userId: string, organizationId: string, permission: Permission): Promise<boolean> {
     try {
       const userPerms = await this.getUserPermissions(userId, organizationId);
       return userPerms.permissions.includes(permission);
@@ -85,7 +85,7 @@ export class OrganizationPermissionsService {
   /**
    * Check if organization has access to a feature
    */
-  async checkFeature(organizationId: string, feature: Feature): boolean {
+  async checkFeature(organizationId: string, feature: Feature): Promise<boolean> {
     const org = await this.prisma.organization.findUnique({
       where: { id: organizationId },
       select: { settings: true },

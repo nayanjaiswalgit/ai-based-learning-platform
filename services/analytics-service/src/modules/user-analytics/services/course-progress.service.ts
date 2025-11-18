@@ -41,7 +41,7 @@ export class CourseProgressService {
     return {
       completed,
       inProgress,
-      recentCourses: enrollments.map((e) => ({
+      recentCourses: enrollments.map((e: any) => ({
         courseId: e.courseId,
         courseTitle: e.course.title,
         courseThumbnail: e.course.thumbnailUrl,

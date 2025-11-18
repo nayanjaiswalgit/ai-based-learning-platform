@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsUUID, IsObject } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../constants/title-role-mapping';
 
 export class AddMemberDto {
   @ApiProperty({ description: 'User ID to add' })

@@ -182,7 +182,7 @@ export class PaymentGatewayService {
       refundId: refund.id,
       amount: refund.amount / 100,
       currency: refund.currency.toUpperCase(),
-      status: refund.status,
+      status: refund.status || "unknown",
     };
   }
 

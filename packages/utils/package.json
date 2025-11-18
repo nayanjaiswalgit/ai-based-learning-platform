@@ -1,6 +1,6 @@
 {
   "name": "@learning-platform/utils",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {

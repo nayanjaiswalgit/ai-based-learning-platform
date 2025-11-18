@@ -1,6 +1,6 @@
 {
   "name": "@ai-learning/payment-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Payment and subscription service for AI-based learning platform",
   "main": "dist/main.js",
   "scripts": {

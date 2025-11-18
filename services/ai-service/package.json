@@ -1,6 +1,6 @@
 {
   "name": "@learning-platform/ai-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "private": true,
   "scripts": {
     "dev": "nest start --watch",

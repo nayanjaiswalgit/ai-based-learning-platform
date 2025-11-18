@@ -1,6 +1,6 @@
 {
   "name": "@learning-platform/bootcamp-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Bootcamp and Cohort Management Service",
   "main": "dist/main.js",
   "scripts": {

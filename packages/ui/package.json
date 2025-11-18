@@ -1,6 +1,6 @@
 {
   "name": "@learning-platform/ui",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "main": "./src/index.tsx",
   "types": "./src/index.tsx",
   "scripts": {

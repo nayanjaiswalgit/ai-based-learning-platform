@@ -1,6 +1,6 @@
 {
   "name": "@ai-learning/code-execution-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Code execution service with Docker sandboxing",
   "main": "dist/main.js",
   "scripts": {

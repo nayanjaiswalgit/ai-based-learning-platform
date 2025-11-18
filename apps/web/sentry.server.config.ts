@@ -13,7 +13,7 @@ Sentry.init({
 
   // Integrations
   integrations: [
-    new Sentry.Integrations.Http({ tracing: true }),
+    Sentry.httpIntegration(),
   ],
 
   // Filter sensitive data

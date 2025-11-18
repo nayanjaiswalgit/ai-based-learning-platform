@@ -79,6 +79,7 @@ export type FormSection = {
 export type FormAction = {
   type: 'submit' | 'reset' | 'button';
   label: string;
+  loadingText?: string;
   variant?: 'default' | 'outline' | 'ghost' | 'destructive';
   disabled?: boolean;
   onClick?: string; // Function name or API endpoint
@@ -90,6 +91,7 @@ export type SocialAuthProvider = {
   label: string;
   icon?: string;
   enabled: boolean;
+  callbackUrl?: string;
 };
 
 export type FormConfig = {

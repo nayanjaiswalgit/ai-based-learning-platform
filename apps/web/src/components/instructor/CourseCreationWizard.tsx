@@ -264,17 +264,17 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Create New Course</h2>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Step {currentStep} of {STEPS.length}
           </span>
         </div>
         <Progress value={progress} className="h-2" />
-        <div className="flex justify-between text-xs text-gray-500">
+        <div className="flex justify-between text-xs text-muted-foreground">
           {STEPS.map((step) => (
             <div
               key={step.id}
               className={`flex-1 text-center ${
-                currentStep >= step.id ? 'text-blue-600 font-medium' : ''
+                currentStep >= step.id ? 'text-primary font-medium' : ''
               }`}
             >
               {step.name}
@@ -302,7 +302,7 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
                   placeholder="e.g., Complete Web Development Bootcamp"
                 />
                 {basicForm.formState.errors.title && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {basicForm.formState.errors.title.message}
                   </p>
                 )}
@@ -317,7 +317,7 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
                   placeholder="Describe what students will learn in this course..."
                 />
                 {basicForm.formState.errors.description && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {basicForm.formState.errors.description.message}
                   </p>
                 )}
@@ -411,7 +411,7 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
                         placeholder="e.g., Create a comprehensive course on React.js covering hooks, state management, and best practices..."
                       />
                       {aiForm.formState.errors.prompt && (
-                        <p className="text-sm text-red-500 mt-1">
+                        <p className="text-sm text-destructive mt-1">
                           {aiForm.formState.errors.prompt.message}
                         </p>
                       )}
@@ -502,7 +502,7 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
           </CardHeader>
           <CardContent className="space-y-4">
             {modules.map((module, modIndex) => (
-              <Card key={modIndex} className="border-l-4 border-l-blue-500">
+              <Card key={modIndex} className="border-l-4 border-l-primary">
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-2">
@@ -624,13 +624,13 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
               <h3 className="font-semibold text-lg">{basicInfo.title}</h3>
               <p className="text-gray-600">{basicInfo.description}</p>
               <div className="flex gap-4 text-sm">
-                <span className="px-2 py-1 bg-blue-100 rounded">
+                <span className="px-2 py-1 bg-primary/10 text-primary rounded">
                   {basicInfo.difficulty}
                 </span>
-                <span className="px-2 py-1 bg-green-100 rounded">
+                <span className="px-2 py-1 bg-success/10 text-success rounded">
                   ${basicInfo.price}
                 </span>
-                <span className="px-2 py-1 bg-purple-100 rounded">
+                <span className="px-2 py-1 bg-secondary/10 text-secondary rounded">
                   {basicInfo.category}
                 </span>
               </div>
@@ -643,13 +643,13 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
                 {modules.map((module, i) => (
                   <div key={i} className="pl-4 border-l-2">
                     <p className="font-medium">{module.title}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {module.lessons.length} lessons
                     </p>
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Total: {modules.length} modules,{' '}
                 {modules.reduce((acc, mod) => acc + mod.lessons.length, 0)} lessons
               </p>
@@ -677,6 +677,7 @@ export function CourseCreationWizard({ onComplete, instructorId }: CourseCreatio
                 <Button
                   onClick={() => handlePublishCourse(false)}
                   disabled={isGenerating}
+                  className="btn-modern"
                 >
                   {isGenerating && !isDraft ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -26,15 +26,15 @@ export function AssignmentCard({ assignment, onViewDetails }: AssignmentCardProp
 
   const getStatusColor = () => {
     if (assignment.submitted && assignment.grade !== undefined) {
-      return 'text-green-600 bg-green-100';
+      return 'text-success bg-success-light';
     }
     if (assignment.submitted) {
-      return 'text-blue-600 bg-blue-100';
+      return 'text-info bg-info-light';
     }
     if (isOverdue) {
-      return 'text-red-600 bg-red-100';
+      return 'text-destructive bg-destructive-light';
     }
-    return 'text-yellow-600 bg-yellow-100';
+    return 'text-warning bg-warning-light';
   };
 
   const getStatusIcon = () => {
@@ -64,11 +64,11 @@ export function AssignmentCard({ assignment, onViewDetails }: AssignmentCardProp
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border-l-4 border-blue-500">
+    <div className="card-elevated bg-card rounded-lg shadow-md p-6 border-l-4 border-primary">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-gray-900 mb-2">{assignment.title}</h3>
-          <p className="text-sm text-gray-600 line-clamp-2">{assignment.description}</p>
+          <h3 className="text-lg font-bold text-foreground mb-2">{assignment.title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-2">{assignment.description}</p>
         </div>
 
         <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor()}`}>
@@ -77,7 +77,7 @@ export function AssignmentCard({ assignment, onViewDetails }: AssignmentCardProp
         </div>
       </div>
 
-      <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
+      <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
           <span>{dueDate.toLocaleDateString()}</span>
@@ -88,13 +88,13 @@ export function AssignmentCard({ assignment, onViewDetails }: AssignmentCardProp
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-2 py-1 bg-gray-100 rounded text-xs">
+          <span className="px-2 py-1 bg-muted rounded text-xs">
             {assignment.assignmentType}
           </span>
         </div>
 
         {assignment.peerReviewRequired && (
-          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+          <span className="px-2 py-1 bg-secondary-light text-secondary rounded text-xs">
             Peer Review
           </span>
         )}
@@ -102,7 +102,7 @@ export function AssignmentCard({ assignment, onViewDetails }: AssignmentCardProp
 
       <button
         onClick={onViewDetails}
-        className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+        className="btn-modern w-full py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover transition-colors font-semibold"
       >
         {assignment.submitted ? 'View Submission' : 'Start Assignment'}
       </button>

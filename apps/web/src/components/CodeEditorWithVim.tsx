@@ -161,10 +161,10 @@ export default function CodeEditorWithVim({
   return (
     <div className="border rounded-lg overflow-hidden">
       {/* Toolbar */}
-      <div className="bg-gray-900 border-b border-gray-700 p-2 flex items-center justify-between">
+      <div className="bg-muted border-b border-border p-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Select value={keybindingMode} onValueChange={handleKeybindingChange}>
-            <SelectTrigger className="w-[120px] bg-gray-800 border-gray-700">
+            <SelectTrigger className="w-[120px] bg-card border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -177,7 +177,7 @@ export default function CodeEditorWithVim({
           </Select>
 
           {vimStatusLine && (
-            <div className="text-sm text-gray-400 ml-4">{vimStatusLine}</div>
+            <div className="text-sm text-muted-foreground ml-4">{vimStatusLine}</div>
           )}
         </div>
 
@@ -186,7 +186,7 @@ export default function CodeEditorWithVim({
             <Button
               onClick={() => onRun(editorRef.current?.getValue() || '')}
               size="sm"
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-success hover:bg-success/90 btn-modern"
             >
               <Play className="w-4 h-4 mr-2" />
               Run

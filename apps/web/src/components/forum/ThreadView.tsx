@@ -152,7 +152,7 @@ export function ThreadView({ threadId, currentUserId, isThreadAuthor }: ThreadVi
             <div className="flex items-start justify-between gap-4 mb-2">
               <h1 className="text-2xl font-bold">{thread.title}</h1>
               {thread.isSolved && (
-                <Badge className="bg-green-600">
+                <Badge className="bg-success">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Solved
                 </Badge>
@@ -210,7 +210,7 @@ export function ThreadView({ threadId, currentUserId, isThreadAuthor }: ThreadVi
               key={reply.id}
               className={cn(
                 'p-6',
-                reply.isBestAnswer && 'border-green-600 border-2 bg-green-50 dark:bg-green-950/20'
+                reply.isBestAnswer && 'border-success border-2 bg-success/10'
               )}
             >
               <div className="flex gap-4">
@@ -258,7 +258,7 @@ export function ThreadView({ threadId, currentUserId, isThreadAuthor }: ThreadVi
 
                     <div className="flex items-center gap-2">
                       {reply.isBestAnswer && (
-                        <Badge className="bg-green-600">
+                        <Badge className="bg-success">
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Best Answer
                         </Badge>

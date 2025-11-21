@@ -195,9 +195,9 @@ export function DSASheetGenerator() {
 
   const getDifficultyColor = (difficulty: string) => {
     const colors = {
-      EASY: 'bg-green-100 text-green-700',
-      MEDIUM: 'bg-yellow-100 text-yellow-700',
-      HARD: 'bg-red-100 text-red-700',
+      EASY: 'bg-success/10 text-success',
+      MEDIUM: 'bg-warning/10 text-warning',
+      HARD: 'bg-destructive/10 text-destructive',
     };
     return colors[difficulty as keyof typeof colors] || colors.MEDIUM;
   };
@@ -207,7 +207,7 @@ export function DSASheetGenerator() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">DSA Sheet Generator</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Generate AI-powered problem sets for interview preparation
           </p>
         </div>
@@ -239,7 +239,7 @@ export function DSASheetGenerator() {
                   </SelectContent>
                 </Select>
                 {form.formState.errors.targetCompany && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.targetCompany.message}
                   </p>
                 )}
@@ -274,7 +274,7 @@ export function DSASheetGenerator() {
                   {...form.register('problemCount', { valueAsNumber: true })}
                   className="w-full"
                 />
-                <div className="flex justify-between text-xs text-gray-500">
+                <div className="flex justify-between text-xs text-muted-foreground">
                   <span>10</span>
                   <span>100</span>
                 </div>
@@ -298,13 +298,13 @@ export function DSASheetGenerator() {
                   ))}
                 </div>
                 {form.formState.errors.focusTopics && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-destructive mt-1">
                     {form.formState.errors.focusTopics.message}
                   </p>
                 )}
               </div>
 
-              <Button type="submit" disabled={isGenerating} className="w-full">
+              <Button type="submit" disabled={isGenerating} className="w-full btn-modern">
                 {isGenerating ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -349,15 +349,15 @@ export function DSASheetGenerator() {
           </CardHeader>
           <CardContent>
             {generatedProblems.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Sparkles className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <div className="text-center py-12 text-muted-foreground">
+                <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
                 <p>No problems generated yet</p>
                 <p className="text-sm">Fill out the form and click Generate Sheet</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
                 {/* Table Header */}
-                <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-50 rounded text-sm font-medium sticky top-0">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-muted rounded text-sm font-medium sticky top-0">
                   <div className="col-span-5">Problem</div>
                   <div className="col-span-2">Difficulty</div>
                   <div className="col-span-3">Category</div>
@@ -393,8 +393,8 @@ export function DSASheetGenerator() {
                     </div>
 
                     <div className="col-span-3">
-                      <p className="text-sm text-gray-600">{problem.category}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-sm text-muted-foreground">{problem.category}</p>
+                      <p className="text-xs text-muted-foreground/70">
                         {problem.companies.slice(0, 2).join(', ')}
                         {problem.companies.length > 2 && ` +${problem.companies.length - 2}`}
                       </p>
@@ -427,29 +427,29 @@ export function DSASheetGenerator() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded">
-                <div className="text-2xl font-bold text-green-700">
+              <div className="text-center p-4 bg-success/10 rounded card-elevated">
+                <div className="text-2xl font-bold text-success">
                   {generatedProblems.filter((p) => p.difficulty === 'EASY').length}
                 </div>
-                <div className="text-sm text-gray-600">Easy</div>
+                <div className="text-sm text-muted-foreground">Easy</div>
               </div>
-              <div className="text-center p-4 bg-yellow-50 rounded">
-                <div className="text-2xl font-bold text-yellow-700">
+              <div className="text-center p-4 bg-warning/10 rounded card-elevated">
+                <div className="text-2xl font-bold text-warning">
                   {generatedProblems.filter((p) => p.difficulty === 'MEDIUM').length}
                 </div>
-                <div className="text-sm text-gray-600">Medium</div>
+                <div className="text-sm text-muted-foreground">Medium</div>
               </div>
-              <div className="text-center p-4 bg-red-50 rounded">
-                <div className="text-2xl font-bold text-red-700">
+              <div className="text-center p-4 bg-destructive/10 rounded card-elevated">
+                <div className="text-2xl font-bold text-destructive">
                   {generatedProblems.filter((p) => p.difficulty === 'HARD').length}
                 </div>
-                <div className="text-sm text-gray-600">Hard</div>
+                <div className="text-sm text-muted-foreground">Hard</div>
               </div>
-              <div className="text-center p-4 bg-blue-50 rounded">
-                <div className="text-2xl font-bold text-blue-700">
+              <div className="text-center p-4 bg-primary/10 rounded card-elevated">
+                <div className="text-2xl font-bold text-primary">
                   {new Set(generatedProblems.flatMap((p) => p.tags)).size}
                 </div>
-                <div className="text-sm text-gray-600">Unique Topics</div>
+                <div className="text-sm text-muted-foreground">Unique Topics</div>
               </div>
             </div>
           </CardContent>

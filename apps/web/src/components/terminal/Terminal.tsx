@@ -61,7 +61,6 @@ export const Terminal: React.FC<TerminalProps> = ({
               background: '#1e1e1e',
               foreground: '#d4d4d4',
               cursor: '#ffffff',
-              selection: '#264f78',
               black: '#000000',
               red: '#cd3131',
               green: '#0dbc79',
@@ -83,7 +82,6 @@ export const Terminal: React.FC<TerminalProps> = ({
               background: '#ffffff',
               foreground: '#000000',
               cursor: '#000000',
-              selection: '#add6ff',
               black: '#000000',
               red: '#cd3131',
               green: '#00bc00',
@@ -122,10 +120,8 @@ export const Terminal: React.FC<TerminalProps> = ({
       sendInput(data);
     });
 
-    // Handle paste
-    xterm.onPaste((data) => {
-      sendInput(data.data);
-    });
+    // Note: onPaste is not available in the current version of @xterm/xterm
+    // Paste events are automatically handled through onData
 
     // Auto-fit on window resize
     const handleResize = () => {

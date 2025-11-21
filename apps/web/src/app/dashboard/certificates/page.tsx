@@ -91,7 +91,7 @@ export default function CertificatesPage() {
   };
 
   const handlePrint = useReactToPrint({
-    content: () => certificateRef.current,
+    contentRef: certificateRef,
     documentTitle: `Certificate-${selectedCertificate?.verificationCode}`,
   });
 

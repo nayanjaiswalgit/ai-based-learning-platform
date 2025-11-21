@@ -74,11 +74,13 @@ export type FormSection = {
   fields: FormField[];
   conditionalDisplay?: ConditionalRule;
   columns?: number; // For grid layout
+  layout?: 'grid' | 'flex' | 'default';
 };
 
 export type FormAction = {
   type: 'submit' | 'reset' | 'button';
   label: string;
+  loadingText?: string;
   variant?: 'default' | 'outline' | 'ghost' | 'destructive';
   disabled?: boolean;
   onClick?: string; // Function name or API endpoint
@@ -90,6 +92,7 @@ export type SocialAuthProvider = {
   label: string;
   icon?: string;
   enabled: boolean;
+  callbackUrl?: string;
 };
 
 export type FormConfig = {

@@ -72,7 +72,7 @@ export default function ReportsPage({ params }: { params: Promise<{ userId: stri
                   <p className="text-sm text-gray-600 mt-1">Courses Completed</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">{weeklyReport.summary.lessonsWatched}</div>
+                  <div className="text-3xl font-bold text-green-600">{weeklyReport.summary.lessonsWatched || 0}</div>
                   <p className="text-sm text-gray-600 mt-1">Lessons Watched</p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -81,12 +81,12 @@ export default function ReportsPage({ params }: { params: Promise<{ userId: stri
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <div className="text-3xl font-bold text-orange-600">
-                    {formatDuration(weeklyReport.summary.timeSpent)}
+                    {formatDuration(weeklyReport.summary.timeSpent || weeklyReport.summary.totalTimeSpent || 0)}
                   </div>
                   <p className="text-sm text-gray-600 mt-1">Time Spent</p>
                 </div>
                 <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-3xl font-bold text-red-600">{weeklyReport.summary.streakDays}</div>
+                  <div className="text-3xl font-bold text-red-600">{weeklyReport.summary.streakDays || 0}</div>
                   <p className="text-sm text-gray-600 mt-1">Streak Days</p>
                 </div>
               </div>
@@ -95,9 +95,9 @@ export default function ReportsPage({ params }: { params: Promise<{ userId: stri
                 <div className="mb-4">
                   <h4 className="font-semibold mb-2">Top Achievements</h4>
                   <div className="flex gap-2 flex-wrap">
-                    {weeklyReport.topAchievements.map((achievement: string, i: number) => (
+                    {weeklyReport.topAchievements.map((achievement, i: number) => (
                       <span key={i} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-                        {achievement}
+                        {typeof achievement === 'string' ? achievement : achievement.title}
                       </span>
                     ))}
                   </div>
@@ -108,9 +108,9 @@ export default function ReportsPage({ params }: { params: Promise<{ userId: stri
                 <div>
                   <h4 className="font-semibold mb-2">Recommendations</h4>
                   <ul className="space-y-1">
-                    {weeklyReport.recommendations.map((rec: string, i: number) => (
+                    {weeklyReport.recommendations.map((rec, i: number) => (
                       <li key={i} className="text-gray-700 text-sm">
-                        • {rec}
+                        • {typeof rec === 'string' ? rec : rec.title}
                       </li>
                     ))}
                   </ul>
@@ -139,17 +139,17 @@ export default function ReportsPage({ params }: { params: Promise<{ userId: stri
                   <p className="text-sm text-gray-600 mt-1">Courses Completed</p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-3xl font-bold text-purple-600">{monthlyReport.progress.problemsSolved}</div>
+                  <div className="text-3xl font-bold text-purple-600">{monthlyReport.progress.problemsSolved || 0}</div>
                   <p className="text-sm text-gray-600 mt-1">Problems Solved</p>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <div className="text-3xl font-bold text-orange-600">
-                    {formatDuration(monthlyReport.progress.timeSpent)}
+                    {formatDuration(monthlyReport.progress.timeSpent || monthlyReport.progress.totalTimeSpent || 0)}
                   </div>
                   <p className="text-sm text-gray-600 mt-1">Time Spent</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-3xl font-bold text-green-600">{monthlyReport.progress.skillsImproved}</div>
+                  <div className="text-3xl font-bold text-green-600">{monthlyReport.progress.skillsImproved || 0}</div>
                   <p className="text-sm text-gray-600 mt-1">Skills Improved</p>
                 </div>
               </div>

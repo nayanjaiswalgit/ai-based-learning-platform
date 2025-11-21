@@ -92,7 +92,15 @@ export default function CodeEditor({
 
     // Add custom snippets
     monaco.languages.registerCompletionItemProvider('python', {
-      provideCompletionItems: () => {
+      provideCompletionItems: (model, position, context, token) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
         return {
           suggestions: [
             {
@@ -101,6 +109,7 @@ export default function CodeEditor({
               insertText: 'def ${1:function_name}(${2:params}):\n    ${3:pass}',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               documentation: 'Function definition',
+              range,
             },
             {
               label: 'class',
@@ -108,6 +117,7 @@ export default function CodeEditor({
               insertText: 'class ${1:ClassName}:\n    def __init__(self${2:, params}):\n        ${3:pass}',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               documentation: 'Class definition',
+              range,
             },
           ],
         };

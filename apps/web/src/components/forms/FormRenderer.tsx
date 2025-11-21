@@ -168,8 +168,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               onBlur={() => handleFieldBlur(field)}
               className={error ? 'border-red-500' : ''}
             />
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -206,8 +206,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                 </button>
               )}
             </div>
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -232,8 +232,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               onBlur={() => handleFieldBlur(field)}
               className={`flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-red-500' : ''}`}
             />
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -319,8 +319,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                 </option>
               ))}
             </select>
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -346,8 +346,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               onBlur={() => handleFieldBlur(field)}
               className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -444,7 +444,7 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                   key={provider.provider}
                   type="button"
                   variant="outline"
-                  onClick={() => window.location.href = provider.callbackUrl}
+                  onClick={() => provider.callbackUrl && (window.location.href = provider.callbackUrl)}
                   disabled={!provider.enabled}
                   className="w-full"
                 >

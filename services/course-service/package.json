@@ -1,6 +1,6 @@
 {
   "name": "@services/course-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Course Management Service - Handles courses, lessons, video streaming, and content delivery",
   "private": true,
   "scripts": {

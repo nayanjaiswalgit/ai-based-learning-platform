@@ -154,7 +154,7 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
             <Label htmlFor={field.id}>
               {field.label}
               {field.validation?.some(v => v.type === 'required') && (
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-destructive ml-1">*</span>
               )}
             </Label>
             <Input
@@ -166,12 +166,12 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               disabled={field.disabled}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               onBlur={() => handleFieldBlur(field)}
-              className={error ? 'border-red-500' : ''}
+              className={error ? 'border-destructive' : ''}
             />
             {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+              <p className="text-sm text-muted-foreground">{field.helperText}</p>
             )}
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         );
 
@@ -206,8 +206,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                 </button>
               )}
             </div>
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -230,10 +230,10 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               disabled={field.disabled}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               onBlur={() => handleFieldBlur(field)}
-              className={`flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-red-500' : ''}`}
+              className={`flex min-h-[80px] w-full rounded-md border border-border bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-destructive' : ''}`}
             />
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -250,15 +250,15 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               disabled={field.disabled}
               onChange={(e) => handleFieldChange(field, e.target.checked)}
               onBlur={() => handleFieldBlur(field)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
             />
             <Label htmlFor={field.id} className="text-sm font-normal">
               {field.label}
               {field.validation?.some(v => v.type === 'required') && (
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-destructive ml-1">*</span>
               )}
             </Label>
-            {error && <p className="text-sm text-red-500 ml-2">{error}</p>}
+            {error && <p className="text-sm text-destructive ml-2">{error}</p>}
           </div>
         );
 
@@ -282,7 +282,7 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                     checked={value === option.value}
                     disabled={field.disabled || option.disabled}
                     onChange={(e) => handleFieldChange(field, e.target.value)}
-                    className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 border-border text-primary focus:ring-primary"
                   />
                   <Label htmlFor={`${field.id}-${option.value}`} className="text-sm font-normal">
                     {option.label}
@@ -310,7 +310,7 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               disabled={field.disabled}
               onChange={(e) => handleFieldChange(field, e.target.value)}
               onBlur={() => handleFieldBlur(field)}
-              className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-red-500' : ''}`}
+              className={`flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 ${error ? 'border-destructive' : ''}`}
             >
               <option value="">Select {field.label}</option>
               {field.options?.map(option => (
@@ -319,8 +319,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                 </option>
               ))}
             </select>
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -346,8 +346,8 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               onBlur={() => handleFieldBlur(field)}
               className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
             />
-            {field.helperText && (
-              <p className="text-sm text-gray-500">{field.helperText}</p>
+            {field.helpText && (
+              <p className="text-sm text-gray-500">{field.helpText}</p>
             )}
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -387,7 +387,7 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
               <h3 className="text-lg font-semibold">{section.title}</h3>
             )}
             {section.description && (
-              <p className="text-sm text-gray-600">{section.description}</p>
+              <p className="text-sm text-muted-foreground">{section.description}</p>
             )}
             <div className={`grid gap-4 ${section.layout === 'grid' ? `grid-cols-1 md:grid-cols-${section.columns || 2}` : ''}`}>
               {section.fields.map(field => renderField(field))}
@@ -398,13 +398,13 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
         {/* Form actions */}
         <div className="flex flex-col gap-4">
           {formState.submitError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+            <div className="p-3 bg-destructive/10 border border-destructive rounded text-sm text-destructive">
               {formState.submitError}
             </div>
           )}
 
           {formState.submitSuccess && config.onSuccess?.message && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-600">
+            <div className="p-3 bg-success/10 border border-success rounded text-sm text-success">
               {config.onSuccess.message}
             </div>
           )}
@@ -431,10 +431,10 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
           <div className="space-y-3">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-border"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
               </div>
             </div>
 
@@ -444,7 +444,7 @@ export function FormRenderer({ config, onSubmit, className = '' }: FormRendererP
                   key={provider.provider}
                   type="button"
                   variant="outline"
-                  onClick={() => window.location.href = provider.callbackUrl}
+                  onClick={() => provider.callbackUrl && (window.location.href = provider.callbackUrl)}
                   disabled={!provider.enabled}
                   className="w-full"
                 >

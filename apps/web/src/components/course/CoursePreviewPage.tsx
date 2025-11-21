@@ -121,7 +121,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -131,7 +131,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Course not found</h2>
-          <p className="text-gray-600">The course you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground">The course you're looking for doesn't exist.</p>
         </div>
       </div>
     );
@@ -149,28 +149,28 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/30">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-purple-900 text-white">
+      <div className="bg-gradient-primary text-white">
         <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Course Info */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2 text-sm">
-              <Badge variant="secondary" className="bg-yellow-400 text-yellow-900">
+              <Badge variant="secondary" className="bg-warning text-warning-foreground">
                 {course.difficulty}
               </Badge>
-              <span className="text-gray-200">{course.category}</span>
+              <span className="text-primary-foreground/80">{course.category}</span>
             </div>
 
             <h1 className="text-4xl font-bold">{course.title}</h1>
-            <p className="text-lg text-gray-200">{course.description}</p>
+            <p className="text-lg text-primary-foreground/80">{course.description}</p>
 
             {/* Rating and Stats */}
             <div className="flex flex-wrap items-center gap-4 text-sm">
               <div className="flex items-center gap-1">
-                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                <Star className="h-5 w-5 fill-warning text-warning" />
                 <span className="font-bold">{course.rating.toFixed(1)}</span>
-                <span className="text-gray-300">
+                <span className="text-primary-foreground/70">
                   ({course.totalRatings} ratings)
                 </span>
               </div>
@@ -199,10 +199,10 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-sm text-gray-300">Created by</p>
+                <p className="text-sm text-primary-foreground/70">Created by</p>
                 <p className="font-semibold">{course.instructor.name}</p>
                 {course.instructor.title && (
-                  <p className="text-sm text-gray-300">{course.instructor.title}</p>
+                  <p className="text-sm text-primary-foreground/70">{course.instructor.title}</p>
                 )}
               </div>
             </div>
@@ -213,7 +213,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
             <Card className="sticky top-4">
               <CardContent className="p-6 space-y-4">
                 {course.thumbnail && (
-                  <div className="aspect-video bg-gray-200 rounded overflow-hidden">
+                  <div className="aspect-video bg-muted rounded overflow-hidden">
                     <img
                       src={course.thumbnail}
                       alt={course.title}
@@ -228,17 +228,17 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                   </div>
                 </div>
 
-                <Button onClick={handleEnroll} className="w-full" size="lg">
+                <Button onClick={handleEnroll} className="w-full btn-modern" size="lg">
                   {course.price === 0 ? 'Enroll for Free' : 'Enroll Now'}
                 </Button>
 
-                <div className="text-center text-sm text-gray-600">
+                <div className="text-center text-sm text-muted-foreground">
                   30-Day Money-Back Guarantee
                 </div>
 
                 <div className="border-t pt-4 space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Includes:</span>
+                    <span className="text-muted-foreground">Includes:</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Play className="h-4 w-4" />
@@ -277,7 +277,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {course.learningOutcomes.map((outcome, index) => (
                     <div key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                       <span className="text-sm">{outcome}</span>
                     </div>
                   ))}
@@ -289,7 +289,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Course Content</CardTitle>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {course.modules.length} modules • {totalLessons} lessons •{' '}
                   {Math.floor(totalDuration / 60)}h {totalDuration % 60}m total length •{' '}
                   {freePreviewCount} free preview{freePreviewCount !== 1 ? 's' : ''}
@@ -300,13 +300,13 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                   <div key={module.id} className="border rounded-lg overflow-hidden">
                     <button
                       onClick={() => toggleModule(module.id)}
-                      className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left flex items-center justify-between transition"
+                      className="w-full px-4 py-3 bg-muted hover:bg-muted/80 text-left flex items-center justify-between transition"
                     >
                       <div className="flex-1">
                         <p className="font-semibold">
                           {modIndex + 1}. {module.title}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {module.lessons.length} lessons •{' '}
                           {module.lessons.reduce((sum, l) => sum + l.durationMinutes, 0)} min
                         </p>
@@ -325,26 +325,26 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                         {module.lessons.map((lesson, lessonIndex) => (
                           <div
                             key={lesson.id}
-                            className="px-4 py-3 hover:bg-gray-50 flex items-center justify-between"
+                            className="px-4 py-3 hover:bg-muted/50 flex items-center justify-between"
                           >
                             <div className="flex items-center gap-3">
                               {lesson.isFreePreview ? (
-                                <Play className="h-4 w-4 text-blue-600" />
+                                <Play className="h-4 w-4 text-primary" />
                               ) : (
-                                <Lock className="h-4 w-4 text-gray-400" />
+                                <Lock className="h-4 w-4 text-muted-foreground" />
                               )}
                               <div>
                                 <p className="text-sm">
                                   {modIndex + 1}.{lessonIndex + 1} {lesson.title}
                                 </p>
                                 {lesson.isFreePreview && (
-                                  <span className="text-xs text-blue-600">
+                                  <span className="text-xs text-primary">
                                     Free preview
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-4 w-4" />
                               <span>{lesson.durationMinutes} min</span>
                             </div>
@@ -403,10 +403,10 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                   <div className="flex-1">
                     <h3 className="text-xl font-bold">{course.instructor.name}</h3>
                     {course.instructor.title && (
-                      <p className="text-gray-600">{course.instructor.title}</p>
+                      <p className="text-muted-foreground">{course.instructor.title}</p>
                     )}
 
-                    <div className="flex gap-6 mt-2 text-sm text-gray-600">
+                    <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
                       {course.instructor.totalStudents && (
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
@@ -424,7 +424,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                 </div>
 
                 {course.instructor.bio && (
-                  <p className="text-sm text-gray-700">{course.instructor.bio}</p>
+                  <p className="text-sm text-foreground">{course.instructor.bio}</p>
                 )}
               </CardContent>
             </Card>
@@ -446,13 +446,13 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                             key={star}
                             className={`h-5 w-5 ${
                               star <= Math.round(course.rating)
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-300'
+                                ? 'fill-warning text-warning'
+                                : 'text-muted-foreground'
                             }`}
                           />
                         ))}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">Course Rating</div>
+                      <div className="text-sm text-muted-foreground mt-1">Course Rating</div>
                     </div>
 
                     <div className="flex-1 space-y-1">
@@ -468,7 +468,7 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                               {rating} {rating === 1 ? 'star' : 'stars'}
                             </span>
                             <Progress value={percentage} className="flex-1 h-2" />
-                            <span className="w-12 text-right text-gray-600">
+                            <span className="w-12 text-right text-muted-foreground">
                               {percentage.toFixed(0)}%
                             </span>
                           </div>
@@ -499,19 +499,19 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
                                     key={star}
                                     className={`h-3 w-3 ${
                                       star <= review.rating
-                                        ? 'fill-yellow-400 text-yellow-400'
-                                        : 'text-gray-300'
+                                        ? 'fill-warning text-warning'
+                                        : 'text-muted-foreground'
                                     }`}
                                   />
                                 ))}
                               </div>
                             </div>
                           </div>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">
                             {new Date(review.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-700">{review.comment}</p>
+                        <p className="text-sm text-foreground">{review.comment}</p>
                       </div>
                     ))}
                   </div>
@@ -528,14 +528,14 @@ export function CoursePreviewPage({ slug }: CoursePreviewPageProps) {
       </div>
 
       {/* Mobile Enrollment Footer */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg p-4">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-2xl font-bold">
               {course.price === 0 ? 'Free' : `$${course.price.toFixed(2)}`}
             </div>
           </div>
-          <Button onClick={handleEnroll} size="lg">
+          <Button onClick={handleEnroll} size="lg" className="btn-modern">
             {course.price === 0 ? 'Enroll for Free' : 'Enroll Now'}
           </Button>
         </div>

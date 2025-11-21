@@ -1,6 +1,6 @@
 {
   "name": "ai-based-learning-platform",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "private": true,
   "description": "Scalable AI-Based Learning Platform - Monorepo",
   "engines": {

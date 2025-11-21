@@ -134,13 +134,13 @@ export class ExecutionService {
       };
     } catch (err) {
       // Try with 'python' command if 'python3' not found
+      const fallbackStartTime = Date.now();
       try {
-        startTime = Date.now();
         const { stdout, stderr } = await execPromise(`python ${filePath}`, {
           timeout: timeLimit,
           maxBuffer: 1024 * 1024,
         });
-        const executionTime = Date.now() - startTime;
+        const executionTime = Date.now() - fallbackStartTime;
 
         return {
           output: stdout || '',
@@ -151,7 +151,7 @@ export class ExecutionService {
         return {
           output: '',
           error: err.message,
-          executionTime: Date.now() - startTime,
+          executionTime: Date.now() - fallbackStartTime,
         };
       }
     } finally {

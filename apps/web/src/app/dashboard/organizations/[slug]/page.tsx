@@ -51,7 +51,7 @@ export default function OrganizationDetailPage() {
       setMembers(membersList);
 
       // Find current user's membership
-      const membership = membersList.find(m => m.user?.email === session?.user?.email);
+      const membership = membersList.find((m: OrganizationMember) => m.user?.email === session?.user?.email);
       setUserMembership(membership || null);
     } catch (error: any) {
       toast({

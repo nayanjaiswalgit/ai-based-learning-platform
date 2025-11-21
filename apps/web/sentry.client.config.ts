@@ -16,19 +16,20 @@ Sentry.init({
 
   environment: process.env.NODE_ENV,
 
+  // Trace propagation targets
+  tracePropagationTargets: [
+    'localhost',
+    /^https:\/\/yourdomain\.com/,
+    /^https:\/\/api\.yourdomain\.com/,
+  ],
+
   // Integrations
   integrations: [
-    new Sentry.Replay({
+    Sentry.replayIntegration({
       maskAllText: true,
       blockAllMedia: true,
     }),
-    new Sentry.BrowserTracing({
-      tracePropagationTargets: [
-        'localhost',
-        /^https:\/\/yourdomain\.com/,
-        /^https:\/\/api\.yourdomain\.com/,
-      ],
-    }),
+    Sentry.browserTracingIntegration(),
   ],
 
   // Filter out common errors

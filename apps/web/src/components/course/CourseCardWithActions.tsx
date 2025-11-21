@@ -173,19 +173,19 @@ export function CourseCardWithActions({
 
   const getDifficultyColor = () => {
     const colors = {
-      BEGINNER: 'bg-green-100 text-green-700',
-      INTERMEDIATE: 'bg-yellow-100 text-yellow-700',
-      ADVANCED: 'bg-red-100 text-red-700',
+      BEGINNER: 'bg-success-light text-success',
+      INTERMEDIATE: 'bg-warning-light text-warning',
+      ADVANCED: 'bg-destructive-light text-destructive',
     };
     return colors[course.difficulty] || colors.INTERMEDIATE;
   };
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-shadow">
+      <Card className="card-elevated group border-border">
         <CardHeader className="relative p-0">
           {/* Thumbnail */}
-          <div className="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 relative overflow-hidden">
+          <div className="aspect-video bg-gradient-primary relative overflow-hidden">
             {course.thumbnail ? (
               <img
                 src={course.thumbnail}
@@ -265,7 +265,7 @@ export function CourseCardWithActions({
           </h3>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 line-clamp-2 min-h-[2.5rem]">
+          <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
             {course.description}
           </p>
 
@@ -274,13 +274,13 @@ export function CourseCardWithActions({
             <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor()}`}>
               {course.difficulty}
             </span>
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+            <span className="px-2 py-1 bg-primary-light text-primary rounded text-xs font-medium">
               ${course.price.toFixed(2)}
             </span>
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 text-sm text-gray-600 pt-2 border-t">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t border-border">
             <div className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               <span>{course.enrollmentCount || 0} students</span>
@@ -288,13 +288,13 @@ export function CourseCardWithActions({
 
             {course.rating && course.totalRatings ? (
               <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <Star className="h-4 w-4 fill-warning text-warning" />
                 <span>
                   {course.rating.toFixed(1)} ({course.totalRatings})
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 text-gray-400">
+              <div className="flex items-center gap-1 text-muted-foreground">
                 <Star className="h-4 w-4" />
                 <span>No ratings</span>
               </div>
@@ -302,7 +302,7 @@ export function CourseCardWithActions({
           </div>
 
           {/* Dates */}
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             Updated: {new Date(course.updatedAt).toLocaleDateString()}
           </div>
         </CardContent>

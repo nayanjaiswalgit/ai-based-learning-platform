@@ -288,7 +288,7 @@ export function AIContentGeneratorDialog({
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-500" />
+            <Sparkles className="h-5 w-5 text-secondary" />
             AI Content Generator
           </DialogTitle>
           <DialogDescription>
@@ -382,7 +382,7 @@ export function AIContentGeneratorDialog({
                     placeholder="e.g., Build a Todo App"
                   />
                   {codingLabForm.formState.errors.title && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="text-sm text-destructive mt-1">
                       {codingLabForm.formState.errors.title.message}
                     </p>
                   )}
@@ -474,7 +474,7 @@ export function AIContentGeneratorDialog({
                     placeholder="e.g., Full Stack Web Development"
                   />
                   {courseForm.formState.errors.topic && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="text-sm text-destructive mt-1">
                       {courseForm.formState.errors.topic.message}
                     </p>
                   )}
@@ -534,7 +534,7 @@ export function AIContentGeneratorDialog({
                     placeholder="e.g., Closures in JavaScript"
                   />
                   {explanationForm.formState.errors.concept && (
-                    <p className="text-sm text-red-500 mt-1">
+                    <p className="text-sm text-destructive mt-1">
                       {explanationForm.formState.errors.concept.message}
                     </p>
                   )}
@@ -604,7 +604,7 @@ export function AIContentGeneratorDialog({
                 <CardDescription>Review and use the generated content</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                <div className="bg-muted p-4 rounded-lg max-h-96 overflow-y-auto">
                   <pre className="text-sm whitespace-pre-wrap">
                     {JSON.stringify(generatedContent, null, 2)}
                   </pre>
@@ -617,7 +617,7 @@ export function AIContentGeneratorDialog({
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Regenerate
               </Button>
-              <Button onClick={handleUseContent} className="flex-1">
+              <Button onClick={handleUseContent} className="flex-1 btn-modern">
                 Use This Content
               </Button>
             </div>

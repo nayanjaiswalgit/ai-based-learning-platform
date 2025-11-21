@@ -26,9 +26,9 @@ export default function AdminAnalyticsPage() {
   const { platform, revenue, content } = dashboard
 
   const revenueByPlan = [
-    { name: 'Free', value: revenue.revenueByPlan.free },
-    { name: 'Pro', value: revenue.revenueByPlan.pro },
-    { name: 'Enterprise', value: revenue.revenueByPlan.enterprise },
+    { name: 'Free', value: revenue.revenueByPlan?.free || 0 },
+    { name: 'Pro', value: revenue.revenueByPlan?.pro || 0 },
+    { name: 'Enterprise', value: revenue.revenueByPlan?.enterprise || 0 },
   ]
 
   return (
@@ -47,9 +47,9 @@ export default function AdminAnalyticsPage() {
               <Users className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{formatNumber(platform.totalUsers)}</div>
+              <div className="text-3xl font-bold">{formatNumber(platform.totalUsers || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">
-                DAU: {formatNumber(platform.dailyActiveUsers)}
+                DAU: {formatNumber(platform.dailyActiveUsers || 0)}
               </p>
             </CardContent>
           </Card>
@@ -60,7 +60,7 @@ export default function AdminAnalyticsPage() {
               <BookOpen className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{formatNumber(platform.courseCatalogSize)}</div>
+              <div className="text-3xl font-bold">{formatNumber(platform.courseCatalogSize || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">Published courses</p>
             </CardContent>
           </Card>
@@ -71,7 +71,7 @@ export default function AdminAnalyticsPage() {
               <Code className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{formatNumber(platform.totalCodeExecutions)}</div>
+              <div className="text-3xl font-bold">{formatNumber(platform.totalCodeExecutions || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">Total runs</p>
             </CardContent>
           </Card>
@@ -82,7 +82,7 @@ export default function AdminAnalyticsPage() {
               <Activity className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{formatNumber(platform.monthlyActiveUsers)}</div>
+              <div className="text-3xl font-bold">{formatNumber(platform.monthlyActiveUsers || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">Last 30 days</p>
             </CardContent>
           </Card>
@@ -96,7 +96,7 @@ export default function AdminAnalyticsPage() {
               <DollarSign className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(revenue.mrr)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(revenue.mrr || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">Monthly recurring revenue</p>
             </CardContent>
           </Card>
@@ -107,7 +107,7 @@ export default function AdminAnalyticsPage() {
               <TrendingUp className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{revenue.churnRate.toFixed(1)}%</div>
+              <div className="text-2xl font-bold">{(revenue.churnRate || 0).toFixed(1)}%</div>
               <p className="text-xs text-muted-foreground mt-2">Last month</p>
             </CardContent>
           </Card>
@@ -118,7 +118,7 @@ export default function AdminAnalyticsPage() {
               <DollarSign className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(revenue.ltv)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(revenue.ltv || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">Lifetime value</p>
             </CardContent>
           </Card>
@@ -129,7 +129,7 @@ export default function AdminAnalyticsPage() {
               <DollarSign className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(revenue.cac)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(revenue.cac || 0)}</div>
               <p className="text-xs text-muted-foreground mt-2">Acquisition cost</p>
             </CardContent>
           </Card>

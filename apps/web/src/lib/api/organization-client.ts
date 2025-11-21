@@ -242,4 +242,23 @@ export const organizationApi = {
       `${AUTH_SERVICE_URL}/api/v1/organizations/${slug}/suggested-titles`,
       { token }
     ),
+
+  // Organization capabilities and permissions
+  getCapabilities: (organizationId: string, token?: string) =>
+    request<{
+      tier: string;
+      features: any[];
+      limits: {
+        maxMembers?: number;
+        maxCourses?: number;
+        maxDepartments?: number;
+        maxStorage?: number;
+      };
+      usage: {
+        members: number;
+        courses: number;
+        departments: number;
+      };
+      userPermissions: any[];
+    }>(`${AUTH_SERVICE_URL}/api/v1/organizations/${organizationId}/capabilities`, { token }),
 };

@@ -1,6 +1,6 @@
 {
   "name": "@ai-learning/assessment-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Assessment service for MCQs, quizzes, and evaluations",
   "main": "dist/main.js",
   "scripts": {

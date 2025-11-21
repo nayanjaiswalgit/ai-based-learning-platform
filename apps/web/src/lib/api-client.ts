@@ -26,7 +26,7 @@ async function request<T>(
 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
-    ...headers,
+    ...(headers as Record<string, string>),
   };
 
   if (token) {
@@ -321,4 +321,4 @@ export const certificateApi = {
     request(`${CERTIFICATE_SERVICE_URL}/certificates/course/${courseId}`, { token }),
 };
 
-export { ApiError };
+export { ApiError, request };

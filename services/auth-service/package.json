@@ -1,6 +1,6 @@
 {
   "name": "@ai-learning/auth-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Authentication and Authorization Service",
   "scripts": {
     "build": "nest build",

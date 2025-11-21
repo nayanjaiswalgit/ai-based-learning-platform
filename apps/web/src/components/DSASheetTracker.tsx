@@ -47,16 +47,16 @@ const MOCK_PROBLEMS: Problem[] = [
 ];
 
 const STATUS_CONFIG = {
-  TODO: { icon: Circle, color: 'text-gray-400', label: 'Todo' },
-  ATTEMPTED: { icon: Clock, color: 'text-yellow-500', label: 'Attempted' },
-  SOLVED: { icon: CheckCircle2, color: 'text-green-500', label: 'Solved' },
-  MASTERED: { icon: Trophy, color: 'text-purple-500', label: 'Mastered' },
+  TODO: { icon: Circle, color: 'text-muted-foreground', label: 'Todo' },
+  ATTEMPTED: { icon: Clock, color: 'text-warning', label: 'Attempted' },
+  SOLVED: { icon: CheckCircle2, color: 'text-success', label: 'Solved' },
+  MASTERED: { icon: Trophy, color: 'text-secondary', label: 'Mastered' },
 };
 
 const DIFFICULTY_COLORS = {
-  EASY: 'text-green-500',
-  MEDIUM: 'text-yellow-500',
-  HARD: 'text-red-500',
+  EASY: 'text-success',
+  MEDIUM: 'text-warning',
+  HARD: 'text-destructive',
 };
 
 export default function DSASheetTracker() {
@@ -86,30 +86,30 @@ export default function DSASheetTracker() {
     <div className="max-w-7xl mx-auto p-6">
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+        <div className="bg-card p-4 rounded-lg border card-elevated">
           <div className="text-2xl font-bold">{stats.total}</div>
-          <div className="text-sm text-gray-500">Total Problems</div>
+          <div className="text-sm text-muted-foreground">Total Problems</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
-          <div className="text-2xl font-bold text-green-500">{stats.solved}</div>
-          <div className="text-sm text-gray-500">Solved</div>
+        <div className="bg-card p-4 rounded-lg border card-elevated">
+          <div className="text-2xl font-bold text-success">{stats.solved}</div>
+          <div className="text-sm text-muted-foreground">Solved</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
-          <div className="text-2xl font-bold text-yellow-500">{stats.attempted}</div>
-          <div className="text-sm text-gray-500">Attempted</div>
+        <div className="bg-card p-4 rounded-lg border card-elevated">
+          <div className="text-2xl font-bold text-warning">{stats.attempted}</div>
+          <div className="text-sm text-muted-foreground">Attempted</div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
-          <div className="text-2xl font-bold text-purple-500">{stats.mastered}</div>
-          <div className="text-sm text-gray-500">Mastered</div>
+        <div className="bg-card p-4 rounded-lg border card-elevated">
+          <div className="text-2xl font-bold text-secondary">{stats.mastered}</div>
+          <div className="text-sm text-muted-foreground">Mastered</div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border mb-6">
+      <div className="bg-card p-4 rounded-lg border mb-6">
         <div className="flex gap-4 items-center">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search problems..."
                 value={searchQuery}
@@ -147,37 +147,37 @@ export default function DSASheetTracker() {
       </div>
 
       {/* Problems Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border overflow-hidden">
+      <div className="bg-card rounded-lg border overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-900">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Problem
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Difficulty
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Categories
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Companies
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Attempts
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="divide-y divide-border">
             {filteredProblems.map((problem) => {
               const StatusIcon = STATUS_CONFIG[problem.status].icon;
               return (
                 <tr
                   key={problem.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"
+                  className="hover:bg-muted/50 cursor-pointer"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusIcon className={`w-5 h-5 ${STATUS_CONFIG[problem.status].color}`} />
@@ -195,7 +195,7 @@ export default function DSASheetTracker() {
                       {problem.categories.slice(0, 2).map((cat) => (
                         <span
                           key={cat}
-                          className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded"
+                          className="px-2 py-1 text-xs bg-primary/10 text-primary rounded"
                         >
                           {cat}
                         </span>
@@ -207,14 +207,14 @@ export default function DSASheetTracker() {
                       {problem.companyTags.slice(0, 2).map((company) => (
                         <span
                           key={company}
-                          className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-100 rounded"
+                          className="px-2 py-1 text-xs bg-secondary/10 text-secondary rounded"
                         >
                           {company}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {problem.attempts || 0}
                   </td>
                 </tr>

@@ -1,6 +1,6 @@
 {
   "name": "@repo/analytics-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "Analytics and reporting microservice",
   "main": "dist/main.js",
   "scripts": {

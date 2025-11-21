@@ -1,6 +1,6 @@
 {
   "name": "@ai-platform/recommendation-service",
-  "version": "1.0.0",
+  "version": "16.0.3",
   "description": "AI-powered recommendation and personalization service",
   "main": "dist/main.js",
   "scripts": {

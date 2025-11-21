@@ -18,7 +18,7 @@ export { RoadmapGenerator } from './roadmap/RoadmapGenerator';
 export { RoadmapManager } from './roadmap/RoadmapManager';
 
 // Existing Components
-export { DSASheetTracker } from './DSASheetTracker';
-export { CodingChallenge } from './CodingChallenge';
-export { CodeEditor } from './CodeEditor';
+export { default as DSASheetTracker } from './DSASheetTracker';
+export { default as CodingChallenge } from './CodingChallenge';
+export { default as CodeEditor } from './CodeEditor';
 export { AILabGenerationDialog } from './instructor/AILabGenerationDialog';

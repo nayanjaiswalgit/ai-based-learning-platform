@@ -1,6 +1,9 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   BookOpen,
   Code,
@@ -14,9 +17,35 @@ import {
   Award,
   TrendingUp,
   Target,
-} from 'lucide-react'
+  Loader2,
+} from 'lucide-react';
+import courseClient from '@/lib/api/course-client';
 
 export default function HomePage() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const data = await courseClient.getCourses({
+        isPublished: true,
+        limit: 3,
+      });
+      setCourses(data);
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+      // Use fallback empty array on error
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const features = [
     {
       icon: BookOpen,
@@ -38,47 +67,14 @@ export default function HomePage() {
       title: 'Community Support',
       description: 'Connect with peers and mentors worldwide',
     },
-  ]
-
-  const popularCourses = [
-    {
-      id: 1,
-      title: 'Full Stack Web Development',
-      instructor: 'Sarah Johnson',
-      rating: 4.9,
-      students: 12450,
-      duration: '40 hours',
-      price: 99,
-      image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=250&fit=crop',
-    },
-    {
-      id: 2,
-      title: 'Data Structures & Algorithms',
-      instructor: 'Michael Chen',
-      rating: 4.8,
-      students: 8920,
-      duration: '35 hours',
-      price: 89,
-      image: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&h=250&fit=crop',
-    },
-    {
-      id: 3,
-      title: 'Machine Learning Fundamentals',
-      instructor: 'Dr. Emma Williams',
-      rating: 4.9,
-      students: 15670,
-      duration: '50 hours',
-      price: 129,
-      image: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=250&fit=crop',
-    },
-  ]
+  ];
 
   const stats = [
     { label: 'Active Students', value: '50,000+', icon: Users },
     { label: 'Expert Instructors', value: '500+', icon: Award },
     { label: 'Courses Available', value: '1,200+', icon: BookOpen },
     { label: 'Success Rate', value: '95%', icon: TrendingUp },
-  ]
+  ];
 
   return (
     <div className="min-h-screen">
@@ -184,49 +180,74 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {popularCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden border-slate-200 bg-white transition-all hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                <div className="relative h-48 overflow-hidden bg-slate-200">
-                  <img
-                    src={course.image}
-                    alt={course.title}
-                    className="h-full w-full object-cover transition-transform hover:scale-105"
-                  />
-                  <div className="absolute top-4 right-4 rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-900">
-                    ${course.price}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+          ) : courses.length > 0 ? (
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {courses.map((course) => (
+                <Card key={course.id} className="overflow-hidden border-slate-200 bg-white transition-all hover:shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                  <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600">
+                    {course.thumbnailUrl ? (
+                      <img
+                        src={course.thumbnailUrl}
+                        alt={course.title}
+                        className="h-full w-full object-cover transition-transform hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <BookOpen className="h-16 w-16 text-white opacity-50" />
+                      </div>
+                    )}
+                    {course.price && (
+                      <div className="absolute top-4 right-4 rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-900">
+                        ${course.price}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-white">
-                    {course.title}
-                  </h3>
-                  <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                    by {course.instructor}
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                    <span className="flex items-center">
-                      <Star className="mr-1 h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      {course.rating}
-                    </span>
-                    <span className="flex items-center">
-                      <Users className="mr-1 h-4 w-4" />
-                      {course.students.toLocaleString()}
-                    </span>
-                    <span className="flex items-center">
-                      <Clock className="mr-1 h-4 w-4" />
-                      {course.duration}
-                    </span>
+                  <div className="p-6">
+                    <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-white">
+                      {course.title}
+                    </h3>
+                    <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+                      by {course.instructor?.username || 'Instructor'}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                      {course.averageRating && (
+                        <span className="flex items-center">
+                          <Star className="mr-1 h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          {course.averageRating.toFixed(1)}
+                        </span>
+                      )}
+                      {course.enrollmentCount > 0 && (
+                        <span className="flex items-center">
+                          <Users className="mr-1 h-4 w-4" />
+                          {course.enrollmentCount.toLocaleString()}
+                        </span>
+                      )}
+                      {course.estimatedDurationHours && (
+                        <span className="flex items-center">
+                          <Clock className="mr-1 h-4 w-4" />
+                          {course.estimatedDurationHours} hours
+                        </span>
+                      )}
+                    </div>
+                    <Link href={`/courses/${course.slug || course.id}`}>
+                      <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700">
+                        Enroll Now
+                      </Button>
+                    </Link>
                   </div>
-                  <Link href={`/courses/${course.id}`}>
-                    <Button className="mt-4 w-full bg-blue-600 hover:bg-blue-700">
-                      Enroll Now
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border bg-muted/20 p-12 text-center">
+              <h3 className="mb-2 text-2xl font-semibold">No courses available yet</h3>
+              <p className="text-muted-foreground">Check back soon for exciting new courses!</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -306,5 +327,5 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

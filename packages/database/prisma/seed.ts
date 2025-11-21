@@ -383,6 +383,162 @@ async function main() {
   console.log(`✅ Created DSA sheet with ${problemsData.length} problems\n`);
 
   // =====================================================
+  // 6. Create Bootcamps
+  // =====================================================
+  console.log('🎓 Creating bootcamps...');
+
+  const bootcampsData = [
+    {
+      title: 'Full Stack Developer Bootcamp',
+      slug: 'full-stack-developer-bootcamp',
+      description: 'Become job-ready in 16 weeks with comprehensive full-stack development training. Learn React, Node.js, PostgreSQL, and deploy production-ready applications.',
+      durationWeeks: 16,
+      price: 2999,
+      difficultyLevel: 'Beginner to Advanced',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800',
+      isPublished: true,
+      syllabus: {
+        weeks: [
+          { range: '1-2', topic: 'Web Fundamentals', description: 'HTML, CSS, JavaScript basics' },
+          { range: '3-4', topic: 'JavaScript & TypeScript', description: 'Modern JavaScript and TypeScript' },
+          { range: '5-7', topic: 'React & Modern Frontend', description: 'Build interactive UIs with React' },
+          { range: '8-10', topic: 'Backend with Node.js', description: 'Server-side development' },
+          { range: '11-12', topic: 'Databases & APIs', description: 'PostgreSQL and REST APIs' },
+          { range: '13-14', topic: 'DevOps & Deployment', description: 'Docker, CI/CD, cloud deployment' },
+          { range: '15-16', topic: 'Capstone Project', description: 'Build and deploy your portfolio project' },
+        ],
+        benefits: [
+          'Live classes 3 times per week',
+          '1:1 mentorship sessions',
+          'Career support and job placement',
+          'Industry-recognized certificate',
+        ],
+      },
+    },
+    {
+      title: 'Data Science & Machine Learning Bootcamp',
+      slug: 'data-science-ml-bootcamp',
+      description: 'Master data science and machine learning in 12 weeks. Learn Python, statistics, ML algorithms, and build real-world projects.',
+      durationWeeks: 12,
+      price: 3499,
+      difficultyLevel: 'Intermediate',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800',
+      isPublished: true,
+      syllabus: {
+        weeks: [
+          { range: '1-2', topic: 'Python & Data Analysis', description: 'NumPy, Pandas, data manipulation' },
+          { range: '3-4', topic: 'Statistics & Probability', description: 'Statistical analysis fundamentals' },
+          { range: '5-6', topic: 'Machine Learning Basics', description: 'Supervised and unsupervised learning' },
+          { range: '7-8', topic: 'Deep Learning', description: 'Neural networks with TensorFlow' },
+          { range: '9-10', topic: 'ML Engineering', description: 'Model deployment and MLOps' },
+          { range: '11-12', topic: 'Capstone Project', description: 'End-to-end ML project' },
+        ],
+        benefits: [
+          'Real-world datasets and projects',
+          'Industry expert instructors',
+          'Job interview preparation',
+          'Portfolio-ready projects',
+        ],
+      },
+    },
+    {
+      title: 'DevOps Engineering Bootcamp',
+      slug: 'devops-engineering-bootcamp',
+      description: 'Learn modern DevOps practices in 10 weeks. Master Docker, Kubernetes, CI/CD, infrastructure as code, and cloud platforms.',
+      durationWeeks: 10,
+      price: 2499,
+      difficultyLevel: 'Advanced',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=800',
+      isPublished: true,
+      syllabus: {
+        weeks: [
+          { range: '1-2', topic: 'Linux & Scripting', description: 'Linux fundamentals and bash scripting' },
+          { range: '3-4', topic: 'Docker & Containers', description: 'Containerization with Docker' },
+          { range: '5-6', topic: 'Kubernetes', description: 'Container orchestration' },
+          { range: '7-8', topic: 'CI/CD Pipelines', description: 'Jenkins, GitHub Actions, GitLab CI' },
+          { range: '9-10', topic: 'Cloud & IaC', description: 'AWS/Azure and Terraform' },
+        ],
+        benefits: [
+          'Hands-on labs and exercises',
+          'Production environment simulation',
+          'Cloud certifications prep',
+          'Industry best practices',
+        ],
+      },
+    },
+    {
+      title: 'Frontend Development Bootcamp',
+      slug: 'frontend-development-bootcamp',
+      description: 'Master modern frontend development in 8 weeks. Build stunning, responsive web applications with React, Next.js, and TypeScript.',
+      durationWeeks: 8,
+      price: 1999,
+      difficultyLevel: 'Beginner',
+      thumbnailUrl: 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=800',
+      isPublished: true,
+      syllabus: {
+        weeks: [
+          { range: '1-2', topic: 'HTML, CSS & JavaScript', description: 'Modern web fundamentals' },
+          { range: '3-4', topic: 'React Fundamentals', description: 'Components, hooks, state management' },
+          { range: '5-6', topic: 'Next.js & TypeScript', description: 'Production-ready applications' },
+          { range: '7-8', topic: 'Advanced Patterns', description: 'Performance, testing, deployment' },
+        ],
+        benefits: [
+          'Build 5+ portfolio projects',
+          'Modern tooling and best practices',
+          'Responsive design mastery',
+          'Job-ready skills',
+        ],
+      },
+    },
+  ];
+
+  const bootcamps = [];
+  for (let i = 0; i < bootcampsData.length; i++) {
+    const bootcampData = bootcampsData[i];
+    const instructor = instructors[i % instructors.length];
+
+    const bootcamp = await prisma.bootcamp.create({
+      data: {
+        ...bootcampData,
+        instructorId: instructor.id,
+      },
+    });
+
+    // Create cohorts for each bootcamp
+    const cohortStartDates = [
+      { name: 'January 2025', startDate: new Date('2025-01-15'), status: 'upcoming' },
+      { name: 'March 2025', startDate: new Date('2025-03-15'), status: 'upcoming' },
+      { name: 'November 2024', startDate: new Date('2024-11-01'), status: 'active' },
+    ];
+
+    for (const cohortData of cohortStartDates) {
+      const endDate = new Date(cohortData.startDate);
+      endDate.setDate(endDate.getDate() + bootcampData.durationWeeks * 7);
+
+      await prisma.cohort.create({
+        data: {
+          bootcampId: bootcamp.id,
+          name: cohortData.name,
+          startDate: cohortData.startDate,
+          endDate,
+          status: cohortData.status,
+          currentEnrollment: cohortData.status === 'active' ? 18 : 5,
+          maxEnrollment: 30,
+          scheduleDetails: {
+            weeklyHours: '15-20 hours',
+            liveSessionDays: ['Monday', 'Wednesday', 'Friday'],
+            sessionTime: '7:00 PM - 9:00 PM EST',
+          },
+        },
+      });
+    }
+
+    bootcamps.push(bootcamp);
+  }
+
+  console.log(`✅ Created ${bootcamps.length} bootcamps with cohorts\n`);
+
+  // =====================================================
   // Summary
   // =====================================================
   console.log('\n' + '='.repeat(60));
@@ -396,6 +552,7 @@ async function main() {
   console.log(`   • Skills: ${skills.length}`);
   console.log(`   • Courses: ${courses.length}`);
   console.log(`   • Enrollments: ${enrollmentCount}`);
+  console.log(`   • Bootcamps: ${bootcamps.length}`);
   console.log(`   • DSA Problems: ${problemsData.length}`);
   console.log('='.repeat(60));
 
